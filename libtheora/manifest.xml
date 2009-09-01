@@ -1,0 +1,17 @@
+<package>
+  <description brief="Theora Video Codec">
+
+    Open source video codec for streaming video over the network.
+
+  </description>
+  <author>Xiph.org</author>
+  <license>BSD</license>
+  <review status="3rdparty" notes=""/>
+  <url>http://www.theora.org/</url>
+  <export>
+    <cpp cflags="-I${prefix}/installed/include/"
+         lflags="-L${prefix}/installed/lib/" />
+  </export>
+  <versioncontrol type="svn" url="http://svn.xiph.org/trunk/theora" />
+</package>
+
