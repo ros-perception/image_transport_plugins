@@ -3,6 +3,11 @@
 
     Open source video codec for streaming video over the network.
 
+    This package will eventually be replaced with a rosdep. It is
+    currently needed due to a problem with Ubuntu's libtheora-dev
+    up through Jaunty, see:
+    https://bugs.launchpad.net/ubuntu/+source/libtheora/+bug/347235
+
   </description>
   <author>Xiph.org</author>
   <license>BSD</license>
