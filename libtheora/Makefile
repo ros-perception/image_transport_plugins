@@ -10,7 +10,7 @@ include $(shell rospack find mk)/download_unpack_build.mk
 
 installed: wiped $(SOURCE_DIR)/unpacked
 	echo "Building LibTheora..."
-	cd $(SOURCE_DIR) && ./autogen.sh --prefix=$(PWD)/installed &&  make && make install
+	cd $(SOURCE_DIR) && ./autogen.sh --prefix=$(CURDIR)/installed &&  make && make install
 	touch -c installed
 
 wiped:
