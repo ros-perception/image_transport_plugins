@@ -1,27 +1,21 @@
-#include "image_transport/publisher_plugin.h"
+#include "image_transport/simple_publisher_plugin.h"
+#include <sensor_msgs/CompressedImage.h>
 
 namespace compressed_image_transport {
 
-class CompressedPublisher : public image_transport::PublisherPlugin
+class CompressedPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage>
 {
 public:
-  virtual ~CompressedPublisher();
+  virtual ~CompressedPublisher() {}
 
-  virtual std::string getTransportType() const;
-
-  virtual void advertise(ros::NodeHandle& nh, const std::string& base_topic,
-                         uint32_t queue_size, bool latch);
-
-  virtual uint32_t getNumSubscribers() const;
-  virtual std::string getTopic() const;
-
-  virtual void publish(const sensor_msgs::Image& message) const;
-
-  virtual void shutdown();
+  virtual std::string getTransportName() const
+  {
+    return "compressed";
+  }
 
 protected:
-  ros::NodeHandle nh_;
-  ros::Publisher pub_;
+  virtual void publish(const sensor_msgs::Image& message,
+                       const PublishFn& publish_fn) const;
 };
 
 } //namespace compressed_image_transport

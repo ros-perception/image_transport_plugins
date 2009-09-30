@@ -1,27 +1,21 @@
-#include "image_transport/subscriber_plugin.h"
+#include "image_transport/simple_subscriber_plugin.h"
 #include <sensor_msgs/CompressedImage.h>
 
 namespace compressed_image_transport {
 
-class CompressedSubscriber : public image_transport::SubscriberPlugin
+class CompressedSubscriber : public image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage>
 {
 public:
-  CompressedSubscriber();
-  
-  virtual ~CompressedSubscriber();
+  virtual ~CompressedSubscriber() {}
 
-  virtual void subscribe(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
-                         const Callback& callback, const ros::VoidPtr& tracked_object,
-                         const ros::TransportHints& transport_hints);
-  
-  virtual std::string getTopic() const;
+  virtual std::string getTransportName() const
+  {
+    return "compressed";
+  }
 
-  virtual void shutdown();
-
-private:
-  ros::Subscriber sub_;
-
-  void decompress(const sensor_msgs::CompressedImageConstPtr& message, const Callback& callback);
+protected:
+  virtual void internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
+                                const Callback& user_cb);
 };
 
 } //namespace image_transport

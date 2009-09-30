@@ -6,36 +6,8 @@
 
 namespace compressed_image_transport {
 
-CompressedSubscriber::CompressedSubscriber()
-{
-}
-
-CompressedSubscriber::~CompressedSubscriber()
-{
-}
-
-void
-CompressedSubscriber::subscribe(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
-                                const Callback& callback, const ros::VoidPtr& tracked_object,
-                                const ros::TransportHints& transport_hints)
-{
-  typedef boost::function<void(const sensor_msgs::CompressedImageConstPtr&)> InternalCallback;
-  InternalCallback decompress_fn = boost::bind(&CompressedSubscriber::decompress, this, _1, callback);
-  sub_ = nh.subscribe<>(base_topic, queue_size, decompress_fn, tracked_object, transport_hints);
-}
-
-std::string CompressedSubscriber::getTopic() const
-{
-  return sub_.getTopic();
-}
-
-void CompressedSubscriber::shutdown()
-{
-  sub_.shutdown();
-}
-
-void CompressedSubscriber::decompress(const sensor_msgs::CompressedImageConstPtr& message,
-                                      const Callback& callback)
+void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
+                                            const Callback& user_cb)
 {
   // Decompress
   const CvMat compressed = cvMat(1, message->data.size(), CV_8UC1,
@@ -61,7 +33,7 @@ void CompressedSubscriber::decompress(const sensor_msgs::CompressedImageConstPtr
     return;
   }
   
-  callback(image_ptr);
+  user_cb(image_ptr);
 }
 
 } //namespace compressed_image_transport
