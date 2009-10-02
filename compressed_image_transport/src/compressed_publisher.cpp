@@ -25,23 +25,29 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
 
   // Update settings from parameter server
   int params[3] = {0};
-  std::string format;
-  if (!nh().getParam("compression_type", format, true))
+  std::string format, format_param;
+  if (!nh().searchParam("compressed_image_transport_format", format) ||
+      !nh().getParam(format_param, format, true))
     format = "jpeg";
   if (format == "jpeg") {
     params[0] = CV_IMWRITE_JPEG_QUALITY;
-    params[1] = 80; // default: 80% quality
+    std::string quality_param;
+    if (!nh().searchParam("compressed_image_transport_jpeg_quality", quality_param) ||
+        !nh().getParam(quality_param, params[1], true))
+      params[1] = 80; // default: 80% quality
   }
   else if (format == "png") {
     params[0] = CV_IMWRITE_PNG_COMPRESSION;
-    params[1] = 9; // default: maximum compression
+    std::string level_param;
+    if (!nh().searchParam("compressed_image_transport_png_level", level_param) ||
+        !nh().getParam(level_param, params[1], true))
+      params[1] = 9; // default: maximum compression
   }
   else {
     ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'",
               format.c_str());
     return;
   }
-  nh().getParam("compression_level", params[1], true);
   std::string extension = '.' + format;
 
   // Compress image
