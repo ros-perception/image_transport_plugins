@@ -22,43 +22,21 @@ TheoraPublisher::~TheoraPublisher()
     th_encode_free(encoding_context_);
 }
 
-std::string TheoraPublisher::getTransportType() const
-{
-  return "theora";
-}
-
-void TheoraPublisher::advertise(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size, bool latch)
-{
-  nh_ = nh;
-  pub_ = nh_.advertise<theora_image_transport::packet> (topic, queue_size, boost::bind(&TheoraPublisher::sendHeader, this, _1),
-                                                                     ros::SubscriberStatusCallback(), ros::VoidPtr(), latch);
-}
-
-uint32_t TheoraPublisher::getNumSubscribers() const
-{
-  return pub_.getNumSubscribers();
-}
-
-std::string TheoraPublisher::getTopic() const
-{
-  return pub_.getTopic();
-}
-
 //Sends the header packets to new subscribers (unless there are no header packets to send yet)
-void TheoraPublisher::sendHeader(const ros::SingleSubscriberPublisher& pub) const
+void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
 {
   theora_image_transport::packet msg;
-  for (unsigned int i = 0; i < stream_header_.size(); i++)
-  {
-    oggPacketToMsg(stream_header_[i], msg);
-    pub.publish(msg);
-    ROS_DEBUG("Published header packet, sleeping for 0.1 second");
-    ros::Duration d = ros::Duration(0, 100000000);
-    d.sleep();
-  }
+    for (unsigned int i = 0; i < stream_header_.size(); i++)
+    {
+      oggPacketToMsg(stream_header_[i], msg);
+      pub.publish(msg);
+      ROS_DEBUG("Published header packet, sleeping for 0.1 second");
+      ros::Duration d = ros::Duration(0, 100000000);
+      d.sleep();
+    }
 }
 
-void TheoraPublisher::publish(const sensor_msgs::Image& message) const
+void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
 {
   if (img_bridge_.fromImage(message, "bgr8"))
   {
@@ -66,7 +44,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message) const
     //cvShowImage(window_name_.c_str(), img);
     IplImage* img2 = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
     cvCvtColor(img, img2, CV_BGR2YCrCb);
-    ensure_encoding_context(cvGetSize(img2));
+    ensure_encoding_context(cvGetSize(img2), publish_fn);
 
     //convert image
     th_ycbcr_buffer ycbcr_image;
@@ -145,7 +123,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message) const
     {
       oggPacketToMsg(oggpacket, output);
       ROS_DEBUG("Publishing packet!");
-      pub_.publish(output);
+      publish_fn(output);
     }
     ROS_DEBUG("Punted from while loop with rval %d", rval);
   }
@@ -153,12 +131,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message) const
     ROS_ERROR("Unable to convert from %s to bgr", message.encoding.c_str());
 }
 
-void TheoraPublisher::shutdown()
-{
-  pub_.shutdown();
-}
-
-void TheoraPublisher::ensure_encoding_context(const CvSize &size) const
+void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishFn& publish_fn) const
 {
   if (encoding_context_ == null)
   {
@@ -188,7 +161,7 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size) const
     //TH_CS_ITU_REC_470BG     A color space designed for PAL/SECAM content.
     encoder_setup.pixel_fmt = TH_PF_420; //see bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
     int bitrate;
-    nh_.param("theora_bitrate", bitrate, 800000);
+    nh().param("theora_bitrate", bitrate, 800000);
     encoder_setup.target_bitrate =
     //encoder_setup.quality = 63;    //On a scale of 0 to 63, to use this set target bitrate to 0
         encoder_setup.aspect_numerator = 1;
@@ -226,7 +199,7 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size) const
     for (unsigned int i = 0; i < stream_header_.size(); i++)
     {
       oggPacketToMsg(stream_header_[i], msg);
-      pub_.publish(msg);
+      publish_fn(msg);
       ROS_DEBUG("Published header packet, sleeping for 0.1 second");
       ros::Duration d = ros::Duration(0, 100000000);
       d.sleep();

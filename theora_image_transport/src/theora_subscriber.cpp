@@ -23,26 +23,6 @@ TheoraSubscriber::~TheoraSubscriber()
 {
 }
 
-
-void TheoraSubscriber::subscribe(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
-                                     const Callback& callback, const ros::VoidPtr& tracked_object,
-                                     const ros::TransportHints& transport_hints)
-{
-  typedef boost::function<void(const theora_image_transport::packetConstPtr&)> InternalCallback;
-  InternalCallback decompress_fn = boost::bind(&TheoraSubscriber::decompress, this, _1, callback);
-  sub_ = nh.subscribe<>(base_topic, queue_size, decompress_fn, tracked_object, transport_hints);
-}
-
-std::string TheoraSubscriber::getTopic() const
-{
-  return sub_.getTopic();
-}
-
-void TheoraSubscriber::shutdown()
-{
-  sub_.shutdown();
-}
-
 //When using this caller is responsible for deleting oggpacket.packet!!
 void TheoraSubscriber::msgToOggPacket(const theora_image_transport::packet &msg, ogg_packet &oggpacketOutput)
 {
@@ -61,7 +41,7 @@ void TheoraSubscriber::msgToOggPacket(const theora_image_transport::packet &msg,
   ROS_DEBUG("Checksum is: %d", i);*/
 }
 
-void TheoraSubscriber::decompress(const theora_image_transport::packetConstPtr& message, const Callback& callback)
+void TheoraSubscriber::internalCallback(const theora_image_transport::packetConstPtr& message, const Callback& callback)
 {
   const theora_image_transport::packet &pkt = *message;
   ogg_packet oggpacket;

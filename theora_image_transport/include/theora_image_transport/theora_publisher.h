@@ -1,4 +1,4 @@
-#include "image_transport/publisher_plugin.h"
+#include "image_transport/simple_publisher_plugin.h"
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <opencv_latest/CvBridge.h>
@@ -10,31 +10,31 @@
 
 namespace theora_image_transport {
 
-class TheoraPublisher : public image_transport::PublisherPlugin
+class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_image_transport::packet>
 {
 public:
   TheoraPublisher();
   virtual ~TheoraPublisher();
 
-  virtual std::string getTransportType() const;
-
-  virtual void advertise(ros::NodeHandle& nh, const std::string& base_topic,
-                         uint32_t queue_size, bool latch);
-
-  virtual uint32_t getNumSubscribers() const;
-  virtual std::string getTopic() const;
-
-  virtual void publish(const sensor_msgs::Image& message) const;
-
-  virtual void shutdown();
+  //Return the system unique string representing the theora transport type
+  virtual std::string getTransportType() const
+  {
+    return "theora";
+  }
 
 protected:
-  void sendHeader(const ros::SingleSubscriberPublisher& pub) const;
-  void ensure_encoding_context(const CvSize &size) const;
-  void oggPacketToMsg(const ogg_packet &oggpacket, theora_image_transport::packet &msgOutput) const;
+  //Callback to send header packets to new clients
+  virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
 
-  ros::NodeHandle nh_;
-  ros::Publisher pub_;
+  //Main publish function
+  virtual void publish(const sensor_msgs::Image& message,
+                       const PublishFn& publish_fn) const;
+
+private:
+  //Utility functions
+  void sendHeader(const ros::SingleSubscriberPublisher& pub) const;
+  void ensure_encoding_context(const CvSize &size, const PublishFn& publish_fn) const;
+  void oggPacketToMsg(const ogg_packet &oggpacket, theora_image_transport::packet &msgOutput) const;
 
   //I have some reservations about making everything mutable like this but
   //from the users perspective the publisher is essentially stateless except for differences in

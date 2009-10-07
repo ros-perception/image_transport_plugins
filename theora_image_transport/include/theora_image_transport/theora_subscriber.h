@@ -1,4 +1,4 @@
-#include "image_transport/subscriber_plugin.h"
+#include "image_transport/simple_subscriber_plugin.h"
 #include <theora_image_transport/packet.h>
 #include <opencv_latest/CvBridge.h>
 
@@ -8,24 +8,23 @@
 
 namespace theora_image_transport {
 
-class TheoraSubscriber : public image_transport::SubscriberPlugin
+class TheoraSubscriber : public image_transport::SimpleSubscriberPlugin<theora_image_transport::packet>
 {
 public:
   TheoraSubscriber();
   virtual ~TheoraSubscriber();
 
-  virtual void subscribe(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
-                         const Callback& callback, const ros::VoidPtr& tracked_object,
-                         const ros::TransportHints& transport_hints);
-  
-  virtual std::string getTopic() const;
+  virtual std::string getTansportName() const
+  {
+    return "theora";
+  }
 
-  virtual void shutdown();
+protected:
+  //The function that does the actual decompression and calls a user supplied callback with the resulting image
+  virtual void internalCallback(const theora_image_transport::packet::ConstPtr &msg, const Callback& user_cb);
 
 private:
   void msgToOggPacket(const theora_image_transport::packet &msg, ogg_packet &oggpacketOutput);
-
-  ros::Subscriber sub_;
 
   bool received_header_;
   th_dec_ctx* decoding_context_;
@@ -33,8 +32,6 @@ private:
   th_comment header_comment_;
   th_setup_info* setup_info_;
   sensor_msgs::CvBridge img_bridge_;
-
-  void decompress(const theora_image_transport::packetConstPtr& message, const Callback& callback);
 };
 
 } //namespace theora_image_transport
