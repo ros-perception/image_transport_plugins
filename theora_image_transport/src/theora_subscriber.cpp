@@ -122,6 +122,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
       IplImage* img2 = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
       cvCvtColor(img, img2, CV_YCrCb2BGR);
 
+      rosMsg = new sensor_msgs::Image();
       img_bridge_.fromIpltoRosImage(img2, *rosMsg);
 
       cvReleaseImage(&img);
