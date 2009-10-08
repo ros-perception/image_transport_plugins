@@ -14,7 +14,7 @@ public:
   TheoraSubscriber();
   virtual ~TheoraSubscriber();
 
-  virtual std::string getTansportName() const
+  virtual std::string getTransportName() const
   {
     return "theora";
   }

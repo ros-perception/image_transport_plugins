@@ -17,7 +17,7 @@ public:
   virtual ~TheoraPublisher();
 
   //Return the system unique string representing the theora transport type
-  virtual std::string getTransportType() const
+  virtual std::string getTransportName() const
   {
     return "theora";
   }
