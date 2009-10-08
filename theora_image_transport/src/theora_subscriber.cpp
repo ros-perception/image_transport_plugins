@@ -46,7 +46,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
   const theora_image_transport::packet &pkt = *message;
   ogg_packet oggpacket;
   msgToOggPacket(pkt, oggpacket);
-  sensor_msgs::Image *rosMsg = new sensor_msgs::Image();
+  sensor_msgs::Image *rosMsg = null;
 
   if (received_header_ == false) //still receiving header info
   {
@@ -135,14 +135,17 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
 
   delete oggpacket.packet;
 
-  //The shared pointer will take care of freeing rosMsg
-  boost::shared_ptr<sensor_msgs::Image> image_ptr(rosMsg);
+  if(rosMsg != null)
+  {
+    //The shared pointer will take care of freeing rosMsg
+    boost::shared_ptr<sensor_msgs::Image> image_ptr(rosMsg);
 
-  //Manually set encoding to be correct
-  //TODO: the packet message could be extended with a flag that indicates the original type for better handling of
-  //      B&W images
-  image_ptr->encoding = sensor_msgs::image_encodings::BGR8;
-  callback(image_ptr);
+    //Manually set encoding to be correct
+    //TODO: the packet message could be extended with a flag that indicates the original type for better handling of
+    //      B&W images
+    image_ptr->encoding = sensor_msgs::image_encodings::BGR8;
+    callback(image_ptr);
+  }
 }
 
 } //namespace theora_image_transport
