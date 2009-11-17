@@ -1,10 +1,11 @@
 all: installed
 
 VERSION		= 1.0
-TARBALL     = build/libtheora-$(VERSION).tar.gz
-TARBALL_URL = http://downloads.xiph.org/releases/theora/libtheora-$(VERSION).tar.bz2
+TARBALL     = build/libtheora-$(VERSION).tar.bz2
+TARBALL_URL = http://pr.willowgarage.com/downloads/libtheora-$(VERSION).tar.bz2
 UNPACK_CMD  = tar -xvjf
 SOURCE_DIR  = build/libtheora-$(VERSION)
+MD5SUM_FILE = libtheora-$(VERSION).tar.bz2.md5sum
 
 include $(shell rospack find mk)/download_unpack_build.mk
 
