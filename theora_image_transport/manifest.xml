@@ -9,7 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://pr.willowgarage.com/wiki/theora_image_transport</url>
   <depend package="image_transport"/>
-  <depend package="opencv_latest"/>
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
   <depend package="libtheora"/>
   <depend package="pluginlib"/>
 

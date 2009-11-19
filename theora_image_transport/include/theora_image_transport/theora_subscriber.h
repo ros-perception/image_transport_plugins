@@ -1,6 +1,6 @@
 #include "image_transport/simple_subscriber_plugin.h"
 #include <theora_image_transport/packet.h>
-#include <opencv_latest/CvBridge.h>
+#include <cv_bridge/CvBridge.h>
 
 #include <theora/codec.h>
 #include <theora/theoraenc.h>

@@ -1,7 +1,7 @@
 #include "image_transport/simple_publisher_plugin.h"
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
-#include <opencv_latest/CvBridge.h>
+#include <cv_bridge/CvBridge.h>
 #include <theora_image_transport/packet.h>
 
 #include <theora/codec.h>
