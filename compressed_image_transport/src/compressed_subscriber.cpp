@@ -1,6 +1,6 @@
 #include "compressed_image_transport/compressed_subscriber.h"
 #include <sensor_msgs/image_encodings.h>
-#include <opencv_latest/CvBridge.h>
+#include <cv_bridge/CvBridge.h>
 #include <opencv/cvwimage.h>
 #include <opencv/highgui.h>
 
