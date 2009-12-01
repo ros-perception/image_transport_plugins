@@ -18,5 +18,6 @@
          lflags="-L${prefix}/installed/lib/" />
   </export>
   <versioncontrol type="svn" url="http://svn.xiph.org/trunk/theora" />
+  <rosdep name="libogg"/>
 </package>
 

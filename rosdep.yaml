@@ -1,0 +1,3 @@
+libogg:
+  ubuntu: libogg-dev
+  debian: libogg-dev
