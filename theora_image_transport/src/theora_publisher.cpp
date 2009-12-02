@@ -162,9 +162,9 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishF
     encoder_setup.pixel_fmt = TH_PF_420; //see bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
     int bitrate;
     nh().param("theora_bitrate", bitrate, 800000);
-    encoder_setup.target_bitrate =
+    encoder_setup.target_bitrate = bitrate;
     //encoder_setup.quality = 63;    //On a scale of 0 to 63, to use this set target bitrate to 0
-        encoder_setup.aspect_numerator = 1;
+    encoder_setup.aspect_numerator = 1;
     encoder_setup.aspect_denominator = 1;
     encoder_setup.fps_numerator = 0;
     encoder_setup.fps_denominator = 0;
