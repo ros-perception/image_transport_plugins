@@ -22,6 +22,9 @@ rosbuild_add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscri
 #TODO (added by ethand 8/27/09): the below line should replaced by fixing the manifest for the libtheora package
 target_link_libraries(${PROJECT_NAME} theoraenc theoradec)
 
+rosbuild_add_executable(ogg_saver src/ogg_saver.cpp)
+target_link_libraries(ogg_saver libogg.so)
+
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
