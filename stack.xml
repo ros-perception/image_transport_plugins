@@ -9,5 +9,5 @@
   <depend stack="ros"/>
   <depend stack="common_msgs"/>
   <depend stack="common"/>
-  <depend stack="opencv"/>
+  <depend stack="vision_opencv"/>
 </stack>
