@@ -27,20 +27,20 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
   int params[3] = {0};
   std::string format, format_param;
   if (!nh().searchParam("compressed_image_transport_format", format) ||
-      !nh().getParam(format_param, format, true))
+      !nh().getParamCached(format_param, format))
     format = "jpeg";
   if (format == "jpeg") {
     params[0] = CV_IMWRITE_JPEG_QUALITY;
     std::string quality_param;
     if (!nh().searchParam("compressed_image_transport_jpeg_quality", quality_param) ||
-        !nh().getParam(quality_param, params[1], true))
+        !nh().getParamCached(quality_param, params[1]))
       params[1] = 80; // default: 80% quality
   }
   else if (format == "png") {
     params[0] = CV_IMWRITE_PNG_COMPRESSION;
     std::string level_param;
     if (!nh().searchParam("compressed_image_transport_png_level", level_param) ||
-        !nh().getParam(level_param, params[1], true))
+        !nh().getParamCached(level_param, params[1]))
       params[1] = 9; // default: maximum compression
   }
   else {
