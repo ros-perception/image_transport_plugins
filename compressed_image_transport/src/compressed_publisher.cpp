@@ -26,7 +26,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
   // Update settings from parameter server
   int params[3] = {0};
   std::string format, format_param;
-  if (!nh().searchParam("compressed_image_transport_format", format) ||
+  if (!nh().searchParam("compressed_image_transport_format", format_param) ||
       !nh().getParamCached(format_param, format))
     format = "jpeg";
   if (format == "jpeg") {
