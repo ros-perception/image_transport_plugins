@@ -5,7 +5,7 @@
   <author>Maintained by Patrick Mihelich</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://pr.willowgarage.com/wiki/image_transport_plugins</url>
+  <url>http://ros.org/wiki/image_transport_plugins</url>
   <depend stack="ros"/>
   <depend stack="common_msgs"/>
   <depend stack="common"/>
