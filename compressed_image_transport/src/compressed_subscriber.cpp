@@ -26,7 +26,7 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
     image_ptr->encoding = sensor_msgs::image_encodings::MONO8;
   }
   else if (decompressed.Channels() == 3) {
-    image_ptr->encoding = sensor_msgs::image_encodings::RGB8;
+    image_ptr->encoding = sensor_msgs::image_encodings::BGR8;
   }
   else {
     ROS_ERROR("Unsupported number of channels: %i", decompressed.Channels());
