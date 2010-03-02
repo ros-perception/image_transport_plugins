@@ -18,8 +18,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
       return;
     }
   }
-  else if (!bridge.fromImage(message, sensor_msgs::image_encodings::RGB8)) {
-    ROS_ERROR("Could not convert image from %s to rgb8", message.encoding.c_str());
+  else if (!bridge.fromImage(message, sensor_msgs::image_encodings::BGR8)) {
+    ROS_ERROR("Could not convert image from %s to bgr8", message.encoding.c_str());
     return;
   }
 
