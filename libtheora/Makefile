@@ -11,7 +11,11 @@ include $(shell rospack find mk)/download_unpack_build.mk
 
 installed: wiped $(SOURCE_DIR)/unpacked
 	echo "Building LibTheora..."
-	cd $(SOURCE_DIR) && ./autogen.sh --prefix=$(CURDIR)/installed &&  make && make install
+	if test `uname` = Darwin ; then \
+	  cd $(SOURCE_DIR) && ./autogen.sh --prefix=$(CURDIR)/installed --disable-sdltest --disable-asm &&  make && make install; \
+	else \
+	  cd $(SOURCE_DIR) && ./autogen.sh --prefix=$(CURDIR)/installed &&  make && make install; \
+	fi
 	touch -c installed
 
 wiped:
