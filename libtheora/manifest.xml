@@ -19,5 +19,8 @@
   </export>
   <versioncontrol type="svn" url="http://svn.xiph.org/trunk/theora" />
   <rosdep name="libogg"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
 </package>
 
