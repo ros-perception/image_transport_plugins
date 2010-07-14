@@ -1,4 +1,4 @@
-#include "image_transport/simple_publisher_plugin.h"
+#include <image_transport/simple_publisher_plugin.h>
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <cv_bridge/CvBridge.h>
@@ -13,9 +13,6 @@ namespace theora_image_transport {
 class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_image_transport::packet>
 {
 public:
-  TheoraPublisher();
-  virtual ~TheoraPublisher();
-
   //Return the system unique string representing the theora transport type
   virtual std::string getTransportName() const
   {
@@ -36,20 +33,15 @@ private:
   void ensure_encoding_context(const CvSize &size, const PublishFn& publish_fn) const;
   void oggPacketToMsg(const ogg_packet &oggpacket, theora_image_transport::packet &msgOutput) const;
 
-  //I have some reservations about making everything mutable like this but
-  //from the users perspective the publisher is essentially stateless except for differences in
-  //bitrate of the resulting stream and required image format.  Thus in order to match the
-  //ros API in image_publisher the publish method is still const
-
+  // Some data is preserved across calls to publish(), but from the user's perspective publish() is
+  // "logically const"
   mutable sensor_msgs::CvBridge img_bridge_;
-  mutable th_enc_ctx* encoding_context_;
-  mutable std::vector<ogg_packet> stream_header_;
+  mutable boost::shared_ptr<th_enc_ctx> encoding_context_;
+  mutable std::vector<theora_image_transport::packet> stream_header_;
 
   //Offsets to make image size into multiple of 16 (with alignment of image data to even pixels I believe)
-  mutable int nearestWidth;
-  mutable int nearestHeight;
-  mutable int nearestXoff;
-  mutable int nearestYoff;
+  mutable int nearest_width_, nearest_height_;
+  mutable int nearest_x_offset_, nearest_y_offset_;
 };
 
 } //namespace compressed_image_transport
