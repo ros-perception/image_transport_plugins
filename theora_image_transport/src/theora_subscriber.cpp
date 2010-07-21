@@ -43,10 +43,9 @@ void TheoraSubscriber::msgToOggPacket(const theora_image_transport::packet &msg,
 
 void TheoraSubscriber::internalCallback(const theora_image_transport::packetConstPtr& message, const Callback& callback)
 {
-  const theora_image_transport::packet &pkt = *message;
   ogg_packet oggpacket;
-  msgToOggPacket(pkt, oggpacket);
-  sensor_msgs::Image *rosMsg = null;
+  msgToOggPacket(*message, oggpacket); /// @todo smart ptr around oggpacket.packet?
+  sensor_msgs::Image *rosMsg = null; /// @todo This is not safe
 
   if (received_header_ == false) //still receiving header info
   {
@@ -83,6 +82,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
     else if (rval < 0)
       ROS_DEBUG("Error code when processing header: %d.", rval);
 
+    /// @todo This seems suspicious, the docs are pretty clear
     if (setup_info_ != null)  //Because rval != 0 as specified in the docs, this is used instead to check that
     {                         // the header has been fully received
       received_header_ = true;
@@ -96,37 +96,34 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
 
     if (rval == 0) //Successfully got a frame
     {
-      th_ycbcr_buffer ycbcr_image;
-      th_decode_ycbcr_out(decoding_context_, ycbcr_image);
+      th_ycbcr_buffer ycbcr_buffer;
+      th_decode_ycbcr_out(decoding_context_, ycbcr_buffer);
 
-      //convert image to IplImage
-      IplImage* img = cvCreateImage(cvSize(ycbcr_image[0].width, ycbcr_image[0].height), IPL_DEPTH_8U, 3);
+      // Blah
+      th_img_plane &y_plane = ycbcr_buffer[0], &cb_plane = ycbcr_buffer[1], &cr_plane = ycbcr_buffer[2];
+      cv::Mat y(y_plane.height, y_plane.width, CV_8UC1, y_plane.data, y_plane.stride);
+      cv::Mat cb_sub(cb_plane.height, cb_plane.width, CV_8UC1, cb_plane.data, cb_plane.stride);
+      cv::Mat cr_sub(cr_plane.height, cr_plane.width, CV_8UC1, cr_plane.data, cr_plane.stride);
 
-      //Do scaling of chroma planes, straight copy for Y plane
-      for (int planeIdx = 0; planeIdx < 3; planeIdx++)
-      {
-        int swappedIdx = planeIdx;
-        if (planeIdx == 1)
-          swappedIdx = 2;
-        else if (planeIdx == 2)
-          swappedIdx = 1;
-        for (int i = 0; i < img->width; i++)
-          for (int j = 0; j < img->height; j++)
-          {
-            int ci = planeIdx > 0 ? i / 2 : i; //Do simple pixel to 2x2 block scaling
-            int cj = planeIdx > 0 ? j / 2 : j;
-            ((uchar*)(img->imageData + img->widthStep * j))[i * 3 + planeIdx] = ycbcr_image[swappedIdx].data[ci + cj * ycbcr_image[swappedIdx].stride];
-          }
-      }
+      // Upsample chroma channels
+      cv::Mat cb, cr;
+      cv::pyrUp(cb_sub, cb);
+      cv::pyrUp(cr_sub, cr);
 
-      IplImage* img2 = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
-      cvCvtColor(img, img2, CV_YCrCb2BGR);
+      // Merge into interleaved image
+      cv::Mat y2 = y.clone();
+      cv::Mat ycrcb, channels[] = {y2, cr, cb};
+      cv::merge(channels, 3, ycrcb);
 
-      rosMsg = new sensor_msgs::Image();
-      img_bridge_.fromIpltoRosImage(img2, *rosMsg);
+      // Convert to BGR color
+      cv::Mat bgr, bgr_padded;
+      cv::cvtColor(ycrcb, bgr_padded, CV_YCrCb2BGR);
+      /// @todo Pull out non-padded image region
+      bgr = bgr_padded;
 
-      cvReleaseImage(&img);
-      cvReleaseImage(&img2);
+      IplImage ipl = bgr;
+      rosMsg = new sensor_msgs::Image;
+      img_bridge_.fromIpltoRosImage(&ipl, *rosMsg);
     }
     else if (rval == TH_DUPFRAME)
       ROS_DEBUG("Got a duplicate frame.");

@@ -40,8 +40,8 @@ private:
   mutable std::vector<theora_image_transport::packet> stream_header_;
 
   //Offsets to make image size into multiple of 16 (with alignment of image data to even pixels I believe)
+  /// @todo These don't really need to be members, should be in encoding_context_
   mutable int nearest_width_, nearest_height_;
-  mutable int nearest_x_offset_, nearest_y_offset_;
 };
 
 } //namespace compressed_image_transport
