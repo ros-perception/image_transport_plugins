@@ -118,9 +118,11 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
       // Convert to BGR color
       cv::Mat bgr, bgr_padded;
       cv::cvtColor(ycrcb, bgr_padded, CV_YCrCb2BGR);
-      /// @todo Pull out non-padded image region
-      bgr = bgr_padded;
+      // Pull out original (non-padded) image region
+      bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
+                                header_info_.pic_width, header_info_.pic_height));
 
+      //ROS_INFO("Decoded image %d x %d", bgr.cols, bgr.rows);
       IplImage ipl = bgr;
       rosMsg = new sensor_msgs::Image;
       img_bridge_.fromIpltoRosImage(&ipl, *rosMsg);
