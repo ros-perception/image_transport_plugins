@@ -1,11 +1,10 @@
 #include "theora_image_transport/theora_subscriber.h"
+#include <cv_bridge/CvBridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv/cvwimage.h>
 #include <opencv/highgui.h>
 
 #include <vector>
-
-#define null 0
 
 using namespace std;
 
@@ -13,86 +12,67 @@ namespace theora_image_transport {
 
 TheoraSubscriber::TheoraSubscriber()
 {
-  decoding_context_ = null;
+  decoding_context_ = NULL;
   received_header_ = false;
-  setup_info_ = null;
+  setup_info_ = NULL;
   th_info_init(&header_info_);
+  th_comment_init(&header_comment_);
+  headers_received_ = 0;
 }
 
 TheoraSubscriber::~TheoraSubscriber()
 {
+  th_info_clear(&header_info_);
+  th_comment_clear(&header_comment_);
+  /// @todo decoding_context_, setup_info_
 }
 
 //When using this caller is responsible for deleting oggpacket.packet!!
-void TheoraSubscriber::msgToOggPacket(const theora_image_transport::packet &msg, ogg_packet &oggpacketOutput)
+void TheoraSubscriber::msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg)
 {
-  oggpacketOutput.bytes = msg.bytes;
-  oggpacketOutput.b_o_s = msg.b_o_s;
-  oggpacketOutput.e_o_s = msg.e_o_s;
-  oggpacketOutput.granulepos = msg.granulepos;
-  oggpacketOutput.packetno = msg.packetno;
-  oggpacketOutput.packet = new unsigned char[msg.bytes];
-  memcpy(oggpacketOutput.packet, &msg.blob[0], msg.bytes);
-
-  //ROS_DEBUG("Received %d bytes in packet#%d and granule%d (and this is BOS: %d).", oggpacketOutput.bytes, oggpacketOutput.packetno, oggpacketOutput.granulepos, oggpacketOutput.b_o_s);
-  /*unsigned int i = 0;
-  for (int j = 0; j < msg.bytes; j++)
-    i = i * 2 % 91 + oggpacketOutput.packet[j];
-  ROS_DEBUG("Checksum is: %d", i);*/
+  ogg.bytes      = msg.data.size();
+  ogg.b_o_s      = msg.b_o_s;
+  ogg.e_o_s      = msg.e_o_s;
+  ogg.granulepos = msg.granulepos;
+  ogg.packetno   = msg.packetno;
+  ogg.packet = new unsigned char[ogg.bytes];
+  memcpy(ogg.packet, &msg.data[0], ogg.bytes);
 }
 
-void TheoraSubscriber::internalCallback(const theora_image_transport::packetConstPtr& message, const Callback& callback)
+void TheoraSubscriber::internalCallback(const theora_image_transport::PacketConstPtr& message, const Callback& callback)
 {
   ogg_packet oggpacket;
   msgToOggPacket(*message, oggpacket); /// @todo smart ptr around oggpacket.packet?
-  sensor_msgs::Image *rosMsg = null; /// @todo This is not safe
+  sensor_msgs::ImagePtr image_ptr;
 
   if (received_header_ == false) //still receiving header info
   {
-    if ((int)oggpacket.packetno == 999999)
-    {
-      ROS_DEBUG("Dropping flush packet.");
-      return;
-    }
-
-    /*if(oggpacket.packetno != 0)
-     {
-     ROS_DEBUG("Dumping header packet because packet# is non-zero: %d.", (int)oggpacket.packetno);
-     return;
-     }*/
-    //static th_setup_info* setup_info_ptr = null;
-    //static th_setup_info** setup_info_ = &setup_info_ptr;
-    ROS_DEBUG("Setup_info: %p", setup_info_);
     int rval = th_decode_headerin(&header_info_, &header_comment_, &setup_info_, &oggpacket);
-    ROS_DEBUG("Setup_info: %p", setup_info_);
+    if (rval > 0) {
+      ROS_INFO("Successfully received a header packet");
+      headers_received_++;
+    }
     if (rval == 0)
     {
-      ROS_DEBUG("This should happen on correct receipt of a header packet but never seems to in practice");
-      //received_header_ = true;
-      //decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
-    }
-    else if (rval == TH_EFAULT)
-      ROS_DEBUG("EFault when processing header.");
-    else if (rval == TH_EBADHEADER) //Oddly, I seem to always get one of these...
-      ROS_DEBUG("Bad header when processing header.");
-    else if (rval == TH_EVERSION)
-      ROS_DEBUG("Bad version when processing header.");
-    else if (rval == TH_ENOTFORMAT)
-      ROS_DEBUG("Received packet which was not a Theora header.");
-    else if (rval < 0)
-      ROS_DEBUG("Error code when processing header: %d.", rval);
-
-    /// @todo This seems suspicious, the docs are pretty clear
-    if (setup_info_ != null)  //Because rval != 0 as specified in the docs, this is used instead to check that
-    {                         // the header has been fully received
+      ROS_INFO("Full header received! Got %d header packets", headers_received_);
       received_header_ = true;
       decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
     }
+    else if (rval == TH_EFAULT)
+      ROS_WARN("EFault when processing header.");
+    else if (rval == TH_EBADHEADER) //Oddly, I seem to always get one of these...
+      ROS_WARN("Bad header packet.");
+    else if (rval == TH_EVERSION)
+      ROS_WARN("Bad version when processing header.");
+    else if (rval == TH_ENOTFORMAT)
+      ROS_WARN("Received packet which was not a Theora header.");
+    else if (rval < 0)
+      ROS_WARN("Error code when processing header: %d.", rval);
   }
 
   if (received_header_ == true)
   {
-    int rval = th_decode_packetin(decoding_context_, &oggpacket, null);
+    int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
 
     if (rval == 0) //Successfully got a frame
     {
@@ -124,22 +104,24 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::packetCons
 
       //ROS_INFO("Decoded image %d x %d", bgr.cols, bgr.rows);
       IplImage ipl = bgr;
-      rosMsg = new sensor_msgs::Image;
-      img_bridge_.fromIpltoRosImage(&ipl, *rosMsg);
+      image_ptr = sensor_msgs::CvBridge::cvToImgMsg(&ipl);
     }
     else if (rval == TH_DUPFRAME)
-      ROS_DEBUG("Got a duplicate frame.");
+      ROS_INFO("Got a duplicate frame.");
+    else if (rval == TH_EFAULT)
+      ROS_WARN("EFAULT processing packet.");
+    else if (rval == TH_EBADPACKET)
+      ROS_WARN("Packet does not contain encoded video data.");
+    else if (rval == TH_EIMPL)
+      ROS_WARN("The video data uses bitstream features not supported by this version of libtheora.");
     else
-      ROS_DEBUG("Error code when decoding packet: %d.", rval);
+      ROS_WARN("Error code when decoding packet: %d.", rval);
   }
 
   delete oggpacket.packet;
 
-  if(rosMsg != null)
-  {
-    //The shared pointer will take care of freeing rosMsg
-    boost::shared_ptr<sensor_msgs::Image> image_ptr(rosMsg);
-
+  if (image_ptr) {
+    image_ptr->header = message->header;
     //Manually set encoding to be correct
     //TODO: the packet message could be extended with a flag that indicates the original type for better handling of
     //      B&W images

@@ -8,16 +8,14 @@ using namespace std;
 
 namespace theora_image_transport {
 
-/// @todo publishHeader function so we can unify with code in ensure_encoding_context
 /// @todo the sleeping is excessive, do we really need it? how big is the buffer? ros::Publication::processPublishQueue()
 // Sends the header packets (if any) to new subscribers
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
 {
-  ROS_INFO("In connectCallback");
+  ROS_INFO("In connectCallback, publishing %d header packets", (int)stream_header_.size());
   ros::Duration d(0.1);
   for (unsigned int i = 0; i < stream_header_.size(); i++) {
     pub.publish(stream_header_[i]);
-    ROS_INFO("Publishing header packet");
     d.sleep(); // sleep briefly after each packet 
   }
 }
@@ -40,7 +38,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   }
 
   cv::Mat bgr(img_bridge_.toIpl()), bgr_padded;
-  ensure_encoding_context(bgr.size(), publish_fn);
+  ensure_encoding_context(message, publish_fn);
   // Pad dimensions out to multiples of 16
   if (nearest_width_ == bgr.cols && nearest_height_ == bgr.rows) {
     bgr_padded = bgr;
@@ -70,18 +68,11 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   cvToTheoraPlane(cr, ycbcr_buffer[2]);
   
   ROS_DEBUG("Width: %d, Height: %d", nearest_width_, nearest_height_);
-#if 0
-  ROS_INFO("Buffer planes:");
-  for (int i = 0; i < 3; ++i)
-    printf("\t%d: width = %d, height = %d, stride = %d\n", i, ycbcr_buffer[i].width, ycbcr_buffer[i].height,
-           ycbcr_buffer[i].stride);
-#endif
-  //ROS_INFO("Publishing image");
 
   /// @todo Louder errors?
   int rval;
   if (!encoding_context_)
-    ROS_DEBUG("About to encode with null encoding context.");
+    ROS_WARN("About to encode with null encoding context.");
   rval = th_encode_ycbcr_in(encoding_context_.get(), ycbcr_buffer);
   if (rval == TH_EFAULT)
     ROS_WARN("EFault in encoding.");
@@ -90,10 +81,10 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   ROS_DEBUG("Encoding resulted in: %d", rval);
 
   ogg_packet oggpacket;
-  theora_image_transport::packet output;
+  theora_image_transport::Packet output;
   ROS_DEBUG("Ready to get encoded packets.");
   while ((rval = th_encode_packetout(encoding_context_.get(), 0, &oggpacket)) > 0) {
-    oggPacketToMsg(oggpacket, output);
+    oggPacketToMsg(message.header, oggpacket, output);
     publish_fn(output);
   }
   ROS_DEBUG("Punted from while loop with rval %d", rval);
@@ -104,7 +95,7 @@ void free_context(th_enc_ctx* context)
   if (context) th_encode_free(context);
 }
 
-void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishFn& publish_fn) const
+void TheoraPublisher::ensure_encoding_context(const sensor_msgs::Image& image, const PublishFn& publish_fn) const
 {
   if (encoding_context_) return;
 
@@ -113,14 +104,14 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishF
 
   // Theora has a divisible-by-sixteen restriction for the encoded frame size, so
   // scale the picture size up to the nearest multiple of 16 and calculate offsets.
-  nearest_width_ = (size.width + 15) & ~0xF;
-  nearest_height_ = (size.height + 15) & ~0xF;
+  nearest_width_ = (image.width + 15) & ~0xF;
+  nearest_height_ = (image.height + 15) & ~0xF;
 
   /// @todo Make encoder_setup a class member, move most of this to initialization
   encoder_setup.frame_width = nearest_width_;
   encoder_setup.frame_height = nearest_height_;
-  encoder_setup.pic_width = size.width;
-  encoder_setup.pic_height = size.height;
+  encoder_setup.pic_width = image.width;
+  encoder_setup.pic_height = image.height;
   encoder_setup.pic_x = 0;
   encoder_setup.pic_y = 0;
   ROS_DEBUG("Creating context with Width: %d, Height: %d", nearest_width_, nearest_height_);
@@ -141,10 +132,8 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishF
 
   /// @todo Is this more of a problem than a ROS_DEBUG?
   if (!encoding_context_)
-    ROS_DEBUG("Encoding context not successfully created.");
+    ROS_WARN("Encoding context not successfully created.");
 
-  /// @todo Stick header info (time stamp, frame id) in comment, also encoding?
-  /// @todo Also put connection header in comment
   th_comment comment;
   th_comment_init(&comment);
   th_comment_add(&comment, (char*)"Compression node written by Ethan.");
@@ -154,30 +143,29 @@ void TheoraPublisher::ensure_encoding_context(const CvSize &size, const PublishF
   stream_header_.clear();
   ogg_packet oggpacket;
   ros::Duration d(0.1);
-  ROS_INFO("In ensure_encoding_context");
   while (th_encode_flushheader(encoding_context_.get(), &comment, &oggpacket) > 0) {
-    stream_header_.push_back(theora_image_transport::packet());
-    oggPacketToMsg(oggpacket, stream_header_.back());
+    stream_header_.push_back(theora_image_transport::Packet());
+    oggPacketToMsg(image.header, oggpacket, stream_header_.back());
     publish_fn(stream_header_.back());
-    ROS_INFO("Publishing header packet");
     d.sleep(); // sleep for 0.1s after each packet
   }
-  //ROS_DEBUG("Published %d header packets.", stream_header_.size());
+  ROS_INFO("In ensure_encoding_context, published %d header packets", (int)stream_header_.size());
   //th_comment_clear(&comment);  /// @todo this should happen but is causing crazy seg faults (probably trying to free a string literal)
 
   if (!encoding_context_)
-    ROS_DEBUG("Encoding context killed by header flushing.");
+    ROS_WARN("Encoding context killed by header flushing.");
 }
 
-void TheoraPublisher::oggPacketToMsg(const ogg_packet &oggpacket, theora_image_transport::packet &msgOutput) const
+void TheoraPublisher::oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
+                                     theora_image_transport::Packet &msg) const
 {
-  msgOutput.blob.resize(oggpacket.bytes);
-  memcpy(&msgOutput.blob[0], oggpacket.packet, oggpacket.bytes);
-  msgOutput.bytes = oggpacket.bytes;
-  msgOutput.b_o_s = oggpacket.b_o_s;
-  msgOutput.e_o_s = oggpacket.e_o_s;
-  msgOutput.granulepos = oggpacket.granulepos;
-  msgOutput.packetno = oggpacket.packetno;
+  msg.header     = header;
+  msg.b_o_s      = oggpacket.b_o_s;
+  msg.e_o_s      = oggpacket.e_o_s;
+  msg.granulepos = oggpacket.granulepos;
+  msg.packetno   = oggpacket.packetno;
+  msg.data.resize(oggpacket.bytes);
+  memcpy(&msg.data[0], oggpacket.packet, oggpacket.bytes);
 }
 
 } //namespace theora_image_transport
