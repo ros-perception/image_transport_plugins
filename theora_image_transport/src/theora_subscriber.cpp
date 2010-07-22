@@ -27,6 +27,16 @@ TheoraSubscriber::~TheoraSubscriber()
   /// @todo decoding_context_, setup_info_
 }
 
+void TheoraSubscriber::subscribeImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
+                                     const Callback &callback, const ros::VoidPtr &tracked_object,
+                                     const image_transport::TransportHints &transport_hints)
+{
+  // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
+  queue_size += 4;
+  typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::Packet> Base;
+  Base::subscribeImpl(nh, base_topic, queue_size, callback, tracked_object, transport_hints);
+}
+
 //When using this caller is responsible for deleting oggpacket.packet!!
 void TheoraSubscriber::msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg)
 {

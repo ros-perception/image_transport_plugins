@@ -16,7 +16,12 @@ public:
   virtual std::string getTransportName() const { return "theora"; }
 
 protected:
-  //The function that does the actual decompression and calls a user supplied callback with the resulting image
+  // Overridden to bump queue_size, otherwise we might lose headers
+  virtual void subscribeImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
+                             const Callback &callback, const ros::VoidPtr &tracked_object,
+                             const image_transport::TransportHints &transport_hints);
+  
+  // The function that does the actual decompression and calls a user supplied callback with the resulting image
   virtual void internalCallback(const theora_image_transport::PacketConstPtr &msg, const Callback& user_cb);
 
 private:
