@@ -21,7 +21,8 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
     return;
   }
   image_ptr->header = message->header;
-  // @todo: don't assume 8-bit channels
+  image_ptr->__connection_header = message->__connection_header;
+  /// @todo Don't assume 8-bit channels
   if (decompressed.Channels() == 1) {
     image_ptr->encoding = sensor_msgs::image_encodings::MONO8;
   }
