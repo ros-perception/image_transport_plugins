@@ -10,8 +10,9 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
 {
   // View/convert as mono or RGB
   sensor_msgs::CvBridge bridge;
-  // @todo: this probably misses some cases
-  // @todo: what about bayer??
+  /// @todo This probably misses some cases
+  /// @todo What about bayer??
+  /// @todo Try to avoid deprecated fromImage
   if (bridge.encoding_as_fmt(message.encoding) == "GRAY") {
     if (!bridge.fromImage(message, sensor_msgs::image_encodings::MONO8)) {
       ROS_ERROR("Could not convert image from %s to mono8", message.encoding.c_str());
@@ -52,6 +53,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
 
   // Compress image
   const IplImage* image = bridge.toIpl();
+  /// @todo Use cv::imencode, can write directly to compressed.data
   CvMat* buf = cvEncodeImage(extension.c_str(), image, params);
 
   // Set up message and publish

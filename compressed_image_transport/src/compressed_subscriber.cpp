@@ -9,6 +9,7 @@ namespace compressed_image_transport {
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
 {
+  /// @todo Use cv::Mat, cv::imdecode
   // Decompress
   const CvMat compressed = cvMat(1, message->data.size(), CV_8UC1,
                                  const_cast<unsigned char*>(&message->data[0]));
