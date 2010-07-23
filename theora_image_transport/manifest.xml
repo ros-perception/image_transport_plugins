@@ -20,7 +20,7 @@
 
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltheora_image_transport" cflags="-I${prefix}/include"/>
-    <image_transport plugin="${prefix}/compressed_plugins.xml" />
+    <image_transport plugin="${prefix}/theora_plugins.xml" />
     <rosbagmigration rule_file="migration_rules/Packet.bmr" />
   </export>
 
