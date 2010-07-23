@@ -1,24 +1,30 @@
 <package>
   <description brief="theora_image_transport">
 
-     theora_image_transport
+     theora_image_transport provides a plugin to image_transport for transparently sending an image
+     stream encoded with the Theora codec.
 
   </description>
-  <author>Ethan Dreyfuss</author>
+  <author>Ethan Dreyfuss, Patrick Mihelich</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://pr.willowgarage.com/wiki/theora_image_transport</url>
+  <url>http://www.ros.org/wiki/theora_image_transport</url>
   <depend package="image_transport"/>
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
   <depend package="libtheora"/>
   <depend package="pluginlib"/>
+  <depend package="rosbagmigration"/>
 
   <rosdep name="libogg"/>
 
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltheora_image_transport" cflags="-I${prefix}/include"/>
-    <image_transport plugin="${prefix}/compressed_plugins.xml" />
+    <image_transport plugin="${prefix}/theora_plugins.xml" />
+    <rosbagmigration rule_file="migration_rules/Packet.bmr" />
   </export>
 
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
 </package>

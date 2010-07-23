@@ -9,6 +9,7 @@ namespace compressed_image_transport {
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
 {
+  /// @todo Use cv::Mat, cv::imdecode
   // Decompress
   const CvMat compressed = cvMat(1, message->data.size(), CV_8UC1,
                                  const_cast<unsigned char*>(&message->data[0]));
@@ -21,7 +22,8 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
     return;
   }
   image_ptr->header = message->header;
-  // @todo: don't assume 8-bit channels
+  image_ptr->__connection_header = message->__connection_header;
+  /// @todo Don't assume 8-bit channels
   if (decompressed.Channels() == 1) {
     image_ptr->encoding = sensor_msgs::image_encodings::MONO8;
   }
