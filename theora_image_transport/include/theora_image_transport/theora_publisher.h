@@ -36,8 +36,7 @@ protected:
 
 private:
   // Utility functions
-  void sendHeader(const ros::SingleSubscriberPublisher& pub) const;
-  void ensure_encoding_context(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
+  bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
   void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
                       theora_image_transport::Packet &msg) const;
 

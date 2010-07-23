@@ -41,15 +41,17 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
 {
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
   queue_size += 4;
+  // Latching doesn't make a lot of sense with this transport. Could try to save the last keyframe,
+  // but do you then send all following delta frames too?
+  latch = false;
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::Packet> Base;
   Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
-  /// @todo Take over latch, and save the most recent keyframe
 }
 
-// Sends the header packets to new subscribers
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
 {
   ROS_INFO("In connectCallback, publishing %d header packets", (int)stream_header_.size());
+  // Sends the header packets to new subscribers
   for (unsigned int i = 0; i < stream_header_.size(); i++) {
     pub.publish(stream_header_[i]);
   }
@@ -65,6 +67,9 @@ static void cvToTheoraPlane(cv::Mat& mat, th_img_plane& plane)
 
 void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
 {
+  if (!ensureEncodingContext(message, publish_fn))
+    return;
+  
   /// @todo fromImage is deprecated
   /// @todo Optimized gray-scale path, rgb8
   if (!img_bridge_.fromImage(message, "bgr8")) {
@@ -73,8 +78,6 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   }
 
   cv::Mat bgr(img_bridge_.toIpl()), bgr_padded;
-  ensure_encoding_context(message, publish_fn);
-  // Pad dimensions out to multiples of 16
   int frame_width = encoder_setup_.frame_width, frame_height = encoder_setup_.frame_height;
   if (frame_width == bgr.cols && frame_height == bgr.rows) {
     bgr_padded = bgr;
@@ -85,9 +88,10 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
     bgr.copyTo(pic_roi);
   }
 
-  //convert image
+  // Convert image to Y'CbCr color space used by Theora
   cv::Mat ycrcb;
   cv::cvtColor(bgr_padded, ycrcb, CV_BGR2YCrCb);
+  
   // Split channels
   cv::Mat ycrcb_planes[3];
   cv::split(ycrcb, ycrcb_planes);
@@ -103,25 +107,26 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   cvToTheoraPlane(cb, ycbcr_buffer[1]);
   cvToTheoraPlane(cr, ycbcr_buffer[2]);
 
-  /// @todo Louder errors?
-  int rval;
-  if (!encoding_context_)
-    ROS_WARN("About to encode with null encoding context.");
-  rval = th_encode_ycbcr_in(encoding_context_.get(), ycbcr_buffer);
-  if (rval == TH_EFAULT)
-    ROS_WARN("EFault in submitting uncompressed frame to encoder.");
-  if (rval == TH_EINVAL)
-    ROS_WARN("EInval in submitting uncompressed frame to encoder.");
+  // Submit frame to the encoder
+  int rval = th_encode_ycbcr_in(encoding_context_.get(), ycbcr_buffer);
+  if (rval == TH_EFAULT) {
+    ROS_ERROR("[theora] EFAULT in submitting uncompressed frame to encoder");
+    return;
+  }
+  if (rval == TH_EINVAL) {
+    ROS_ERROR("[theora] EINVAL in submitting uncompressed frame to encoder");
+    return;
+  }
 
+  // Retrieve and publish encoded video data packets
   ogg_packet oggpacket;
   theora_image_transport::Packet output;
-  ROS_DEBUG("Ready to get encoded packets.");
   while ((rval = th_encode_packetout(encoding_context_.get(), 0, &oggpacket)) > 0) {
     oggPacketToMsg(message.header, oggpacket, output);
     publish_fn(output);
   }
   if (rval == TH_EFAULT)
-    ROS_WARN("EFAULT in retreiving encoded video data packets.");
+    ROS_ERROR("[theora] EFAULT in retrieving encoded video data packets");
 }
 
 void freeContext(th_enc_ctx* context)
@@ -129,10 +134,12 @@ void freeContext(th_enc_ctx* context)
   if (context) th_encode_free(context);
 }
 
-void TheoraPublisher::ensure_encoding_context(const sensor_msgs::Image& image, const PublishFn& publish_fn) const
+bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const
 {
-  /// @todo Check if image size or encoding has changed
-  if (encoding_context_) return;
+  /// @todo Check if encoding has changed
+  if (encoding_context_ && encoder_setup_.pic_width == image.width &&
+      encoder_setup_.pic_height == image.height)
+    return true;
 
   // Theora has a divisible-by-sixteen restriction for the encoded frame size, so
   // scale the picture size up to the nearest multiple of 16 and calculate offsets.
@@ -143,10 +150,10 @@ void TheoraPublisher::ensure_encoding_context(const sensor_msgs::Image& image, c
 
   // Allocate encoding context. Smart pointer ensures that th_encode_free gets called.
   encoding_context_.reset(th_encode_alloc(&encoder_setup_), freeContext);
-
-  /// @todo More of a problem than a ROS_DEBUG!
-  if (!encoding_context_)
-    ROS_WARN("Encoding context not successfully created.");
+  if (!encoding_context_) {
+    ROS_ERROR("[theora] Failed to create encoding context");
+    return false;
+  }
 
   th_comment comment;
   th_comment_init(&comment);
@@ -164,7 +171,8 @@ void TheoraPublisher::ensure_encoding_context(const sensor_msgs::Image& image, c
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
     publish_fn(stream_header_.back());
   }
-  ROS_INFO("In ensure_encoding_context, published %d header packets", (int)stream_header_.size());
+  ROS_INFO("In ensureEncodingContext, published %d header packets", (int)stream_header_.size());
+  return true;
 }
 
 void TheoraPublisher::oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
