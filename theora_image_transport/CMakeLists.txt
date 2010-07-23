@@ -20,10 +20,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscriber.cpp src/manifest.cpp)
 
-# TODO Restore ogg_saver
-#rosbuild_add_executable(ogg_saver src/ogg_saver.cpp)
-# TODO libogg needs to be a rosdep or something
-#target_link_libraries(ogg_saver libogg.so)
+rosbuild_add_executable(ogg_saver src/ogg_saver.cpp)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

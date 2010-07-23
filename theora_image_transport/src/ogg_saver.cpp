@@ -1,6 +1,6 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
 
-#include <theora_image_transport/packet.h>
+#include <theora_image_transport/Packet.h>
 
 #include <theora/codec.h>
 #include <theora/theoraenc.h>
@@ -9,97 +9,97 @@
 
 #include <fstream>
 #include <vector>
-
-#define null 0
+#include <boost/scoped_array.hpp>
 
 using namespace std;
 
 class OggSaver
 {
 public:
-  OggSaver(ros::NodeHandle &n, const char* filename)
-   : nh_(n), fout(filename, std::ios::out|std::ios::binary)
+  OggSaver(const char* filename)
+   : fout_(filename, std::ios::out|std::ios::binary)
   {
-    if(ogg_stream_init(&os, 0) != 0)
-    {
-      ROS_ERROR("Unable to initialize ogg_stream_state structure");
+    if (ogg_stream_init(&stream_state_, 0) == -1) {
+      ROS_FATAL("Unable to initialize ogg_stream_state structure");
       exit(1);
     }
 
-    sub = nh_.subscribe("stream", 10, &OggSaver::processMsg, this);
+    sub_ = nh_.subscribe("stream", 10, &OggSaver::processMsg, this);
   }
 
   ~OggSaver()
   {
-    ogg_page op;
-    if(ogg_stream_flush(&os, &op) != 0)
-    {
-      fout.write((char*)op.header, op.header_len);
-      fout.write((char*)op.body, op.body_len);
-    }
-    fout.close();
+    ogg_page page;
+    if (ogg_stream_flush(&stream_state_, &page) != 0)
+      writePage(page);
+    fout_.close();
+    ogg_stream_clear(&stream_state_);
   }
 
 private:
 
-  ros::NodeHandle &nh_;
-  ogg_stream_state os;
-  ofstream fout;
-  ros::Subscriber sub;
+  ros::NodeHandle nh_;
+  ogg_stream_state stream_state_;
+  ofstream fout_;
+  ros::Subscriber sub_;
 
-  //When using this caller is responsible for deleting oggpacket.packet!!
-  void msgToOggPacket(const theora_image_transport::packet &msg, ogg_packet &oggpacketOutput)
+  // When using this caller is responsible for deleting oggpacket.packet!!
+  void msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &oggpacket)
   {
-    oggpacketOutput.bytes = msg.bytes;
-    oggpacketOutput.b_o_s = msg.b_o_s;
-    oggpacketOutput.e_o_s = msg.e_o_s;
-    oggpacketOutput.granulepos = msg.granulepos;
-    oggpacketOutput.packetno = msg.packetno;
-    oggpacketOutput.packet = new unsigned char[msg.bytes];
-    memcpy(oggpacketOutput.packet, &msg.blob[0], msg.bytes);
-
-    //ROS_DEBUG("Received %d bytes in packet#%d and granule%d (and this is BOS: %d).", oggpacketOutput.bytes, oggpacketOutput.packetno, oggpacketOutput.granulepos, oggpacketOutput.b_o_s);
-    /*unsigned int i = 0;
-    for (int j = 0; j < msg.bytes; j++)
-      i = i * 2 % 91 + oggpacketOutput.packet[j];
-    ROS_DEBUG("Checksum is: %d", i);*/
+    oggpacket.bytes = msg.data.size();
+    oggpacket.b_o_s = msg.b_o_s;
+    oggpacket.e_o_s = msg.e_o_s;
+    oggpacket.granulepos = msg.granulepos;
+    oggpacket.packetno = msg.packetno;
+    oggpacket.packet = new unsigned char[oggpacket.bytes];
+    memcpy(oggpacket.packet, &msg.data[0], oggpacket.bytes);
   }
 
-  void processMsg(const theora_image_transport::packetConstPtr& message)
+  void writePage(ogg_page& page)
   {
-    const theora_image_transport::packet &pkt = *message;
-    ogg_packet oggpacket;
-    msgToOggPacket(pkt, oggpacket);
+    fout_.write((char*)page.header, page.header_len);
+    fout_.write((char*)page.body,   page.body_len);
+  }
 
-    if(ogg_stream_packetin(&os, &oggpacket))
-    {
+  void processMsg(const theora_image_transport::PacketConstPtr& message)
+  {
+    /// @todo Make sure we don't write a video packet first
+    /// @todo Handle duplicate headers
+    /// @todo Wait for a keyframe!!
+    /// @todo Need to flush page for initial identification header packet? And after last header packet?
+    /// @todo Handle chaining streams? Need to retroactively set e_o_s on previous video packet.
+    ogg_packet oggpacket;
+    msgToOggPacket(*message, oggpacket);
+    boost::scoped_array<unsigned char> packet_guard(oggpacket.packet); // Make sure packet memory gets deleted
+
+    if (ogg_stream_packetin(&stream_state_, &oggpacket)) {
       ROS_ERROR("Error while adding packet to stream.");
       exit(2);
     }
-    delete[] oggpacket.packet;
 
-    ogg_page op;
-    if(ogg_stream_pageout(&os, &op) != 0)
-    {
-      fout.write((char*)op.header, op.header_len);
-      fout.write((char*)op.body, op.body_len);
-    }
+    ogg_page page;
+    if (ogg_stream_pageout(&stream_state_, &page) != 0)
+      writePage(page);
   }
 };
 
 int main(int argc, char** argv)
 {
+  /// @todo Use image topic, not stream
+  /// @todo Option to specify (or figure out?) the frame rate
   ros::init(argc, argv, "OggSaver", ros::init_options::AnonymousName);
-  ros::NodeHandle n;
+
   if(argc < 2) {
     cerr << "Usage: " << argv[0] << " stream:=/theora/image/stream outputFile" << endl;
     exit(3);
   }
-  if (n.resolveName("stream") == "/stream") {
+  if (ros::names::remap("stream") == "stream") {
       ROS_WARN("ogg_saver: stream has not been remapped! Typical command-line usage:\n"
                "\t$ ./ogg_saver stream:=<theora stream topic> outputFile");
   }
-  OggSaver saver(n, argv[1]);
+  
+  OggSaver saver(argv[1]);
+  
   ros::spin();
   return 0;
 }
