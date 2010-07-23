@@ -32,6 +32,7 @@ private:
   th_info header_info_;
   th_comment header_comment_;
   th_setup_info* setup_info_;
+  sensor_msgs::ImagePtr latest_image_;
   int headers_received_; /// @todo Just for debugging
 };
 
