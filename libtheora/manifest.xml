@@ -14,8 +14,8 @@
   <review status="3rdparty" notes=""/>
   <url>http://www.theora.org/</url>
   <export>
-    <cpp cflags="-I${prefix}/installed/include/"
-         lflags="-L${prefix}/installed/lib/" />
+    <cpp cflags="-I${prefix}/installed/include"
+         lflags="-Wl,-rpath,${prefix}/installed/lib -L${prefix}/installed/lib -ltheora -ltheoraenc -ltheoradec" />
   </export>
   <versioncontrol type="svn" url="http://svn.xiph.org/trunk/theora" />
   <rosdep name="libogg"/>
