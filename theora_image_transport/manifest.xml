@@ -14,12 +14,14 @@
   <depend package="cv_bridge"/>
   <depend package="libtheora"/>
   <depend package="pluginlib"/>
+  <depend package="rosbagmigration"/>
 
   <rosdep name="libogg"/>
 
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltheora_image_transport" cflags="-I${prefix}/include"/>
     <image_transport plugin="${prefix}/compressed_plugins.xml" />
+    <rosbagmigration rule_file="migration_rules/Packet.bmr" />
   </export>
 
   <platform os="ubuntu" version="9.04"/>
