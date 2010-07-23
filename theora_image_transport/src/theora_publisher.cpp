@@ -72,6 +72,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   
   /// @todo fromImage is deprecated
   /// @todo Optimized gray-scale path, rgb8
+  /// @todo fromImage can throw cv::Exception on bayer encoded images
   if (!img_bridge_.fromImage(message, "bgr8")) {
     ROS_ERROR("Unable to convert from '%s' to bgr8", message.encoding.c_str());
     return;

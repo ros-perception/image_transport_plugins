@@ -126,10 +126,10 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
   switch (rval) {
     case 0:
-      break; // Yay, we got a frame. Carry on.
+      break; // Yay, we got a frame. Carry on below.
     case TH_DUPFRAME:
-      // Video data hasn't changed, so we reuse the last received frame.
-      ROS_INFO("[theora] Got a duplicate frame"); /// @todo Change to debug
+      // Video data hasn't changed, so we update the timestamp and reuse the last received frame.
+      ROS_DEBUG("[theora] Got a duplicate frame");
       if (latest_image_) {
         latest_image_->header = message->header;
         callback(latest_image_);
@@ -178,7 +178,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   IplImage ipl = bgr;
   latest_image_ = sensor_msgs::CvBridge::cvToImgMsg(&ipl);
   latest_image_->header = message->header;
-  /// @todo Copy connection header (also in DUPFRAME above)
+  latest_image_->__connection_header = message->__connection_header;
   /// @todo Handle RGB8 or MONO8 efficiently
   latest_image_->encoding = sensor_msgs::image_encodings::BGR8;
   callback(latest_image_);
