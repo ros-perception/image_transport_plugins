@@ -28,6 +28,7 @@ private:
   void msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg);
 
   bool received_header_;
+  bool received_keyframe_;
   th_dec_ctx* decoding_context_;
   th_info header_info_;
   th_comment header_comment_;

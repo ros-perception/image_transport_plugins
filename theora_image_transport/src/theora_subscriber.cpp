@@ -12,6 +12,7 @@ namespace theora_image_transport {
 
 TheoraSubscriber::TheoraSubscriber()
   : received_header_(false),
+    received_keyframe_(false),
     decoding_context_(NULL),
     setup_info_(NULL)
 {
@@ -59,8 +60,10 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
 
   // Beginning of logical stream flag means we're getting new headers
   if (oggpacket.b_o_s == 1) {
+    // Clear all state, everything we knew is wrong
     ROS_INFO("Beginning of logical stream, clearing stuff");
     received_header_ = false;
+    received_keyframe_ = false;
     if (decoding_context_) {
       th_decode_free(decoding_context_);
       decoding_context_ = NULL;
@@ -71,6 +74,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
     th_info_init(&header_info_);
     th_comment_clear(&header_comment_);
     th_comment_init(&header_comment_);
+    latest_image_.reset();
   }
 
   // Decode header packets until we get the first video packet
@@ -113,8 +117,12 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
     }
   }
 
-  /// @todo Wait for a keyframe if we haven't received one yet
-  // We have a video packet, let's decode it
+  // Wait for a keyframe if we haven't received one yet - delta frames are useless to us in that case
+  received_keyframe_ = received_keyframe_ || (th_packet_iskeyframe(&oggpacket) == 1);
+  if (!received_keyframe_)
+    return;
+  
+  // We have a video packet we can handle, let's decode it
   int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
   switch (rval) {
     case 0:
