@@ -50,8 +50,7 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
 
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
 {
-  ROS_INFO("In connectCallback, publishing %d header packets", (int)stream_header_.size());
-  // Sends the header packets to new subscribers
+  // Send the header packets to new subscribers
   for (unsigned int i = 0; i < stream_header_.size(); i++) {
     pub.publish(stream_header_[i]);
   }
@@ -160,7 +159,6 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::Image& image, con
   th_comment_init(&comment);
   boost::shared_ptr<th_comment> clear_guard(&comment, th_comment_clear);
   /// @todo Store image encoding in comment
-  //th_comment_add(&comment, (char*)"Compression node written by Ethan.");
   comment.vendor = strdup("Willow Garage theora_image_transport");
 
   // Construct the header and stream it in case anyone is already listening
@@ -172,7 +170,6 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::Image& image, con
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
     publish_fn(stream_header_.back());
   }
-  ROS_INFO("In ensureEncodingContext, published %d header packets", (int)stream_header_.size());
   return true;
 }
 

@@ -18,7 +18,6 @@ TheoraSubscriber::TheoraSubscriber()
 {
   th_info_init(&header_info_);
   th_comment_init(&header_comment_);
-  headers_received_ = 0; // DEBUG
 }
 
 TheoraSubscriber::~TheoraSubscriber()
@@ -61,7 +60,6 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   // Beginning of logical stream flag means we're getting new headers
   if (oggpacket.b_o_s == 1) {
     // Clear all state, everything we knew is wrong
-    ROS_INFO("Beginning of logical stream, clearing stuff");
     received_header_ = false;
     received_keyframe_ = false;
     if (decoding_context_) {
@@ -83,8 +81,6 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
     switch (rval) {
       case 0:
         // We've received the full header; this is the first video packet.
-        ROS_INFO("Full header received! Got %d header packets", headers_received_); // DEBUG
-        headers_received_ = 0;
         decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
         if (!decoding_context_) {
           ROS_ERROR("[theora] Decoding parameters were invalid");
@@ -108,11 +104,6 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
         // If rval > 0, we successfully received a header packet.
         if (rval < 0)
           ROS_WARN("[theora] Error code %d when processing header packet", rval);
-        else {
-          // Successfully decoded a header packet
-          ROS_INFO("Successfully received a header packet");
-          headers_received_++; // DEBUG
-        }
         return;
     }
   }
