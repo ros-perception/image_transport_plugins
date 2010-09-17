@@ -12,7 +12,7 @@ These classes are not normally meant to be used directly, but are loaded automat
 
 \section rosapi ROS API
 
-The publisher and subscriber plugins communicate on an internal "compressed" topic.
+The publisher and subscriber plugins communicate on an internal "theora" topic.
 See the wiki documentation.
 
 */
