@@ -2,8 +2,28 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/CvBridge.h>
 #include <opencv/highgui.h>
+#include <boost/make_shared.hpp>
 
 namespace compressed_image_transport {
+
+void CompressedPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
+                                        const image_transport::SubscriberStatusCallback  &user_connect_cb,
+                                        const image_transport::SubscriberStatusCallback  &user_disconnect_cb,
+                                        const ros::VoidPtr &tracked_object, bool latch)
+{
+  typedef image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage> Base;
+  Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
+
+  /// @todo What if we have two compressed publishers for the same topic??
+  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
+  ReconfigureServer::CallbackType f = boost::bind(&CompressedPublisher::configCb, this, _1, _2);
+  reconfigure_server_->setCallback(f);
+}
+
+void CompressedPublisher::configCb(Config& config, uint32_t level)
+{
+  config_ = config;
+}
 
 void CompressedPublisher::publish(const sensor_msgs::Image& message,
                                   const PublishFn& publish_fn) const
@@ -24,32 +44,22 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
     return;
   }
 
-  // Update settings from parameter server
+  // Fill compression settings
   int params[3] = {0};
-  std::string format, format_param;
-  if (!nh().searchParam("compressed_image_transport_format", format_param) ||
-      !nh().getParamCached(format_param, format))
-    format = "jpeg";
-  if (format == "jpeg") {
+  if (config_.format == "jpeg") {
     params[0] = CV_IMWRITE_JPEG_QUALITY;
-    std::string quality_param;
-    if (!nh().searchParam("compressed_image_transport_jpeg_quality", quality_param) ||
-        !nh().getParamCached(quality_param, params[1]))
-      params[1] = 80; // default: 80% quality
+    params[1] = config_.jpeg_quality;
   }
-  else if (format == "png") {
+  else if (config_.format == "png") {
     params[0] = CV_IMWRITE_PNG_COMPRESSION;
-    std::string level_param;
-    if (!nh().searchParam("compressed_image_transport_png_level", level_param) ||
-        !nh().getParamCached(level_param, params[1]))
-      params[1] = 9; // default: maximum compression
+    params[1] = config_.png_level;
   }
   else {
     ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'",
-              format.c_str());
+              config_.format.c_str());
     return;
   }
-  std::string extension = '.' + format;
+  std::string extension = '.' + config_.format;
 
   // Compress image
   const IplImage* image = bridge.toIpl();
@@ -59,7 +69,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message,
   // Set up message and publish
   sensor_msgs::CompressedImage compressed;
   compressed.header = message.header;
-  compressed.format = format;
+  compressed.format = config_.format;
   compressed.data.resize(buf->width);
   memcpy(&compressed.data[0], buf->data.ptr, buf->width);
   cvReleaseMat(&buf);
