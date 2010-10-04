@@ -15,6 +15,7 @@
   <depend package="libtheora"/>
   <depend package="pluginlib"/>
   <depend package="rosbagmigration"/>
+  <depend package="dynamic_reconfigure"/>
 
   <rosdep name="libogg"/>
 

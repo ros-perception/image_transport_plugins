@@ -17,16 +17,12 @@ TheoraPublisher::TheoraPublisher()
   encoder_setup_.pic_y = 0;
   encoder_setup_.colorspace = TH_CS_UNSPECIFIED;
   encoder_setup_.pixel_fmt = TH_PF_420; // See bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
-  /// @todo Make target bitrate and quality parameters
-  //int bitrate;
-  //nh().param("theora_bitrate", bitrate, 800000);
-  encoder_setup_.target_bitrate = 800000;
-  //encoder_setup_.quality = 63;    // On a scale of 0 to 63, to use this set target bitrate to 0
   encoder_setup_.aspect_numerator = 1;
   encoder_setup_.aspect_denominator = 1;
   encoder_setup_.fps_numerator = 0;
   encoder_setup_.fps_denominator = 0;
   encoder_setup_.keyframe_granule_shift = 6; // Apparently a good default
+  // Note: target_bitrate and quality set in configCb
 }
 
 TheoraPublisher::~TheoraPublisher()
@@ -46,6 +42,19 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
   latch = false;
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::Packet> Base;
   Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
+
+  // Set up reconfigure server for this topic
+  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
+  ReconfigureServer::CallbackType f = boost::bind(&TheoraPublisher::configCb, this, _1, _2);
+  reconfigure_server_->setCallback(f);
+}
+
+void TheoraPublisher::configCb(Config& config, uint32_t level)
+{
+  encoder_setup_.quality = config.quality;
+  encoder_setup_.target_bitrate = config.optimize_for ? 0 : config.target_bitrate;
+  /// @todo Use libtheora 1.1 API to change quality or bitrate
+  encoding_context_.reset();
 }
 
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)

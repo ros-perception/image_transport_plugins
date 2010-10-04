@@ -2,6 +2,8 @@
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <cv_bridge/CvBridge.h>
+#include <dynamic_reconfigure/server.h>
+#include <theora_image_transport/TheoraPublisherConfig.h>
 #include <theora_image_transport/Packet.h>
 
 #include <theora/codec.h>
@@ -21,7 +23,7 @@ public:
   virtual std::string getTransportName() const { return "theora"; }
 
 protected:
-  // Overridden to tweak queue_size to make sure headers don't get lost
+  // Overridden to tweak arguments and set up reconfigure server
   virtual void advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
                              const image_transport::SubscriberStatusCallback  &user_connect_cb,
                              const image_transport::SubscriberStatusCallback  &user_disconnect_cb,
@@ -34,11 +36,17 @@ protected:
   virtual void publish(const sensor_msgs::Image& message,
                        const PublishFn& publish_fn) const;
 
-private:
+protected:
   // Utility functions
   bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
   void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
                       theora_image_transport::Packet &msg) const;
+
+  typedef theora_image_transport::TheoraPublisherConfig Config;
+  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
+  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
+
+  void configCb(Config& config, uint32_t level);
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
