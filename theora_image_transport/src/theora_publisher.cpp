@@ -55,6 +55,8 @@ void TheoraPublisher::configCb(Config& config, uint32_t level)
   encoder_setup_.target_bitrate = config.optimize_for ? 0 : config.target_bitrate;
   /// @todo Use libtheora 1.1 API to change quality or bitrate
   encoding_context_.reset();
+#ifdef TH_ENCCTL_SET_QUALITY
+#endif
 }
 
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
