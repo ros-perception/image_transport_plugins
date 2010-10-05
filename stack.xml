@@ -7,8 +7,9 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/image_transport_plugins</url>
   <depend stack="common" /> <!-- pluginlib -->
+  <depend stack="driver_common" /> <!-- dynamic_reconfigure -->
   <depend stack="image_common" /> <!-- image_transport -->
-  <depend stack="ros" />
+  <depend stack="ros" /> <!-- rosbagmigration -->
   <depend stack="vision_opencv" /> <!-- opencv2, cv_bridge -->
 
 </stack>

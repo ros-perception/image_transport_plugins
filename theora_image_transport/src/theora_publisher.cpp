@@ -52,10 +52,16 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
 void TheoraPublisher::configCb(Config& config, uint32_t level)
 {
   encoder_setup_.quality = config.quality;
+  // target_bitrate must be 0 if we're using quality.
   encoder_setup_.target_bitrate = config.optimize_for ? 0 : config.target_bitrate;
-  /// @todo Use libtheora 1.1 API to change quality or bitrate
-  encoding_context_.reset();
 #ifdef TH_ENCCTL_SET_QUALITY
+  // libtheora 1.1 lets us change quality or bitrate on the fly.
+  if (encoding_context_) {
+    
+  }
+#else
+  // Pre-1.1, no choice but to just create a new encoding context.
+  encoding_context_.reset();
 #endif
 }
 
