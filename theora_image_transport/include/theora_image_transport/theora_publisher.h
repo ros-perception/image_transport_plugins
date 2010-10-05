@@ -41,6 +41,7 @@ protected:
   bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
   void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
                       theora_image_transport::Packet &msg) const;
+  void updateKeyframeFrequency() const;
 
   typedef theora_image_transport::TheoraPublisherConfig Config;
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
@@ -52,6 +53,7 @@ protected:
   // "logically const"
   mutable sensor_msgs::CvBridge img_bridge_;
   mutable th_info encoder_setup_;
+  mutable ogg_uint32_t keyframe_frequency_;
   mutable boost::shared_ptr<th_enc_ctx> encoding_context_;
   mutable std::vector<theora_image_transport::Packet> stream_header_;
 };

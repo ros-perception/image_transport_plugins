@@ -19,10 +19,12 @@ TheoraPublisher::TheoraPublisher()
   encoder_setup_.pixel_fmt = TH_PF_420; // See bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
   encoder_setup_.aspect_numerator = 1;
   encoder_setup_.aspect_denominator = 1;
-  encoder_setup_.fps_numerator = 0;
-  encoder_setup_.fps_denominator = 0;
-  encoder_setup_.keyframe_granule_shift = 6; // Apparently a good default
-  // Note: target_bitrate and quality set in configCb
+  encoder_setup_.fps_numerator = 1; // don't know the frame rate ahead of time
+  encoder_setup_.fps_denominator = 1;
+  encoder_setup_.keyframe_granule_shift = 6; // A good default for streaming applications
+  // Note: target_bitrate and quality set to correct values in configCb
+  encoder_setup_.target_bitrate = -1;
+  encoder_setup_.quality = -1;
 }
 
 TheoraPublisher::~TheoraPublisher()
@@ -51,18 +53,51 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
 
 void TheoraPublisher::configCb(Config& config, uint32_t level)
 {
-  encoder_setup_.quality = config.quality;
   // target_bitrate must be 0 if we're using quality.
-  encoder_setup_.target_bitrate = config.optimize_for ? 0 : config.target_bitrate;
-#ifdef TH_ENCCTL_SET_QUALITY
-  // libtheora 1.1 lets us change quality or bitrate on the fly.
+  long bitrate = 0;
+  if (config.optimize_for == theora_image_transport::TheoraPublisher_Bitrate)
+    bitrate = config.target_bitrate;
+  bool update_bitrate = bitrate && encoder_setup_.target_bitrate != bitrate;
+  bool update_quality = !bitrate && ((encoder_setup_.quality != config.quality) || encoder_setup_.target_bitrate > 0);
+  encoder_setup_.quality = config.quality;
+  encoder_setup_.target_bitrate = bitrate;
+  keyframe_frequency_ = config.keyframe_frequency;
+  
   if (encoding_context_) {
-    
-  }
+    int err = 0;
+    // libtheora 1.1 lets us change quality or bitrate on the fly, 1.0 does not.
+#ifdef TH_ENCCTL_SET_BITRATE
+    if (update_bitrate) {
+      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_BITRATE, &bitrate, sizeof(long));
+      if (err)
+        ROS_ERROR("Failed to update bitrate dynamically");
+    }
 #else
-  // Pre-1.1, no choice but to just create a new encoding context.
-  encoding_context_.reset();
+    err |= update_bitrate;
 #endif
+
+#ifdef TH_ENCCTL_SET_QUALITY
+    if (update_quality) {
+      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_QUALITY, &config.quality, sizeof(int));
+      // In 1.1 above call will fail if a bitrate has previously been set. That restriction may
+      // be relaxed in a future version. Complain on other failures.
+      if (err && err != TH_EINVAL)
+        ROS_ERROR("Failed to update quality dynamically");
+    }
+#else
+    err |= update_quality;
+#endif
+
+    // If unable to change parameters dynamically, just create a new encoding context.
+    if (err) {
+      encoding_context_.reset();
+    }
+    // Otherwise, do the easy updates and keep going!
+    else {
+      updateKeyframeFrequency();
+      config.keyframe_frequency = keyframe_frequency_; // In case desired value was unattainable
+    }
+  }
 }
 
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
@@ -172,6 +207,8 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::Image& image, con
     return false;
   }
 
+  updateKeyframeFrequency();
+
   th_comment comment;
   th_comment_init(&comment);
   boost::shared_ptr<th_comment> clear_guard(&comment, th_comment_clear);
@@ -200,6 +237,17 @@ void TheoraPublisher::oggPacketToMsg(const roslib::Header& header, const ogg_pac
   msg.packetno   = oggpacket.packetno;
   msg.data.resize(oggpacket.bytes);
   memcpy(&msg.data[0], oggpacket.packet, oggpacket.bytes);
+}
+
+void TheoraPublisher::updateKeyframeFrequency() const
+{
+  ogg_uint32_t desired_frequency = keyframe_frequency_;
+  if (th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
+                    &keyframe_frequency_, sizeof(ogg_uint32_t)))
+    ROS_ERROR("Failed to change keyframe frequency");
+  if (keyframe_frequency_ != desired_frequency)
+    ROS_WARN("Couldn't set keyframe frequency to %d, actually set to %d",
+             desired_frequency, keyframe_frequency_);
 }
 
 } //namespace theora_image_transport
