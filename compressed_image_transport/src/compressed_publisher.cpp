@@ -14,7 +14,7 @@ void CompressedPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage> Base;
   Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
 
-  /// @todo What if we have two compressed publishers for the same topic??
+  // Set up reconfigure server for this topic
   reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
   ReconfigureServer::CallbackType f = boost::bind(&CompressedPublisher::configCb, this, _1, _2);
   reconfigure_server_->setCallback(f);

@@ -1,3 +1,6 @@
 libogg:
   ubuntu: libogg-dev
   debian: libogg-dev
+libtheora:
+  ubuntu: libtheora-dev
+  debian: libtheora-dev
