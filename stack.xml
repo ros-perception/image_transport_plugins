@@ -4,7 +4,7 @@
   </description>
   <author>Maintained by Patrick Mihelich</author>
   <license>BSD</license>  
-  <review status="unreviewed" notes=""/>
+  <review status="API cleared" notes="2010/09/22"/>
   <url>http://ros.org/wiki/image_transport_plugins</url>
   <depend stack="common" /> <!-- pluginlib -->
   <depend stack="driver_common" /> <!-- dynamic_reconfigure -->
