@@ -4,6 +4,8 @@
 
 \section codeapi Code API
 
+theora_image_transport does not have a stable code API.
+
 theora_image_transport contains two <a href="http://www.ros.org/wiki/image_transport">image_transport</a>
 plugins, one for publishing and one for receiving images as Theora video packets.
 These classes are not normally meant to be used directly, but are loaded automatically by image_transport classes.
