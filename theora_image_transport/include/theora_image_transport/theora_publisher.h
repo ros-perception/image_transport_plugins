@@ -36,18 +36,18 @@ protected:
   virtual void publish(const sensor_msgs::Image& message,
                        const PublishFn& publish_fn) const;
 
-protected:
-  // Utility functions
-  bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
-  void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
-                      theora_image_transport::Packet &msg) const;
-  void updateKeyframeFrequency() const;
-
+  // Dynamic reconfigure support
   typedef theora_image_transport::TheoraPublisherConfig Config;
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;
 
   void configCb(Config& config, uint32_t level);
+
+  // Utility functions
+  bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
+  void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
+                      theora_image_transport::Packet &msg) const;
+  void updateKeyframeFrequency() const;
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
