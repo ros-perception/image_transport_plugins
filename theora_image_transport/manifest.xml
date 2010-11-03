@@ -12,19 +12,19 @@
   <depend package="image_transport"/>
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
-  <depend package="libtheora"/>
   <depend package="pluginlib"/>
   <depend package="rosbagmigration"/>
+  <depend package="dynamic_reconfigure"/>
 
   <rosdep name="libogg"/>
+  <rosdep name="libtheora"/>
 
   <export>
-    <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltheora_image_transport" cflags="-I${prefix}/include"/>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltheora_image_transport -logg -ltheora -ltheoraenc -ltheoradec" cflags="-I${prefix}/include"/>
     <image_transport plugin="${prefix}/theora_plugins.xml" />
-    <rosbagmigration rule_file="migration_rules/Packet.bmr" />
+    <rosbag migration_rule_file="migration_rules/Packet.bmr" />
   </export>
 
-  <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
 </package>

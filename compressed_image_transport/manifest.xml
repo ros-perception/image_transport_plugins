@@ -12,6 +12,7 @@
   <depend package="image_transport"/>
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
+  <depend package="dynamic_reconfigure"/>
 
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lcompressed_image_transport" cflags="-I${prefix}/include"/>

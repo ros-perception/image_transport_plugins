@@ -1,4 +1,6 @@
-#include "image_transport/simple_subscriber_plugin.h"
+#include <image_transport/simple_subscriber_plugin.h>
+#include <dynamic_reconfigure/server.h>
+#include <theora_image_transport/TheoraSubscriberConfig.h>
 #include <theora_image_transport/Packet.h>
 
 #include <theora/codec.h>
@@ -17,6 +19,7 @@ public:
 
 protected:
   // Overridden to bump queue_size, otherwise we might lose headers
+  // Overridden to tweak arguments and set up reconfigure server
   virtual void subscribeImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
                              const Callback &callback, const ros::VoidPtr &tracked_object,
                              const image_transport::TransportHints &transport_hints);
@@ -24,7 +27,16 @@ protected:
   // The function that does the actual decompression and calls a user supplied callback with the resulting image
   virtual void internalCallback(const theora_image_transport::PacketConstPtr &msg, const Callback& user_cb);
 
-private:
+  // Dynamic reconfigure support
+  typedef theora_image_transport::TheoraSubscriberConfig Config;
+  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
+  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
+  int pplevel_; // Post-processing level
+
+  void configCb(Config& config, uint32_t level);
+
+  // Utility functions
+  int updatePostProcessingLevel(int level);
   void msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg);
 
   bool received_header_;
