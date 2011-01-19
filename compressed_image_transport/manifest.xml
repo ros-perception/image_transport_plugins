@@ -7,7 +7,7 @@
   </description>
   <author>Patrick Mihelich</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes="2010/10/10"/>
   <url>http://www.ros.org/wiki/compressed_image_transport</url>
   <depend package="image_transport"/>
   <depend package="opencv2"/>
