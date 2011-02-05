@@ -2,7 +2,9 @@ libogg:
   ubuntu: libogg-dev
   debian: libogg-dev
   fedora: libogg-devel
+  macports: libogg
 libtheora:
   ubuntu: libtheora-dev
   debian: libtheora-dev
   fedora: libtheora-devel
+  macports: libtheora
