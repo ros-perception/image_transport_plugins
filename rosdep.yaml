@@ -6,6 +6,7 @@ libogg:
   osxbrew:
     homebrew:
       packages: [ libogg ]
+  gentoo: media-libs/libogg
 libtheora:
   ubuntu: libtheora-dev
   debian: libtheora-dev
@@ -14,3 +15,4 @@ libtheora:
   osxbrew:
     homebrew:
       packages: [ theora ]
+  gentoo: media-libs/libtheora

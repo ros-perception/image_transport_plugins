@@ -1,5 +1,6 @@
 #include "theora_image_transport/theora_publisher.h"
 #include <sensor_msgs/image_encodings.h>
+#include <std_msgs/Header.h>
 
 #include <vector>
 #include <cstdio> //for memcpy
@@ -227,7 +228,7 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::Image& image, con
   return true;
 }
 
-void TheoraPublisher::oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
+void TheoraPublisher::oggPacketToMsg(const std_msgs::Header& header, const ogg_packet &oggpacket,
                                      theora_image_transport::Packet &msg) const
 {
   msg.header     = header;

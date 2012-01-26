@@ -9,6 +9,8 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
 
+find_package(OpenCV REQUIRED)
+
 rosbuild_init()
 
 rosbuild_genmsg()
@@ -24,10 +26,10 @@ include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 gencfg()
 
 rosbuild_add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscriber.cpp src/manifest.cpp)
-target_link_libraries(${PROJECT_NAME} ogg theora theoraenc theoradec)
+target_link_libraries(${PROJECT_NAME} ogg theora theoraenc theoradec ${OpenCV_LIBS})
 
 rosbuild_add_executable(ogg_saver src/ogg_saver.cpp)
-target_link_libraries(ogg_saver ogg theora theoraenc theoradec)
+target_link_libraries(ogg_saver ogg theora theoraenc theoradec ${OpenCV_LIBS})
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

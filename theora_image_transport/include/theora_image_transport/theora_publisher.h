@@ -2,6 +2,7 @@
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <cv_bridge/CvBridge.h>
+#include <std_msgs/Header.h>
 #include <dynamic_reconfigure/server.h>
 #include <theora_image_transport/TheoraPublisherConfig.h>
 #include <theora_image_transport/Packet.h>
@@ -45,7 +46,7 @@ protected:
 
   // Utility functions
   bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
-  void oggPacketToMsg(const roslib::Header& header, const ogg_packet &oggpacket,
+  void oggPacketToMsg(const std_msgs::Header& header, const ogg_packet &oggpacket,
                       theora_image_transport::Packet &msg) const;
   void updateKeyframeFrequency() const;
 
