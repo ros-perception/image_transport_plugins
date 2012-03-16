@@ -1,16 +1,20 @@
 <stack>
   <description brief="Plugins for specialized network image transport">
-    A set of plugins for publishing and subscribing to sensor_msgs/Image topics in representations other than raw pixel data. For example, for viewing a stream of images off-robot, a video codec will give much lower bandwidth and latency. For low frame rate tranport of high-definition images, you might prefer sending them as JPEG or PNG-compressed form.
+    A set of plugins for publishing and subscribing to sensor_msgs/Image topics
+    in representations other than raw pixel data. For example, for viewing a
+    stream of images off-robot, a video codec will give much lower bandwidth
+    and latency. For low frame rate tranport of high-definition images, you
+    might prefer sending them as JPEG or PNG-compressed form.
   </description>
   <author>Maintained by Patrick Mihelich</author>
   <license>BSD</license>  
   <review status="Doc reviewed" notes="2010/10/10"/>
   <url>http://ros.org/wiki/image_transport_plugins</url>
-  <depend stack="common" /> <!-- pluginlib -->
-  <depend stack="driver_common" /> <!-- dynamic_reconfigure -->
+
+  <depend stack="dynamic_reconfigure" /> <!-- dynamic_reconfigure -->
   <depend stack="image_common" /> <!-- image_transport -->
-  <depend stack="ros" />
-  <depend stack="ros_comm" /> <!-- rosbagmigration -->
-  <depend stack="vision_opencv" /> <!-- opencv2, cv_bridge -->
+  <depend stack="pluginlib" /> <!-- pluginlib -->
+  <depend stack="ros_comm" /> <!-- rosbag, roscpp -->
+  <depend stack="vision_opencv" /> <!-- cv_bridge -->
 
 </stack>
