@@ -28,7 +28,17 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
   cv_ptr->header = message->header;
 
   // Assign image encoding
-  string image_encoding = message->format.substr(0, message->format.find(';'));
+  string image_encoding;
+  const size_t split_pos = message->format.find(';');
+  if (split_pos==string::npos)
+  {
+    // older version of compressed_image_transport did not signal image format
+    image_encoding = "rgb8";
+  } else
+  {
+    image_encoding = message->format.substr(0, message->format.find(';'));
+  }
+
   cv_ptr->encoding = image_encoding;
 
   // Decode color/mono image
