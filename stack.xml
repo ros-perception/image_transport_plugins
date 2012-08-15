@@ -6,7 +6,7 @@
     and latency. For low frame rate tranport of high-definition images, you
     might prefer sending them as JPEG or PNG-compressed form.
   </description>
-  <author>Maintained by Patrick Mihelich</author>
+  <author>Maintained by Vincent Rabaud vrabaud@willowgarage.com</author>
   <license>BSD</license>  
   <review status="Doc reviewed" notes="2010/10/10"/>
   <url>http://ros.org/wiki/image_transport_plugins</url>
