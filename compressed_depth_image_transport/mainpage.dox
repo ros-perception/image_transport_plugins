@@ -1,0 +1,19 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\section codeapi Code API
+
+compressed_depth_image_transport does not have a stable code API.
+
+compressed_depth_image_transport contains an image tranport plugin for publishing and one for receiving depth images.
+These classes are not normally meant to be used directly, but are loaded automatically by image_transport classes.
+ - compressed_depth_image_transport::CompressedDepthPublisher
+ - compressed_depth_image_transport::CompressedDepthSubscriber
+
+\section rosapi ROS API
+
+The publisher and subscriber plugins communicate on an internal "compressed_depth" topic.
+See the wiki documentation.
+
+*/
