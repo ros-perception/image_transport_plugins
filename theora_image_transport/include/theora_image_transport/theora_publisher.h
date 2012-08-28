@@ -1,7 +1,7 @@
 #include <image_transport/simple_publisher_plugin.h>
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
-#include <cv_bridge/CvBridge.h>
+#include <cv_bridge/cv_bridge.h>
 #include <std_msgs/Header.h>
 #include <dynamic_reconfigure/server.h>
 #include <theora_image_transport/TheoraPublisherConfig.h>
@@ -52,7 +52,7 @@ protected:
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
-  mutable sensor_msgs::CvBridge img_bridge_;
+  mutable cv_bridge::CvImage img_image_;
   mutable th_info encoder_setup_;
   mutable ogg_uint32_t keyframe_frequency_;
   mutable boost::shared_ptr<th_enc_ctx> encoding_context_;
