@@ -27,36 +27,45 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
   // Copy message header
   cv_ptr->header = message->header;
 
-  // Assign image encoding
-  string image_encoding;
-  const size_t split_pos = message->format.find(';');
-  if (split_pos==string::npos)
-  {
-    // older version of compressed_image_transport did not signal image format
-    image_encoding = "rgb8";
-  } else
-  {
-    image_encoding = message->format.substr(0, message->format.find(';'));
-  }
-
-  cv_ptr->encoding = image_encoding;
-
   // Decode color/mono image
   try
   {
     cv_ptr->image = cv::imdecode(cv::Mat(message->data), CV_LOAD_IMAGE_UNCHANGED);
 
-    if (enc::isColor(image_encoding))
+    // Assign image encoding string
+    const size_t split_pos = message->format.find(';');
+    if (split_pos==string::npos)
     {
-      // Revert color transformation
-      if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
-        cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
+      // Older version of compressed_image_transport does not signal image format
+      switch (cv_ptr->image.channels())
+      {
+        case 1:
+          cv_ptr->encoding = enc::MONO8;
+          break;
+        case 3:
+          cv_ptr->encoding = enc::BGR8;
+          break;
+        default:
+          ROS_ERROR("Unsupported number of channels: %i", cv_ptr->image.channels());
+          break;
+      }
+    } else
+    {
+      string image_encoding = message->format.substr(0, message->format.find(';'));
+      cv_ptr->encoding = image_encoding;
 
-      if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
-        cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+      if ( enc::isColor(image_encoding))
+      {
+        // Revert color transformation
+        if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
 
-      if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
-        cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+        if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+
+        if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+      }
     }
   }
   catch (cv::Exception& e)
