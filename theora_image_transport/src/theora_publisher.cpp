@@ -125,12 +125,14 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   /// @todo fromImage is deprecated
   /// @todo Optimized gray-scale path, rgb8
   /// @todo fromImage can throw cv::Exception on bayer encoded images
-  if (!img_bridge_.fromImage(message, "bgr8")) {
+  cv_bridge::CvImageConstPtr cv_image_ptr = cv_bridge::toCvShare(sensor_msgs::ImageConstPtr(&message), "bgr8");
+  if (!cv_image_ptr == 0) {
     ROS_ERROR("Unable to convert from '%s' to bgr8", message.encoding.c_str());
     return;
   }
 
-  cv::Mat bgr(img_bridge_.toIpl()), bgr_padded;
+  const cv::Mat bgr = cv_image_ptr->image;
+  cv::Mat bgr_padded;
   int frame_width = encoder_setup_.frame_width, frame_height = encoder_setup_.frame_height;
   if (frame_width == bgr.cols && frame_height == bgr.rows) {
     bgr_padded = bgr;

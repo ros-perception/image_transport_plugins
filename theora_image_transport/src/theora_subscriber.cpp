@@ -1,8 +1,8 @@
 #include "theora_image_transport/theora_subscriber.h"
-#include <cv_bridge/CvBridge.h>
+#include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv/cvwimage.h>
-#include <opencv/highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <boost/scoped_array.hpp>
 #include <vector>
 
@@ -202,12 +202,9 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
                             header_info_.pic_width, header_info_.pic_height));
 
-  IplImage ipl = bgr;
-  latest_image_ = sensor_msgs::CvBridge::cvToImgMsg(&ipl);
-  latest_image_->header = message->header;
+  latest_image_ = cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
   latest_image_->__connection_header = message->__connection_header;
   /// @todo Handle RGB8 or MONO8 efficiently
-  latest_image_->encoding = sensor_msgs::image_encodings::BGR8;
   callback(latest_image_);
 }
 
