@@ -1,18 +1,18 @@
 #include "image_transport/simple_publisher_plugin.h"
 #include <sensor_msgs/CompressedImage.h>
 #include <dynamic_reconfigure/server.h>
-#include <compressed_image_transport/CompressedPublisherConfig.h>
+#include <compressed_depth_image_transport/CompressedDepthPublisherConfig.h>
 
-namespace compressed_image_transport {
+namespace compressed_depth_image_transport {
 
-class CompressedPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage>
+class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage>
 {
 public:
-  virtual ~CompressedPublisher() {}
+  virtual ~CompressedDepthPublisher() {}
 
   virtual std::string getTransportName() const
   {
-    return "compressed";
+    return "compressedDepth";
   }
 
 protected:
@@ -25,7 +25,7 @@ protected:
   virtual void publish(const sensor_msgs::Image& message,
                        const PublishFn& publish_fn) const;
 
-  typedef compressed_image_transport::CompressedPublisherConfig Config;
+  typedef compressed_depth_image_transport::CompressedDepthPublisherConfig Config;
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;
   Config config_;
@@ -33,4 +33,4 @@ protected:
   void configCb(Config& config, uint32_t level);
 };
 
-} //namespace compressed_image_transport
+} //namespace compressed_depth_image_transport

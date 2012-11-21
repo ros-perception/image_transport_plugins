@@ -1,0 +1,7 @@
+#include <pluginlib/class_list_macros.h>
+#include "compressed_depth_image_transport/compressed_depth_publisher.h"
+#include "compressed_depth_image_transport/compressed_depth_subscriber.h"
+
+PLUGINLIB_DECLARE_CLASS(image_transport, compressedDepth_pub, compressed_depth_image_transport::CompressedDepthPublisher, image_transport::PublisherPlugin)
+
+PLUGINLIB_DECLARE_CLASS(image_transport, compressedDepth_sub, compressed_depth_image_transport::CompressedDepthSubscriber, image_transport::SubscriberPlugin)

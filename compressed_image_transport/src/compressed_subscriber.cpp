@@ -1,41 +1,84 @@
 #include "compressed_image_transport/compressed_subscriber.h"
 #include <sensor_msgs/image_encodings.h>
-#include <cv_bridge/CvBridge.h>
+#include <cv_bridge/cv_bridge.h>
 #include <opencv/cvwimage.h>
 #include <opencv/highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
-namespace compressed_image_transport {
+#include "compressed_image_transport/compression_common.h"
+
+#include <limits>
+#include <vector>
+
+using namespace cv;
+
+namespace enc = sensor_msgs::image_encodings;
+
+namespace compressed_image_transport
+{
 
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
-{
-  /// @todo Use cv::Mat, cv::imdecode
-  // Decompress
-  const CvMat compressed = cvMat(1, message->data.size(), CV_8UC1,
-                                 const_cast<unsigned char*>(&message->data[0]));
-  cv::WImageBuffer_b decompressed( cvDecodeImage(&compressed, CV_LOAD_IMAGE_ANYCOLOR) );
 
-  // Copy into ROS image message
-  boost::shared_ptr<sensor_msgs::Image> image_ptr(new sensor_msgs::Image);
-  if ( !sensor_msgs::CvBridge::fromIpltoRosImage(decompressed.Ipl(), *image_ptr) ) {
-    ROS_ERROR("Unable to create image message");
-    return;
+{
+
+  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+
+  // Copy message header
+  cv_ptr->header = message->header;
+
+  // Decode color/mono image
+  try
+  {
+    cv_ptr->image = cv::imdecode(cv::Mat(message->data), CV_LOAD_IMAGE_UNCHANGED);
+
+    // Assign image encoding string
+    const size_t split_pos = message->format.find(';');
+    if (split_pos==string::npos)
+    {
+      // Older version of compressed_image_transport does not signal image format
+      switch (cv_ptr->image.channels())
+      {
+        case 1:
+          cv_ptr->encoding = enc::MONO8;
+          break;
+        case 3:
+          cv_ptr->encoding = enc::BGR8;
+          break;
+        default:
+          ROS_ERROR("Unsupported number of channels: %i", cv_ptr->image.channels());
+          break;
+      }
+    } else
+    {
+      string image_encoding = message->format.substr(0, message->format.find(';'));
+      cv_ptr->encoding = image_encoding;
+
+      if ( enc::isColor(image_encoding))
+      {
+        // Revert color transformation
+        if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
+
+        if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+
+        if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+      }
+    }
   }
-  image_ptr->header = message->header;
-  image_ptr->__connection_header = message->__connection_header;
-  /// @todo Don't assume 8-bit channels
-  if (decompressed.Channels() == 1) {
-    image_ptr->encoding = sensor_msgs::image_encodings::MONO8;
+  catch (cv::Exception& e)
+  {
+    ROS_ERROR("%s", e.what());
   }
-  else if (decompressed.Channels() == 3) {
-    image_ptr->encoding = sensor_msgs::image_encodings::BGR8;
-  }
-  else {
-    ROS_ERROR("Unsupported number of channels: %i", decompressed.Channels());
-    return;
-  }
-  
-  user_cb(image_ptr);
+
+  size_t rows = cv_ptr->image.rows;
+  size_t cols = cv_ptr->image.cols;
+
+  if ((rows > 0) && (cols > 0))
+    // Publish message to user callback
+    user_cb(cv_ptr->toImageMsg());
 }
 
 } //namespace compressed_image_transport

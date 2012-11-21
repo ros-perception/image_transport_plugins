@@ -1,8 +1,8 @@
 #include "theora_image_transport/theora_subscriber.h"
-#include <cv_bridge/CvBridge.h>
+#include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv/cvwimage.h>
-#include <opencv/highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <boost/scoped_array.hpp>
 #include <vector>
 
@@ -11,7 +11,8 @@ using namespace std;
 namespace theora_image_transport {
 
 TheoraSubscriber::TheoraSubscriber()
-  : received_header_(false),
+  : pplevel_(0),
+    received_header_(false),
     received_keyframe_(false),
     decoding_context_(NULL),
     setup_info_(NULL)
@@ -36,6 +37,40 @@ void TheoraSubscriber::subscribeImpl(ros::NodeHandle &nh, const std::string &bas
   queue_size += 4;
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::Packet> Base;
   Base::subscribeImpl(nh, base_topic, queue_size, callback, tracked_object, transport_hints);
+
+  // Set up reconfigure server for this topic
+  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
+  ReconfigureServer::CallbackType f = boost::bind(&TheoraSubscriber::configCb, this, _1, _2);
+  reconfigure_server_->setCallback(f);
+}
+
+void TheoraSubscriber::configCb(Config& config, uint32_t level)
+{
+  if (decoding_context_ && pplevel_ != config.post_processing_level) {
+    pplevel_ = updatePostProcessingLevel(config.post_processing_level);
+    config.post_processing_level = pplevel_; // In case more than PPLEVEL_MAX
+  }
+  else
+    pplevel_ = config.post_processing_level;
+}
+
+int TheoraSubscriber::updatePostProcessingLevel(int level)
+{
+  int pplevel_max;
+  int err = th_decode_ctl(decoding_context_, TH_DECCTL_GET_PPLEVEL_MAX, &pplevel_max, sizeof(int));
+  if (err)
+    ROS_WARN("Failed to get maximum post-processing level, error code %d", err);
+  else if (level > pplevel_max) {
+    ROS_WARN("Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
+    level = pplevel_max;
+  }
+
+  err = th_decode_ctl(decoding_context_, TH_DECCTL_SET_PPLEVEL, &level, sizeof(int));
+  if (err) {
+    ROS_ERROR("Failed to set post-processing level, error code %d", err);
+    return pplevel_; // old value
+  }
+  return level;
 }
 
 //When using this caller is responsible for deleting oggpacket.packet!!
@@ -87,6 +122,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
           return;
         }
         received_header_ = true;
+        pplevel_ = updatePostProcessingLevel(pplevel_);
         break; // Continue on the video decoding
       case TH_EFAULT:
         ROS_WARN("[theora] EFAULT when processing header packet");
@@ -166,12 +202,9 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
                             header_info_.pic_width, header_info_.pic_height));
 
-  IplImage ipl = bgr;
-  latest_image_ = sensor_msgs::CvBridge::cvToImgMsg(&ipl);
-  latest_image_->header = message->header;
+  latest_image_ = cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
   latest_image_->__connection_header = message->__connection_header;
   /// @todo Handle RGB8 or MONO8 efficiently
-  latest_image_->encoding = sensor_msgs::image_encodings::BGR8;
   callback(latest_image_);
 }
 
