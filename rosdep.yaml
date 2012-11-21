@@ -1,4 +1,0 @@
-libogg:
-  ubuntu: libogg-dev
-  debian: libogg-dev
-  fedora: libogg-devel

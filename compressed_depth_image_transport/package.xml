@@ -1,0 +1,19 @@
+<package>
+  <name>compressed_depth_image_transport</name>
+  <version>1.8.3</version>
+    <description>
+     Compressed_depth_image_transport provides a plugin to image_transport for transparently sending
+     depth images (raw, floating-point) using PNG compression.
+  </description>
+  <author>Julius Kammerl</author>
+  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
+  <license>BSD</license>
+  
+  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  
+  <!-- Old stack contents -->
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>cv_bridge</run_depend>
+
+</package>

@@ -1,28 +1,29 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8)
+project(compressed_depth_image_transport)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED)
+catkin_package()
 
 find_package(OpenCV REQUIRED)
+find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_transport tf)
 
-rosbuild_init()
+# generate the dynamic_reconfigure config file
+generate_dynamic_reconfigure_options(cfg/CompressedDepthPublisher.cfg)
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS}
+                           ${OpenCV_INCLUDE_DIRS}
+)
 
-# Dynamic reconfigure
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
+include_directories(${PROJECT_NAME} include cfg/cpp)
 
-rosbuild_add_library(${PROJECT_NAME} src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+add_library(${PROJECT_NAME} src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
+                                      ${OpenCV_LIBRARIES}
+)
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 
