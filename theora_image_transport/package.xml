@@ -21,4 +21,9 @@
   <run_depend>rosbag</run_depend>
   <run_depend>libogg</run_depend>
   <run_depend>libtheora</run_depend>
+
+  <export>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
+  </export>
+
 </package>

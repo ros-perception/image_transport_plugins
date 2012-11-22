@@ -17,5 +17,9 @@
   <run_depend>image_transport</run_depend>
   <run_depend>cv_bridge</run_depend>
 
+  <export>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
+  </export>
+
 </package>
 
