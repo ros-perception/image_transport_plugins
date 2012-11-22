@@ -1,0 +1,24 @@
+<package>
+  <name>theora_image_transport</name>
+  <version>1.8.3</version>
+    <description>
+     Theora_image_transport provides a plugin to image_transport for
+     transparently sending an image stream encoded with the Theora codec.
+  </description>
+  <author>Patrick Mihelich</author>
+  <author>Ethan Dreyfuss</author>
+  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
+  <license>BSD</license>
+  
+  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  
+  <!-- Old manifest contents -->
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>pluginlib</run_depend>
+
+  <run_depend>rosbag</run_depend>
+  <run_depend>libogg</run_depend>
+  <run_depend>libtheora</run_depend>
+</package>

@@ -1,40 +1,52 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8)
+project(theora_image_transport)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED)
 
 find_package(OpenCV REQUIRED)
+find_package(catkin REQUIRED genmsg cv_bridge dynamic_reconfigure image_transport tf rosbag)
 
-rosbuild_init()
+add_message_files(DIRECTORY msg
+                  FILES Packet.msg
+)
 
-rosbuild_genmsg()
+generate_messages(DEPENDENCIES std_msgs)
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+find_package(PkgConfig)
+pkg_check_modules(PC_OGG REQUIRED ogg)
+pkg_check_modules(PC_THEORA REQUIRED theora)
 
-# Dynamic reconfigure
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
+# generate the dynamic_reconfigure config file
+generate_dynamic_reconfigure_options(cfg/TheoraPublisher.cfg cfg/TheoraSubscriber.cfg)
+include_directories(include cfg/cpp)
 
-rosbuild_add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscriber.cpp src/manifest.cpp)
-target_link_libraries(${PROJECT_NAME} ogg theora theoraenc theoradec ${OpenCV_LIBS})
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS}
+                           ${OpenCV_INCLUDE_DIRS}
+	                   ${PC_OGG_INCLUDE_DIRS}
+   	                   ${PC_THEORA_INCLUDE_DIRS}
+)
 
-rosbuild_add_executable(ogg_saver src/ogg_saver.cpp)
-target_link_libraries(ogg_saver ogg theora theoraenc theoradec ${OpenCV_LIBS})
+catkin_package()
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+LINK_DIRECTORIES(${PC_OGG_LIBRARY_DIRS} ${PC_THEORA_LIBRARY_DIRS} )
+ADD_DEFINITIONS(${PC_OGG_CFLAGS_OTHER} ${PC_THEORA_CFLAGS_OTHER})
+
+add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscriber.cpp src/manifest.cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
+                                      ${OpenCV_LIBRARIES}
+                                      ${PC_OGG_LIBRARIES}
+                                      ${PC_THEORA_LIBRARIES}
+#                                      ogg theora theoraenc theoradec
+)
+
+add_executable(ogg_saver src/ogg_saver.cpp)
+include_directories(ogg_saver include cfg/cpp)
+target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} ${PC_OGG_LIBRARY} ${OpenCV_LIBS})
+
+
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+install(TARGETS ogg_saver
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
