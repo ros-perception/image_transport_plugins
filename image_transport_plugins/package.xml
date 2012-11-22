@@ -1,0 +1,28 @@
+<package>
+  <name>image_transport_plugins</name>
+  <version>1.8.3</version>
+    <description>
+    A set of plugins for publishing and subscribing to sensor_msgs/Image topics
+    in representations other than raw pixel data. For example, for viewing a
+    stream of images off-robot, a video codec will give much lower bandwidth
+    and latency. For low frame rate tranport of high-definition images, you
+    might prefer sending them as JPEG or PNG-compressed form.
+  </description>
+  <author>Patrick Mihelich</author>
+  <author>Julius Kammerl</author>
+  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
+  <license>BSD</license>
+  
+  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  
+  <!-- Old stack contents -->
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>image_common</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>ros_comm</run_depend>
+  <run_depend>vision_opencv</run_depend>
+  <export>
+    <metapackage/>
+  </export>
+
+</package>
