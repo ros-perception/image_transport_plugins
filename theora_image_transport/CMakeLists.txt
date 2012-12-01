@@ -42,7 +42,8 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
 
 add_executable(ogg_saver src/ogg_saver.cpp)
 include_directories(ogg_saver include cfg/cpp)
-target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} ${PC_OGG_LIBRARY} ${OpenCV_LIBS})
+target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} ${PC_OGG_LIBRARY} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} ogg theora theoraenc theoradec)
+add_dependencies(ogg_saver ${PROJECT_NAME}_gencpp)
 
 
 install(TARGETS ${PROJECT_NAME}
