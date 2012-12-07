@@ -51,20 +51,40 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
       }
     } else
     {
-      string image_encoding = message->format.substr(0, message->format.find(';'));
+      string image_encoding = message->format.substr(0, split_pos);
+
       cv_ptr->encoding = image_encoding;
 
       if ( enc::isColor(image_encoding))
       {
+        string compressed_encoding = message->format.substr(split_pos);
+        bool compressed_bgr_image = (compressed_encoding.find("compressed bgr")!=string::npos);
+
         // Revert color transformation
-        if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
-          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
+        if (compressed_bgr_image)
+        {
+          // if necessary convert colors from bgr to rgb
+          if ((image_encoding == enc::RGB8) || (image_encoding == enc::RGB16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGB);
 
-        if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
-          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+          if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGBA);
 
-        if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
-          cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+          if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2BGRA);
+        } else
+        {
+          // if necessary convert colors from rgb to bgr
+          if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
+
+          if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+
+          if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+        }
+
       }
     }
   }

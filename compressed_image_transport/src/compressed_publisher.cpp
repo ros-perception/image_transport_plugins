@@ -68,7 +68,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params[1] = config_.jpeg_quality;
 
       // Update ros message format header
-      compressed.format += "; jpeg compressed";
+      compressed.format += "; jpeg compressed ";
 
       // Check input format
       if ((bitDepth == 8) && // JPEG only works on 8bit images
@@ -80,7 +80,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         if (enc::isColor(message.encoding))
         {
           // convert color images to RGB domain
-          targetFormat << "rgb" << bitDepth;
+          targetFormat << "bgr" << bitDepth;
+          compressed.format += targetFormat.str();
         }
 
         // OpenCV-ros bridge
@@ -126,7 +127,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params[1] = config_.png_level;
 
       // Update ros message format header
-      compressed.format += "; png compressed";
+      compressed.format += "; png compressed ";
 
       // Check input format
       if (((bitDepth == 16) || (bitDepth == 8)) && ((numChannels == 1) || (numChannels == 3)))
@@ -137,7 +138,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         if (enc::isColor(message.encoding))
         {
           // convert color images to RGB domain
-          targetFormat << "rgb" << bitDepth;
+          targetFormat << "bgr" << bitDepth;
+          compressed.format += targetFormat.str();
         }
 
         // OpenCV-ros bridge
