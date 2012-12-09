@@ -21,6 +21,11 @@
   <run_depend>pluginlib</run_depend>
   <run_depend>ros_comm</run_depend>
   <run_depend>vision_opencv</run_depend>
+  
+  <run_depend>compressed_depth_image_transport</run_depend>
+  <run_depend>compressed_image_transport</run_depend>
+  <run_depend>theora_image_transport</run_depend>
+
   <export>
     <metapackage/>
   </export>
