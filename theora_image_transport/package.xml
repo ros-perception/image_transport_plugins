@@ -12,12 +12,19 @@
   
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   
-  <!-- Old manifest contents -->
+  <build_depend>catkin</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>rosbag</build_depend>
+  <build_depend>libogg</build_depend>
+  <build_depend>libtheora</build_depend>
+
   <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>pluginlib</run_depend>
-
   <run_depend>rosbag</run_depend>
   <run_depend>libogg</run_depend>
   <run_depend>libtheora</run_depend>
