@@ -1,6 +1,6 @@
 <package>
   <name>compressed_depth_image_transport</name>
-  <version>1.8.6</version>
+  <version>1.8.7</version>
     <description>
      Compressed_depth_image_transport provides a plugin to image_transport for transparently sending
      depth images (raw, floating-point) using PNG compression.
@@ -15,11 +15,13 @@
   <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>image_transport</build_depend>
   <build_depend>cv_bridge</build_depend>
+  <build_depend>tf</build_depend>
 
   <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>cv_bridge</run_depend>
-
+  <run_depend>tf</run_depend>
+ 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>
