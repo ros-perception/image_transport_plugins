@@ -15,7 +15,8 @@
   
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
 
-  <build_depend>catkin</build_depend> 
+  <buildtool_depend>catkin</buildtool_depend>
+  
   <build_depend>compressed_depth_image_transport</build_depend>
   <build_depend>compressed_image_transport</build_depend>
   <build_depend>theora_image_transport</build_depend>     
