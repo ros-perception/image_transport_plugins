@@ -4,7 +4,7 @@ project(theora_image_transport)
 find_package(catkin REQUIRED)
 
 find_package(OpenCV REQUIRED)
-find_package(catkin REQUIRED genmsg cv_bridge dynamic_reconfigure image_transport tf rosbag)
+find_package(catkin REQUIRED message_runtime cv_bridge dynamic_reconfigure image_transport tf rosbag)
 
 add_message_files(DIRECTORY msg
                   FILES Packet.msg
