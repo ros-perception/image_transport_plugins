@@ -4,7 +4,7 @@ project(theora_image_transport)
 find_package(catkin REQUIRED)
 
 find_package(OpenCV REQUIRED)
-find_package(catkin REQUIRED message_runtime cv_bridge dynamic_reconfigure image_transport tf rosbag)
+find_package(catkin REQUIRED message_generation cv_bridge dynamic_reconfigure image_transport tf rosbag)
 
 add_message_files(DIRECTORY msg
                   FILES Packet.msg
@@ -26,7 +26,7 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS}
    	                   ${PC_THEORA_INCLUDE_DIRS}
 )
 
-catkin_package()
+catkin_package(CATKIN_DEPENDS message_runtime)
 
 LINK_DIRECTORIES(${PC_OGG_LIBRARY_DIRS} ${PC_THEORA_LIBRARY_DIRS} )
 ADD_DEFINITIONS(${PC_OGG_CFLAGS_OTHER} ${PC_THEORA_CFLAGS_OTHER})
