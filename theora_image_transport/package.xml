@@ -1,6 +1,6 @@
 <package>
   <name>theora_image_transport</name>
-  <version>1.8.7</version>
+  <version>1.8.8</version>
     <description>
      Theora_image_transport provides a plugin to image_transport for
      transparently sending an image stream encoded with the Theora codec.
@@ -22,6 +22,7 @@
   <build_depend>libogg</build_depend>
   <build_depend>libtheora</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>message_generation</build_depend>
 
   <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>image_transport</run_depend>
@@ -31,6 +32,7 @@
   <run_depend>libogg</run_depend>
   <run_depend>libtheora</run_depend>
   <run_depend>tf</run_depend>
+  <run_depend>message_runtime</run_depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
