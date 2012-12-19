@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 project(compressed_image_transport)
 
+# generate the dynamic_reconfigure config file
+generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg)
+
 find_package(catkin REQUIRED)
 catkin_package()
 
 find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_transport tf)
-
-# generate the dynamic_reconfigure config file
-generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg)
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS}
                            ${OpenCV_INCLUDE_DIRS}
