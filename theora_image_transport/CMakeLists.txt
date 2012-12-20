@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(theora_image_transport)
 
-find_package(catkin REQUIRED)
-
 find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED message_generation cv_bridge dynamic_reconfigure image_transport tf rosbag)
 
