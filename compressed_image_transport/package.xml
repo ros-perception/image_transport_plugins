@@ -26,9 +26,6 @@
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
-  </export>
-
-  <export>
     <image_transport plugin="${prefix}/compressed_image_transport.xml" />
   </export>
 </package>

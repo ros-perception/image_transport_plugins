@@ -36,9 +36,6 @@
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
-  </export>
-
-  <export>
     <image_transport plugin="${prefix}/theora_plugins.xml" />
   </export>
 </package>
