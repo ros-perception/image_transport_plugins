@@ -32,6 +32,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # add xml file
-install(FILES compressed_image_transport.xml
+install(FILES compressed_plugin.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
