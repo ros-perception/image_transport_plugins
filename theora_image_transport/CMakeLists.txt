@@ -54,3 +54,8 @@ install(TARGETS ${PROJECT_NAME} ogg_saver
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+
+# add xml file
+install(FILES theora_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
