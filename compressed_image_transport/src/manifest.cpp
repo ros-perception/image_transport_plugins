@@ -36,6 +36,6 @@
 #include "compressed_image_transport/compressed_publisher.h"
 #include "compressed_image_transport/compressed_subscriber.h"
 
-PLUGINLIB_DECLARE_CLASS(image_transport, compressed_pub, compressed_image_transport::CompressedPublisher, image_transport::PublisherPlugin)
+PLUGINLIB_EXPORT_CLASS( compressed_image_transport::CompressedPublisher, image_transport::PublisherPlugin)
 
-PLUGINLIB_DECLARE_CLASS(image_transport, compressed_sub, compressed_image_transport::CompressedSubscriber, image_transport::SubscriberPlugin)
+PLUGINLIB_EXPORT_CLASS( compressed_image_transport::CompressedSubscriber, image_transport::SubscriberPlugin)
