@@ -1,6 +1,6 @@
 <package>
   <name>compressed_depth_image_transport</name>
-  <version>1.8.16</version>
+  <version>1.8.17</version>
   <description>
     Compressed_depth_image_transport provides a plugin to image_transport for transparently sending
     depth images (raw, floating-point) using PNG compression.

@@ -1,6 +1,6 @@
 <package>
   <name>image_transport_plugins</name>
-  <version>1.8.16</version>
+  <version>1.8.17</version>
     <description>
     A set of plugins for publishing and subscribing to sensor_msgs/Image topics
     in representations other than raw pixel data. For example, for viewing a
