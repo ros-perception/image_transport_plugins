@@ -164,7 +164,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
   try
   {
     // conversion necessary
-    cv_image_ptr = cv_bridge::toCvCopy(message, sensor_msgs::image_encodings::RGB8);
+    cv_image_ptr = cv_bridge::toCvCopy(message, sensor_msgs::image_encodings::BGR8);
   }
   catch (cv::Exception& e)
   {
