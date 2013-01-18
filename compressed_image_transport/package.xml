@@ -1,6 +1,6 @@
 <package>
   <name>compressed_image_transport</name>
-  <version>1.8.16</version>
+  <version>1.8.17</version>
   <description>
     Compressed_image_transport provides a plugin to image_transport for transparently sending images
     encoded as JPEG or PNG.

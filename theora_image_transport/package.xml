@@ -1,6 +1,6 @@
 <package>
   <name>theora_image_transport</name>
-  <version>1.8.16</version>
+  <version>1.8.17</version>
   <description>
     Theora_image_transport provides a plugin to image_transport for
     transparently sending an image stream encoded with the Theora codec.
