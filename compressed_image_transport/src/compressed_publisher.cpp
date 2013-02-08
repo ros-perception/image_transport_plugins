@@ -105,24 +105,22 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       compressed.format += "; jpeg compressed ";
 
       // Check input format
-      if ((bitDepth == 8) && // JPEG only works on 8bit images
-          ((numChannels == 1) || (numChannels == 3)))
+      if ((bitDepth == 8) || (bitDepth == 16))
       {
-
         // Target image format
-        stringstream targetFormat;
+        std::string targetFormat;
         if (enc::isColor(message.encoding))
         {
-          // convert color images to RGB domain
-          targetFormat << "bgr" << bitDepth;
-          compressed.format += targetFormat.str();
+          // convert color images to BGR8 format
+          targetFormat = "bgr8";
+          compressed.format += targetFormat;
         }
 
         // OpenCV-ros bridge
         cv_bridge::CvImagePtr cv_ptr;
         try
         {
-          cv_ptr = cv_bridge::toCvCopy(message, targetFormat.str());
+          cv_ptr = cv_bridge::toCvCopy(message, targetFormat);
 
           // Compress image
           if (cv::imencode(".jpg", cv_ptr->image, compressed.data, params))
@@ -150,7 +148,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         publish_fn(compressed);
       }
       else
-        ROS_ERROR("Compressed Image Transport - JPEG compression requires 8-bit, 1/3-channel images (input format is: %s)", message.encoding.c_str());
+        ROS_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
 
       break;
     }
@@ -164,7 +162,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       compressed.format += "; png compressed ";
 
       // Check input format
-      if (((bitDepth == 16) || (bitDepth == 8)) && ((numChannels == 1) || (numChannels == 3)))
+      if ((bitDepth == 8) || (bitDepth == 16))
       {
 
         // Target image format
@@ -198,17 +196,19 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         catch (cv_bridge::Exception& e)
         {
           ROS_ERROR("%s", e.what());
+          return;
         }
         catch (cv::Exception& e)
         {
           ROS_ERROR("%s", e.what());
+          return;
         }
 
         // Publish message
         publish_fn(compressed);
       }
       else
-        ROS_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit, 1/3-channel images (input format is: %s)", message.encoding.c_str());
+        ROS_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
       break;
     }
 

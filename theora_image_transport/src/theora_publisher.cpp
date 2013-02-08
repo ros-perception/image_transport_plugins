@@ -166,9 +166,15 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
     // conversion necessary
     cv_image_ptr = cv_bridge::toCvCopy(message, sensor_msgs::image_encodings::BGR8);
   }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: '%s'", e.what());
+    return;
+  }
   catch (cv::Exception& e)
   {
-    ROS_ERROR("OpenCV exception: '%s'", e.msg.c_str());
+    ROS_ERROR("OpenCV exception: '%s'", e.what());
+    return;
   }
 
   if (cv_image_ptr == 0) {

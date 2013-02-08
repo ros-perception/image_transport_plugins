@@ -165,6 +165,7 @@ void CompressedDepthPublisher::publish(const sensor_msgs::Image& message, const 
         else
         {
           ROS_ERROR("cv::imencode (png) failed on input image");
+          return;
         }
       }
       catch (cv::Exception& e)
