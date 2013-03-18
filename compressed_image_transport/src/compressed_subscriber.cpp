@@ -118,7 +118,6 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
           if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
         }
-
       }
     }
   }

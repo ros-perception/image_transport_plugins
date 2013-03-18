@@ -1,6 +1,6 @@
 <package>
   <name>image_transport_plugins</name>
-  <version>1.8.16</version>
+  <version>1.8.19</version>
     <description>
     A set of plugins for publishing and subscribing to sensor_msgs/Image topics
     in representations other than raw pixel data. For example, for viewing a
@@ -15,10 +15,6 @@
   
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
 
-  <build_depend>compressed_depth_image_transport</build_depend>
-  <build_depend>compressed_image_transport</build_depend>
-  <build_depend>theora_image_transport</build_depend>     
-  
   <run_depend>compressed_depth_image_transport</run_depend>
   <run_depend>compressed_image_transport</run_depend>
   <run_depend>theora_image_transport</run_depend>
