@@ -237,7 +237,6 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
                             header_info_.pic_width, header_info_.pic_height));
 
   latest_image_ = cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
-  latest_image_->__connection_header = message->__connection_header;
   /// @todo Handle RGB8 or MONO8 efficiently
   callback(latest_image_);
 }
