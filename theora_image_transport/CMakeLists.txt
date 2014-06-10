@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(theora_image_transport)
 
 find_package(OpenCV REQUIRED)
-find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_transport message_generation tf rosbag)
+find_package(catkin REQUIRED COMPONENTS cv_bridge dynamic_reconfigure image_transport message_generation tf rosbag pluginlib std_msgs)
 
 add_message_files(DIRECTORY msg FILES Packet.msg)
 
@@ -21,7 +21,7 @@ generate_dynamic_reconfigure_options(cfg/TheoraPublisher.cfg cfg/TheoraSubscribe
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime std_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
@@ -43,20 +43,18 @@ add_definitions(${PC_OGG_CFLAGS_OTHER}
 )
 
 add_library(${PROJECT_NAME} src/theora_publisher.cpp src/theora_subscriber.cpp src/manifest.cpp)
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_gencpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
                                       ${OpenCV_LIBRARIES}
                                       ${PC_OGG_LIBRARIES}
                                       ${PC_THEORA_LIBRARIES}
                                       ${PC_THEORAENC_LIBRARIES}
                                       ${PC_THEORADEC_LIBRARIES}
-#                                      ogg theora theoraenc theoradec
 )
 
 class_loader_hide_library_symbols(${PROJECT_NAME})
 
 add_executable(ogg_saver src/ogg_saver.cpp)
-include_directories(ogg_saver include cfg/cpp)
 target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} 
                                 ${PC_OGG_LIBRARY} 
                                 ${OpenCV_LIBRARIES} 
