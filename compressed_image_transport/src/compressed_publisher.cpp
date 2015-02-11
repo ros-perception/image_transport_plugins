@@ -117,10 +117,10 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         }
 
         // OpenCV-ros bridge
-        cv_bridge::CvImagePtr cv_ptr;
         try
         {
-          cv_ptr = cv_bridge::toCvCopy(message, targetFormat);
+          boost::shared_ptr<CompressedPublisher> tracked_object;
+          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat);
 
           // Compress image
           if (cv::imencode(".jpg", cv_ptr->image, compressed.data, params))
