@@ -33,8 +33,6 @@
 *********************************************************************/
 
 #include <image_transport/simple_publisher_plugin.h>
-#include <opencv/cv.h>
-#include <opencv/cxcore.h>
 #include <cv_bridge/cv_bridge.h>
 #include <std_msgs/Header.h>
 #include <dynamic_reconfigure/server.h>

@@ -35,9 +35,13 @@
 #include "compressed_depth_image_transport/compressed_depth_subscriber.h"
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-#include <opencv/cvwimage.h>
-#include <opencv/highgui.h>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+// If OpenCV3
+#ifndef CV_VERSION_EPOCH
+#include <opencv2/imgcodecs.hpp>
+#endif
 
 #include "compressed_depth_image_transport/compression_common.h"
 
@@ -62,7 +66,7 @@ void CompressedDepthSubscriber::internalCallback(const sensor_msgs::CompressedIm
   cv_ptr->header = message->header;
 
   // Assign image encoding
-  string image_encoding = message->format.substr(0, message->format.find(';'));
+  std::string image_encoding = message->format.substr(0, message->format.find(';'));
   cv_ptr->encoding = image_encoding;
 
   // Decode message data
@@ -74,7 +78,7 @@ void CompressedDepthSubscriber::internalCallback(const sensor_msgs::CompressedIm
     memcpy(&compressionConfig, &message->data[0], sizeof(compressionConfig));
 
     // Get compressed image data
-    const vector<uint8_t> imageData(message->data.begin() + sizeof(compressionConfig), message->data.end());
+    const std::vector<uint8_t> imageData(message->data.begin() + sizeof(compressionConfig), message->data.end());
 
     // Depth map decoding
     float depthQuantA, depthQuantB;
@@ -89,7 +93,7 @@ void CompressedDepthSubscriber::internalCallback(const sensor_msgs::CompressedIm
       try
       {
         // Decode image data
-        decompressed = cv::imdecode(imageData, CV_LOAD_IMAGE_UNCHANGED);
+        decompressed = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
       }
       catch (cv::Exception& e)
       {

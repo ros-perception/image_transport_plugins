@@ -39,6 +39,8 @@
 #include <vector>
 #include <cstdio> //for memcpy
 
+#include <opencv2/imgproc/imgproc.hpp>
+
 using namespace std;
 
 namespace theora_image_transport {
@@ -197,7 +199,7 @@ void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn
 
   // Convert image to Y'CbCr color space used by Theora
   cv::Mat ycrcb;
-  cv::cvtColor(bgr_padded, ycrcb, CV_BGR2YCrCb);
+  cv::cvtColor(bgr_padded, ycrcb, cv::COLOR_BGR2YCrCb);
   
   // Split channels
   cv::Mat ycrcb_planes[3];

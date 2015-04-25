@@ -35,8 +35,7 @@
 #include "compressed_image_transport/compressed_subscriber.h"
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-#include <opencv/cvwimage.h>
-#include <opencv/highgui.h>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "compressed_image_transport/compression_common.h"
@@ -68,7 +67,7 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
 
     // Assign image encoding string
     const size_t split_pos = message->format.find(';');
-    if (split_pos==string::npos)
+    if (split_pos==std::string::npos)
     {
       // Older version of compressed_image_transport does not signal image format
       switch (cv_ptr->image.channels())
@@ -85,14 +84,14 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
       }
     } else
     {
-      string image_encoding = message->format.substr(0, split_pos);
+      std::string image_encoding = message->format.substr(0, split_pos);
 
       cv_ptr->encoding = image_encoding;
 
       if ( enc::isColor(image_encoding))
       {
-        string compressed_encoding = message->format.substr(split_pos);
-        bool compressed_bgr_image = (compressed_encoding.find("compressed bgr")!=string::npos);
+        std::string compressed_encoding = message->format.substr(split_pos);
+        bool compressed_bgr_image = (compressed_encoding.find("compressed bgr") != std::string::npos);
 
         // Revert color transformation
         if (compressed_bgr_image)

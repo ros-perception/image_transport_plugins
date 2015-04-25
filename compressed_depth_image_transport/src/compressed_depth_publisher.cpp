@@ -35,8 +35,7 @@
 #include "compressed_depth_image_transport/compressed_depth_publisher.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/highgui/highgui.hpp>
 #include <boost/make_shared.hpp>
 
 #include "compressed_depth_image_transport/compression_common.h"

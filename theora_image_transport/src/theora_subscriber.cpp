@@ -35,7 +35,6 @@
 #include "theora_image_transport/theora_subscriber.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include <opencv/cvwimage.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <boost/scoped_array.hpp>
 #include <vector>
