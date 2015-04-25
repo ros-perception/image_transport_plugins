@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.2 (2015-04-25)
+------------------
 * get code to compile with OpenCV3
 * avoid yet another image copy
 * avoid copying data if it can be shared

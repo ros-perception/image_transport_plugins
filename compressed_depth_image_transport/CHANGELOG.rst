@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.2 (2015-04-25)
+------------------
 * use compression parameters for both depths
   fixes `#12 <https://github.com/ros-perception/image_transport_plugins/issues/12>`_
 * get code to compile with OpenCV3

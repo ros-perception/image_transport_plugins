@@ -2,8 +2,8 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.2 (2015-04-25)
+------------------
 * get code to compile with OpenCV3
 * Contributors: Vincent Rabaud
 
