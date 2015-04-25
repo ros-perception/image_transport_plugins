@@ -96,11 +96,11 @@ void CompressedDepthPublisher::publish(const sensor_msgs::Image& message, const 
   compressed.format += "; compressedDepth";
 
   // Check input format
+  params[0] = cv::IMWRITE_PNG_COMPRESSION;
+  params[1] = config_.png_level;
+
   if ((bitDepth == 32) && (numChannels == 1))
   {
-    params[0] = CV_IMWRITE_PNG_COMPRESSION;
-    params[1] = config_.png_level;
-
     float depthZ0 = config_.depth_quantization;
     float depthMax = config_.depth_max;
 
