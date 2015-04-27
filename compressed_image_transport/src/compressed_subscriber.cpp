@@ -68,11 +68,11 @@ void CompressedSubscriber::configCb(Config& config, uint32_t level)
 {
   config_ = config;
   if (config_.mode == "gray") {
-      flags_ = CV_LOAD_IMAGE_GRAYSCALE;
+      flags_ = cv::IMREAD_GRAYSCALE;
   } else if (config_.mode == "gray") {
-      flags_ = CV_LOAD_IMAGE_COLOR;
+      flags_ = cv::IMREAD_COLOR;
   } else /*if (config_.mode == "unchanged")*/ {
-      flags_ = CV_LOAD_IMAGE_UNCHANGED;
+      flags_ = cv::IMREAD_UNCHANGED;
   } 
 }
 
@@ -90,7 +90,7 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
   // Decode color/mono image
   try
   {
-    cv_ptr->image = cv::imdecode(cv::Mat(message->data), CV_LOAD_IMAGE_UNCHANGED);
+    cv_ptr->image = cv::imdecode(cv::Mat(message->data), cv::IMREAD_UNCHANGED);
 
     // Assign image encoding string
     const size_t split_pos = message->format.find(';');
