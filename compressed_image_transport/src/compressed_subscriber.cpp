@@ -67,11 +67,11 @@ void CompressedSubscriber::subscribeImpl(ros::NodeHandle& nh, const std::string&
 void CompressedSubscriber::configCb(Config& config, uint32_t level)
 {
   config_ = config;
-  if (config_.mode == "gray") {
+  if (config_.mode == compressed_image_transport::CompressedSubscriber_gray) {
       imdecode_flag_ = cv::IMREAD_GRAYSCALE;
-  } else if (config_.mode == "color") {
+  } else if (config_.mode == compressed_image_transport::CompressedSubscriber_color) {
       imdecode_flag_ = cv::IMREAD_COLOR;
-  } else /*if (config_.mode == "unchanged")*/ {
+  } else /*if (config_.mode == compressed_image_transport::CompressedSubscriber_unchanged)*/ {
       imdecode_flag_ = cv::IMREAD_UNCHANGED;
   } 
 }
