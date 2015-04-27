@@ -50,6 +50,33 @@ namespace enc = sensor_msgs::image_encodings;
 namespace compressed_image_transport
 {
 
+void CompressedSubscriber::subscribeImpl(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
+                             const Callback& callback, const ros::VoidPtr& tracked_object,
+                             const image_transport::TransportHints& transport_hints)
+{
+    typedef image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage> Base;
+    Base::subscribeImpl(nh, base_topic, queue_size, callback, tracked_object, transport_hints);
+
+    // Set up reconfigure server for this topic
+    reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
+    ReconfigureServer::CallbackType f = boost::bind(&CompressedSubscriber::configCb, this, _1, _2);
+    reconfigure_server_->setCallback(f);
+}
+
+
+void CompressedSubscriber::configCb(Config& config, uint32_t level)
+{
+  config_ = config;
+  if (config_.mode == "gray") {
+      flags_ = CV_LOAD_IMAGE_GRAYSCALE;
+  } else if (config_.mode == "gray") {
+      flags_ = CV_LOAD_IMAGE_COLOR;
+  } else /*if (config_.mode == "unchanged")*/ {
+      flags_ = CV_LOAD_IMAGE_UNCHANGED;
+  } 
+}
+
+
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
 

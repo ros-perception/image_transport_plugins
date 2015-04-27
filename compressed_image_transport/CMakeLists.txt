@@ -5,7 +5,7 @@ find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS cv_bridge dynamic_reconfigure image_transport tf)
 
 # generate the dynamic_reconfigure config file
-generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg)
+generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg cfg/CompressedSubscriber.cfg)
 
 catkin_package(
   INCLUDE_DIRS include
