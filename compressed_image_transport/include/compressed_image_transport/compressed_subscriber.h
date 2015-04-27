@@ -63,7 +63,7 @@ protected:
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;
   Config config_;
-  int flags_;
+  int imdecode_flag_;
 
   void configCb(Config& config, uint32_t level);
 };
