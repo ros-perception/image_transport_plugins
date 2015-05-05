@@ -83,9 +83,9 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
-  if (config_.format == "jpeg")
+  if (config_.format == compressed_image_transport::CompressedPublisher_jpeg)
     encodingFormat = JPEG;
-  if (config_.format == "png")
+  if (config_.format == compressed_image_transport::CompressedPublisher_png)
     encodingFormat = PNG;
 
   // Bit depth of image encoding
