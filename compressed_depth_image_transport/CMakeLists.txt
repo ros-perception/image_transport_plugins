@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(compressed_depth_image_transport)
 
 find_package(OpenCV REQUIRED)
-find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_transport tf)
+find_package(catkin REQUIRED cv_bridge dynamic_reconfigure image_transport)
 
 # generate the dynamic_reconfigure config file
 generate_dynamic_reconfigure_options(cfg/CompressedDepthPublisher.cfg)
@@ -10,7 +10,7 @@ generate_dynamic_reconfigure_options(cfg/CompressedDepthPublisher.cfg)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport tf
+  CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport
   DEPENDS OpenCV
 )
 
