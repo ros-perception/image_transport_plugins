@@ -330,6 +330,7 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
     return compressed;
   }
 
+  return sensor_msgs::CompressedImage::Ptr();
 }
 
 }  // namespace compressed_depth_image_transport
