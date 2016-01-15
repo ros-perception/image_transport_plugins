@@ -1,7 +1,8 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 20012, Willow Garage, Inc.
+*  Copyright (c) 2012, Willow Garage.
+*  Copyright (c) 2016, Google, Inc.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,22 +33,25 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-#include "compressed_depth_image_transport/compressed_depth_subscriber.h"
+#include <opencv2/core/core.hpp>
 
-#include "compressed_depth_image_transport/codec.h"
-#include "compressed_depth_image_transport/compression_common.h"
+#include "sensor_msgs/CompressedImage.h"
+#include "sensor_msgs/Image.h"
+#include "sensor_msgs/image_encodings.h"
 
+// Encoding and decoding of compressed depth images.
 namespace compressed_depth_image_transport
 {
 
-void CompressedDepthSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
-                                            const Callback& user_cb)
-{
-  sensor_msgs::Image::Ptr image = decodeCompressedDepthImage(*message);
-  if (image)
-  {
-    user_cb(image);
-  }
-}
+// Returns a null pointer on bad input.
+sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::CompressedImage& compressed_image);
 
-} //namespace compressed_depth_image_transport
+// Compress a depth image. The png_compression parameter is passed straight through to
+// OpenCV as IMWRITE_PNG_COMPRESSION. Returns a null pointer on bad input.
+sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
+    const sensor_msgs::Image& message,
+    double depth_max,
+    double depth_quantization,
+    int png_level);
+
+}  // namespace compressed_depth_image_transport
