@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.3 (2016-01-17)
+------------------
 * Refactor the codec into its own .h and .cpp.
 * remove useless tf dependencies
 * Contributors: Mac Mason, Vincent Rabaud

@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.3 (2016-01-17)
+------------------
 * remove useless tf dependencies
 * Using cfg-defined constants
 * Changed flag name, and corrected typo in flag use.
