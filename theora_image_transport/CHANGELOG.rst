@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove useless tf dependencies
+* Contributors: Vincent Rabaud
+
 1.9.2 (2015-04-25)
 ------------------
 * get code to compile with OpenCV3
