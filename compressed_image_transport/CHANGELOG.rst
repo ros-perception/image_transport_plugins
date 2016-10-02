@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.4 (2016-10-02)
+------------------
 * address gcc6 build error and tune
   With gcc6, compiling fails with `stdlib.h: No such file or directory`,
   as including '-isystem /usr/include' breaks with gcc6, cf.,
