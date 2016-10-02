@@ -24,8 +24,9 @@ catkin_package(
   CATKIN_DEPENDS message_runtime std_msgs
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
-include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS}
+include_directories(include
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   ${PC_OGG_INCLUDE_DIRS}
   ${PC_THEORA_INCLUDE_DIRS}
   ${PC_THEORAENC_INCLUDE_DIRS}
