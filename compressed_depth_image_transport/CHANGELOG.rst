@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.5 (2016-10-03)
+------------------
 * disable -Werr
 * Contributors: Vincent Rabaud
 
