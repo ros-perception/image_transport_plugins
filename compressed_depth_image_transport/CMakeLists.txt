@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(compressed_depth_image_transport)
 
 if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 endif()
 
 find_package(OpenCV REQUIRED)
