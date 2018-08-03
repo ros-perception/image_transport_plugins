@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -32,14 +32,13 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include "image_transport/simple_publisher_plugin.h"
-#include <sensor_msgs/CompressedImage.h>
-#include <dynamic_reconfigure/server.h>
-#include <compressed_image_transport/CompressedPublisherConfig.h>
 
 namespace compressed_image_transport {
 
-class CompressedPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage>
+class CompressedPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage>
 {
 public:
   virtual ~CompressedPublisher() {}
@@ -51,20 +50,14 @@ public:
 
 protected:
   // Overridden to set up reconfigure server
-  virtual void advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                             const image_transport::SubscriberStatusCallback  &user_connect_cb,
-                             const image_transport::SubscriberStatusCallback  &user_disconnect_cb,
-                             const ros::VoidPtr &tracked_object, bool latch);
-  
-  virtual void publish(const sensor_msgs::Image& message,
+  virtual void advertiseImpl(
+      rclcpp::Node::SharedPtr node,
+      const std::string& base_topic,
+      rmw_qos_profile_t custom_qos);
+
+  virtual void publish(const sensor_msgs::msg::Image& message,
                        const PublishFn& publish_fn) const;
 
-  typedef compressed_image_transport::CompressedPublisherConfig Config;
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
-  Config config_;
-
-  void configCb(Config& config, uint32_t level);
 };
 
 } //namespace compressed_image_transport
