@@ -76,6 +76,11 @@ void CompressedSubscriber::configCb(Config& config, uint32_t level)
   } 
 }
 
+void CompressedSubscriber::shutdown()
+{
+  reconfigure_server_.reset();
+  image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage>::shutdown();
+}
 
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
