@@ -33,10 +33,12 @@
 *********************************************************************/
 
 #include "theora_image_transport/theora_subscriber.h"
+
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
+#include <rclcpp/logging.hpp>
+#include <sensor_msgs/image_encodings.hpp>
+
 #include <opencv2/imgproc/imgproc.hpp>
-#include <boost/scoped_array.hpp>
 #include <vector>
 
 using namespace std;
@@ -62,52 +64,52 @@ TheoraSubscriber::~TheoraSubscriber()
   th_comment_clear(&header_comment_);
 }
 
-void TheoraSubscriber::subscribeImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                                     const Callback &callback, const ros::VoidPtr &tracked_object,
-                                     const image_transport::TransportHints &transport_hints)
+void TheoraSubscriber::subscribeImpl(
+  rclcpp::Node::SharedPtr node,
+  const std::string &base_topic,
+  const Callback & callback,
+  rmw_qos_profile_t custom_qos)
 {
+  // TODO: how to handle this in ROS2?
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
-  queue_size += 4;
-  typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::Packet> Base;
-  Base::subscribeImpl(nh, base_topic, queue_size, callback, tracked_object, transport_hints);
-
-  // Set up reconfigure server for this topic
-  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
-  ReconfigureServer::CallbackType f = boost::bind(&TheoraSubscriber::configCb, this, _1, _2);
-  reconfigure_server_->setCallback(f);
+  // queue_size += 4;
+  typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
+  Base::subscribeImpl(node, base_topic, callback, custom_qos);
 }
 
-void TheoraSubscriber::configCb(Config& config, uint32_t level)
-{
-  if (decoding_context_ && pplevel_ != config.post_processing_level) {
-    pplevel_ = updatePostProcessingLevel(config.post_processing_level);
-    config.post_processing_level = pplevel_; // In case more than PPLEVEL_MAX
-  }
-  else
-    pplevel_ = config.post_processing_level;
-}
+// TODO: port this check to ROS2 user events
+//void TheoraSubscriber::configCb(Config& config, uint32_t level)
+//{
+//  if (decoding_context_ && pplevel_ != config.post_processing_level) {
+//    pplevel_ = updatePostProcessingLevel(config.post_processing_level);
+//    config.post_processing_level = pplevel_; // In case more than PPLEVEL_MAX
+//  }
+//  else
+//    pplevel_ = config.post_processing_level;
+//}
 
 int TheoraSubscriber::updatePostProcessingLevel(int level)
 {
   int pplevel_max;
   int err = th_decode_ctl(decoding_context_, TH_DECCTL_GET_PPLEVEL_MAX, &pplevel_max, sizeof(int));
-  if (err)
-    ROS_WARN("Failed to get maximum post-processing level, error code %d", err);
-  else if (level > pplevel_max) {
-    ROS_WARN("Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
+  if (err) {
+    RCUTILS_LOG_WARN("Failed to get maximum post-processing level, error code %d", err);
+  } else if (level > pplevel_max) {
+    RCUTILS_LOG_WARN("Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
     level = pplevel_max;
   }
 
   err = th_decode_ctl(decoding_context_, TH_DECCTL_SET_PPLEVEL, &level, sizeof(int));
   if (err) {
-    ROS_ERROR("Failed to set post-processing level, error code %d", err);
+    RCUTILS_LOG_ERROR("Failed to set post-processing level, error code %d", err);
     return pplevel_; // old value
   }
   return level;
 }
 
 //When using this caller is responsible for deleting oggpacket.packet!!
-void TheoraSubscriber::msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg)
+void TheoraSubscriber::msgToOggPacket(const theora_image_transport::msg::Packet &msg,
+                                      ogg_packet &ogg)
 {
   ogg.bytes      = msg.data.size();
   ogg.b_o_s      = msg.b_o_s;
@@ -118,12 +120,13 @@ void TheoraSubscriber::msgToOggPacket(const theora_image_transport::Packet &msg,
   memcpy(ogg.packet, &msg.data[0], ogg.bytes);
 }
 
-void TheoraSubscriber::internalCallback(const theora_image_transport::PacketConstPtr& message, const Callback& callback)
+void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr& message,
+                                        const Callback& callback)
 {
   /// @todo Break this function into pieces
   ogg_packet oggpacket;
   msgToOggPacket(*message, oggpacket);
-  boost::scoped_array<unsigned char> packet_guard(oggpacket.packet); // Make sure packet memory gets deleted
+  std::unique_ptr<unsigned char[]> packet_guard(oggpacket.packet); // Make sure packet memory gets deleted
 
   // Beginning of logical stream flag means we're getting new headers
   if (oggpacket.b_o_s == 1) {
@@ -151,28 +154,28 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
         // We've received the full header; this is the first video packet.
         decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
         if (!decoding_context_) {
-          ROS_ERROR("[theora] Decoding parameters were invalid");
+          RCUTILS_LOG_ERROR("[theora] Decoding parameters were invalid");
           return;
         }
         received_header_ = true;
         pplevel_ = updatePostProcessingLevel(pplevel_);
         break; // Continue on the video decoding
       case TH_EFAULT:
-        ROS_WARN("[theora] EFAULT when processing header packet");
+        RCUTILS_LOG_WARN("[theora] EFAULT when processing header packet");
         return;
       case TH_EBADHEADER:
-        ROS_WARN("[theora] Bad header packet");
+        RCUTILS_LOG_WARN("[theora] Bad header packet");
         return;
       case TH_EVERSION:
-        ROS_WARN("[theora] Header packet not decodable with this version of libtheora");
+        RCUTILS_LOG_WARN("[theora] Header packet not decodable with this version of libtheora");
         return;
       case TH_ENOTFORMAT:
-        ROS_WARN("[theora] Packet was not a Theora header");
+        RCUTILS_LOG_WARN("[theora] Packet was not a Theora header");
         return;
       default:
         // If rval > 0, we successfully received a header packet.
         if (rval < 0)
-          ROS_WARN("[theora] Error code %d when processing header packet", rval);
+          RCUTILS_LOG_WARN("[theora] Error code %d when processing header packet", rval);
         return;
     }
   }
@@ -189,23 +192,23 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
       break; // Yay, we got a frame. Carry on below.
     case TH_DUPFRAME:
       // Video data hasn't changed, so we update the timestamp and reuse the last received frame.
-      ROS_DEBUG("[theora] Got a duplicate frame");
+      RCUTILS_LOG_DEBUG("[theora] Got a duplicate frame");
       if (latest_image_) {
         latest_image_->header = message->header;
         callback(latest_image_);
       }
       return;
     case TH_EFAULT:
-      ROS_WARN("[theora] EFAULT processing video packet");
+      RCUTILS_LOG_WARN("[theora] EFAULT processing video packet");
       return;
     case TH_EBADPACKET:
-      ROS_WARN("[theora] Packet does not contain encoded video data");
+      RCUTILS_LOG_WARN("[theora] Packet does not contain encoded video data");
       return;
     case TH_EIMPL:
-      ROS_WARN("[theora] The video data uses bitstream features not supported by this version of libtheora");
+      RCUTILS_LOG_WARN("[theora] The video data uses bitstream features not supported by this version of libtheora");
       return;
     default:
-      ROS_WARN("[theora] Error code %d when decoding video packet", rval);
+      RCUTILS_LOG_WARN("[theora] Error code %d when decoding video packet", rval);
       return;
   }
 
@@ -235,7 +238,8 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::PacketCons
   bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
                             header_info_.pic_width, header_info_.pic_height));
 
-  latest_image_ = cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
+  latest_image_ = 
+    cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
   /// @todo Handle RGB8 or MONO8 efficiently
   callback(latest_image_);
 }

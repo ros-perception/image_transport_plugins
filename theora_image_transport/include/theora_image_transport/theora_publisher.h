@@ -32,12 +32,13 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
+
 #include <image_transport/simple_publisher_plugin.h>
 #include <cv_bridge/cv_bridge.h>
-#include <std_msgs/Header.h>
-#include <dynamic_reconfigure/server.h>
-#include <theora_image_transport/TheoraPublisherConfig.h>
-#include <theora_image_transport/Packet.h>
+#include <std_msgs/msg/header.hpp>
+#include <theora_image_transport/msg/packet.hpp>
 
 #include <theora/codec.h>
 #include <theora/theoraenc.h>
@@ -45,7 +46,7 @@
 
 namespace theora_image_transport {
 
-class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_image_transport::Packet>
+class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet>
 {
 public:
   TheoraPublisher();
@@ -57,38 +58,32 @@ public:
 
 protected:
   // Overridden to tweak arguments and set up reconfigure server
-  virtual void advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                             const image_transport::SubscriberStatusCallback  &user_connect_cb,
-                             const image_transport::SubscriberStatusCallback  &user_disconnect_cb,
-                             const ros::VoidPtr &tracked_object, bool latch);
-  
-  // Callback to send header packets to new clients
-  virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
+  virtual void advertiseImpl(
+    rclcpp::Node::SharedPtr node,
+    const std::string &base_topic,
+    rmw_qos_profile_t custom_qos);
+
+  // TODO: Callback to send header packets to new clients
+  // virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
 
   // Main publish function
-  virtual void publish(const sensor_msgs::Image& message,
+  virtual void publish(const sensor_msgs::msg::Image& message,
                        const PublishFn& publish_fn) const;
-
-  // Dynamic reconfigure support
-  typedef theora_image_transport::TheoraPublisherConfig Config;
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
-
-  void configCb(Config& config, uint32_t level);
-
+  
   // Utility functions
-  bool ensureEncodingContext(const sensor_msgs::Image& image, const PublishFn& publish_fn) const;
-  void oggPacketToMsg(const std_msgs::Header& header, const ogg_packet &oggpacket,
-                      theora_image_transport::Packet &msg) const;
+  bool ensureEncodingContext(const sensor_msgs::msg::Image& image, const PublishFn& publish_fn) const;
+  void oggPacketToMsg(const std_msgs::msg::Header& header,
+                      const ogg_packet &oggpacket,
+                      theora_image_transport::msg::Packet &msg) const;
   void updateKeyframeFrequency() const;
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
-  mutable cv_bridge::CvImage img_image_;
+  mutable cv_bridge::CvImage img_image;
   mutable th_info encoder_setup_;
   mutable ogg_uint32_t keyframe_frequency_;
-  mutable boost::shared_ptr<th_enc_ctx> encoding_context_;
-  mutable std::vector<theora_image_transport::Packet> stream_header_;
+  mutable std::shared_ptr<th_enc_ctx> encoding_context_;
+  mutable std::vector<theora_image_transport::msg::Packet> stream_header_;
 };
 
 } //namespace compressed_image_transport
