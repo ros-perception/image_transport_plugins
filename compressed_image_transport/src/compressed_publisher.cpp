@@ -42,8 +42,9 @@
 
 #include <rclcpp/parameter_client.hpp>
 
-#include <vector>
+#include <iostream>
 #include <sstream>
+#include <vector>
 
 using namespace cv;
 using namespace std;
@@ -64,18 +65,14 @@ void CompressedPublisher::advertiseImpl(
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+      RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.\n");
     }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+    RCUTILS_LOG_INFO("service not available, waiting again...\n");
   }
 
-  std::stringstream ss;
-  // Get a few of the parameters just set.
-  for (auto & parameter : parameters_client->get_parameters({"format"})) {
-    ss << "\nParameter name: " << parameter.get_name();
-    ss << "\nParameter value (" << parameter.get_type_name() << "): " <<
-      parameter.value_to_string();
-  }
+  format_ =  parameters_client->get_parameter<std::string>("format", "JPEG");
+  png_level_ = parameters_client->get_parameter<int>("png_level", 3);
+  jpeg_quality_ = parameters_client->get_parameter<int>("jpeg_quality", 95);
 }
 
 void CompressedPublisher::publish(
@@ -93,14 +90,13 @@ void CompressedPublisher::publish(
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
-  //if (config_.format == compressed_image_transport::CompressedPublisher_jpeg)
-  //  encodingFormat = JPEG;
-  //if (config_.format == compressed_image_transport::CompressedPublisher_png)
-  //  encodingFormat = PNG;
+  if (format_ == "JPEG" || format_ == "jpeg")
+    encodingFormat = JPEG;
+  if (format_ == "PNG" || format_ == "png")
+    encodingFormat = PNG;
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
-  int numChannels = enc::numChannels(message.encoding);
 
   switch (encodingFormat)
   {
@@ -108,8 +104,7 @@ void CompressedPublisher::publish(
     case JPEG:
     {
       params[0] = CV_IMWRITE_JPEG_QUALITY;
-      //params[1] = config_.jpeg_quality;
-      params[1] = 100;
+      params[1] = jpeg_quality_;
 
       // Update ros message format header
       compressed.format += "; jpeg compressed ";
@@ -138,36 +133,36 @@ void CompressedPublisher::publish(
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            //ROS_DEBUG("Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            //ROS_ERROR("cv::imencode (jpeg) failed on input image");
+            RCUTILS_LOG_ERROR("cv::imencode (jpeg) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          //ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
         }
         catch (cv::Exception& e)
         {
-          //ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
         }
 
         // Publish message
         publish_fn(compressed);
       }
       else
-        //ROS_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
-
+      {
+        RCUTILS_LOG_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
+      }
       break;
     }
       // PNG Compression
     case PNG:
     {
       params[0] = CV_IMWRITE_PNG_COMPRESSION;
-      params[1] = 1;
-      //params[1] = config_.png_level;
+      params[1] = png_level_;
 
       // Update ros message format header
       compressed.format += "; png compressed ";
@@ -197,21 +192,21 @@ void CompressedPublisher::publish(
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            //ROS_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            //ROS_ERROR("cv::imencode (png) failed on input image");
+            RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          //ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
           return;
         }
         catch (cv::Exception& e)
         {
-          //ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
           return;
         }
 
@@ -219,12 +214,12 @@ void CompressedPublisher::publish(
         publish_fn(compressed);
       }
       else
-        //ROS_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
+        RCUTILS_LOG_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
       break;
     }
 
     default:
-      //ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", config_.format.c_str());
+      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", format_.c_str());
       break;
   }
 

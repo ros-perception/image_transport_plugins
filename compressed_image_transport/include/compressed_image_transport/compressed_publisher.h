@@ -53,10 +53,25 @@ protected:
   virtual void advertiseImpl(
       rclcpp::Node::SharedPtr node,
       const std::string& base_topic,
-      rmw_qos_profile_t custom_qos);
+      rmw_qos_profile_t custom_qos) override final;
 
   virtual void publish(const sensor_msgs::msg::Image& message,
-                       const PublishFn& publish_fn) const;
+                       const PublishFn& publish_fn) const override final;
+
+  // Compression format to use "JPEG" or "PNG"
+  std::string format_;
+
+  // PNG Compression Level from 0 to 9.  A higher value means a smaller size.
+  // Default to OpenCV default of 3
+  int png_level_;
+
+  // JPEG Quality from 0 to 100 (higher is better quality).
+  // Default to OpenCV default of 95.
+  int jpeg_quality_;
+
+
+
+
 
 };
 
