@@ -33,15 +33,20 @@
 *********************************************************************/
 
 #include "compressed_image_transport/compressed_subscriber.h"
-#include <sensor_msgs/image_encodings.hpp>
+
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "compressed_image_transport/compression_common.h"
 
+#include <rclcpp/parameter_client.hpp>
+
 #include <limits>
 #include <vector>
+
+constexpr const char* kDefaultMode = "unchanged";
 
 using namespace cv;
 
@@ -60,8 +65,27 @@ void CompressedSubscriber::subscribeImpl(
 {
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
-    //TODO(ros2): Parameters or Dynamic reconfigure?
-    imdecode_flag_ = cv::IMREAD_UNCHANGED;
+
+    auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+    while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
+      if (!rclcpp::ok()) {
+        RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.\n");
+      }
+      RCUTILS_LOG_INFO("service not available, waiting again...\n");
+    }
+
+    auto mode = parameters_client->get_parameter<std::string>("mode", kDefaultMode);
+
+    if (mode == "unchanged") {
+      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
+    } else if (mode == "gray") {
+      config_.imdecode_flag = cv::IMREAD_GRAYSCALE;
+    } else if (mode == "color") {
+      config_.imdecode_flag = cv::IMREAD_COLOR;
+    } else {
+      RCUTILS_LOG_ERROR("Unknown mode: %s, defaulting to 'unchanged\n", mode.c_str());
+      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
+    }
 }
 
 
@@ -77,7 +101,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   // Decode color/mono image
   try
   {
-    cv_ptr->image = cv::imdecode(cv::Mat(message->data), imdecode_flag_);
+    cv_ptr->image = cv::imdecode(cv::Mat(message->data), config_.imdecode_flag);
 
     // Assign image encoding string
     const size_t split_pos = message->format.find(';');
@@ -93,7 +117,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
           cv_ptr->encoding = enc::BGR8;
           break;
         default:
-          //ROS_ERROR("Unsupported number of channels: %i", cv_ptr->image.channels());
+          RCUTILS_LOG_ERROR("Unsupported number of channels: %i\n", cv_ptr->image.channels());
           break;
       }
     } else
@@ -136,7 +160,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   }
   catch (cv::Exception& e)
   {
-    //ROS_ERROR("%s", e.what());
+    RCUTILS_LOG_ERROR("%s\n", e.what());
   }
 
   size_t rows = cv_ptr->image.rows;

@@ -64,7 +64,11 @@ protected:
   virtual void internalCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
                                 const Callback& user_cb);
 
-  int imdecode_flag_;
+  struct Config {
+    int imdecode_flag;
+  };
+
+  Config config_;
 };
 
 } //namespace image_transport

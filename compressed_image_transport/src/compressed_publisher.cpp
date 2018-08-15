@@ -42,9 +42,12 @@
 
 #include <rclcpp/parameter_client.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <vector>
+
+constexpr const char* kDefaultFormat = "jpeg";
+constexpr int kDefaultPngLevel = 3;
+constexpr int KDefaultJpegQuality = 95;
 
 using namespace cv;
 using namespace std;
@@ -63,16 +66,16 @@ void CompressedPublisher::advertiseImpl(
   Base::advertiseImpl(node, base_topic, custom_qos);
 
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  while (!parameters_client->wait_for_service(1s)) {
+  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
       RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.\n");
     }
     RCUTILS_LOG_INFO("service not available, waiting again...\n");
   }
 
-  format_ =  parameters_client->get_parameter<std::string>("format", "JPEG");
-  png_level_ = parameters_client->get_parameter<int>("png_level", 3);
-  jpeg_quality_ = parameters_client->get_parameter<int>("jpeg_quality", 95);
+  config_.format =  parameters_client->get_parameter<std::string>("format", kDefaultFormat);
+  config_.png_level = parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
+  config_.jpeg_quality = parameters_client->get_parameter<int>("jpeg_quality", KDefaultJpegQuality);
 }
 
 void CompressedPublisher::publish(
@@ -90,9 +93,9 @@ void CompressedPublisher::publish(
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
-  if (format_ == "JPEG" || format_ == "jpeg")
+  if (config_.format == "jpeg")
     encodingFormat = JPEG;
-  if (format_ == "PNG" || format_ == "png")
+  if (config_.format == "png")
     encodingFormat = PNG;
 
   // Bit depth of image encoding
@@ -104,7 +107,7 @@ void CompressedPublisher::publish(
     case JPEG:
     {
       params[0] = CV_IMWRITE_JPEG_QUALITY;
-      params[1] = jpeg_quality_;
+      params[1] = config_.jpeg_quality;
 
       // Update ros message format header
       compressed.format += "; jpeg compressed ";
@@ -162,7 +165,7 @@ void CompressedPublisher::publish(
     case PNG:
     {
       params[0] = CV_IMWRITE_PNG_COMPRESSION;
-      params[1] = png_level_;
+      params[1] = config_.png_level;
 
       // Update ros message format header
       compressed.format += "; png compressed ";
@@ -219,10 +222,8 @@ void CompressedPublisher::publish(
     }
 
     default:
-      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", format_.c_str());
+      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", config_.format.c_str());
       break;
   }
-
 }
-
 } //namespace compressed_image_transport
