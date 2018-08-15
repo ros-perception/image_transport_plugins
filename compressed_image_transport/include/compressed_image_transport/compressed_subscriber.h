@@ -69,6 +69,7 @@ protected:
   };
 
   Config config_;
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace image_transport

@@ -38,6 +38,8 @@
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include "image_transport/simple_publisher_plugin.h"
 
+#include <rclcpp/node.hpp>
+
 namespace compressed_image_transport {
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
@@ -76,6 +78,7 @@ protected:
   };
 
   Config config_;
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace compressed_image_transport

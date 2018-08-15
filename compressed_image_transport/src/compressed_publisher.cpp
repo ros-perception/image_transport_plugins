@@ -64,13 +64,14 @@ void CompressedPublisher::advertiseImpl(
 {
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
+  node_ = node;
 
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
   while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
-      RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.\n");
+      RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
     }
-    RCUTILS_LOG_INFO("service not available, waiting again...\n");
+    RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...n");
   }
 
   config_.format =  parameters_client->get_parameter<std::string>("format", kDefaultFormat);
@@ -136,20 +137,20 @@ void CompressedPublisher::publish(
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCLCPP_DEBUG(node_->get_logger(), "Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            RCUTILS_LOG_ERROR("cv::imencode (jpeg) failed on input image");
+            RCLCPP_ERROR(node_->get_logger(), "cv::imencode (jpeg) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          RCUTILS_LOG_ERROR("%s", e.what());
+          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
         }
         catch (cv::Exception& e)
         {
-          RCUTILS_LOG_ERROR("%s", e.what());
+          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
         }
 
         // Publish message
@@ -157,7 +158,7 @@ void CompressedPublisher::publish(
       }
       else
       {
-        RCUTILS_LOG_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
+        RCLCPP_ERROR(node_->get_logger(), "Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
       }
       break;
     }

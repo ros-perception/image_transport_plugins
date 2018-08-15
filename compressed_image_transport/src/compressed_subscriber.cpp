@@ -65,13 +65,14 @@ void CompressedSubscriber::subscribeImpl(
 {
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
+    node_ = node;
 
     auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
     while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
       if (!rclcpp::ok()) {
-        RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.\n");
+        RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
       }
-      RCUTILS_LOG_INFO("service not available, waiting again...\n");
+      RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
     }
 
     auto mode = parameters_client->get_parameter<std::string>("mode", kDefaultMode);
@@ -83,7 +84,7 @@ void CompressedSubscriber::subscribeImpl(
     } else if (mode == "color") {
       config_.imdecode_flag = cv::IMREAD_COLOR;
     } else {
-      RCUTILS_LOG_ERROR("Unknown mode: %s, defaulting to 'unchanged\n", mode.c_str());
+      RCLCPP_ERROR(node_->get_logger(), "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
       config_.imdecode_flag = cv::IMREAD_UNCHANGED;
     }
 }
@@ -117,7 +118,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
           cv_ptr->encoding = enc::BGR8;
           break;
         default:
-          RCUTILS_LOG_ERROR("Unsupported number of channels: %i\n", cv_ptr->image.channels());
+          RCLCPP_ERROR(node_->get_logger(), "Unsupported number of channels: %i", cv_ptr->image.channels());
           break;
       }
     } else
@@ -160,7 +161,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   }
   catch (cv::Exception& e)
   {
-    RCUTILS_LOG_ERROR("%s\n", e.what());
+    RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
   }
 
   size_t rows = cv_ptr->image.rows;
