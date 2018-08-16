@@ -76,6 +76,8 @@ protected:
   th_comment header_comment_;
   th_setup_info* setup_info_;
   sensor_msgs::msg::Image::SharedPtr latest_image_;
+
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace theora_image_transport

@@ -85,7 +85,8 @@ void TheoraPublisher::advertiseImpl(
   custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos);
+  Base::advertiseImpl(node_, base_topic, custom_qos);
+  node_ = node;
 }
 
   // TODO(ros2): this method should be called when configuration change through
@@ -110,7 +111,7 @@ void TheoraPublisher::advertiseImpl(
   //    if (update_bitrate) {
   //      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_BITRATE, &bitrate, sizeof(long));
   //      if (err)
-  //        RCUTILS_LOG_ERROR("Failed to update bitrate dynamically");
+  //        RCLCPP_ERROR(node_->get_logger(), "Failed to update bitrate dynamically");
   //    }
   //#else
   //    err |= update_bitrate;
@@ -122,7 +123,7 @@ void TheoraPublisher::advertiseImpl(
   //      // In 1.1 above call will fail if a bitrate has previously been set. That restriction may
   //      // be relaxed in a future version. Complain on other failures.
   //      if (err && err != TH_EINVAL)
-  //        RCUTILS_LOG_ERROR("Failed to update quality dynamically");
+  //        RCLCPP_ERROR(node_->get_logger(), "Failed to update quality dynamically");
   //    }
   //#else
   //    err |= update_quality;
@@ -166,17 +167,17 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   }
   catch (cv_bridge::Exception& e)
   {
-    RCUTILS_LOG_ERROR("cv_bridge exception: '%s'", e.what());
+    RCLCPP_ERROR(node_->get_logger(), "cv_bridge exception: '%s'", e.what());
     return;
   }
   catch (cv::Exception& e)
   {
-    RCUTILS_LOG_ERROR("OpenCV exception: '%s'", e.what());
+    RCLCPP_ERROR(node_->get_logger(), "OpenCV exception: '%s'", e.what());
     return;
   }
 
   if (cv_image_ptr == 0) {
-    RCUTILS_LOG_ERROR("Unable to convert from '%s' to 'bgr8'", message.encoding.c_str());
+    RCLCPP_ERROR(node_->get_logger(), "Unable to convert from '%s' to 'bgr8'", message.encoding.c_str());
     return;
   }
 
@@ -215,11 +216,11 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   // Submit frame to the encoder
   int rval = th_encode_ycbcr_in(encoding_context_.get(), ycbcr_buffer);
   if (rval == TH_EFAULT) {
-    RCUTILS_LOG_ERROR("[theora] EFAULT in submitting uncompressed frame to encoder");
+    RCLCPP_ERROR(node_->get_logger(), "[theora] EFAULT in submitting uncompressed frame to encoder");
     return;
   }
   if (rval == TH_EINVAL) {
-    RCUTILS_LOG_ERROR("[theora] EINVAL in submitting uncompressed frame to encoder");
+    RCLCPP_ERROR(node_->get_logger(), "[theora] EINVAL in submitting uncompressed frame to encoder");
     return;
   }
 
@@ -231,7 +232,7 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
     publish_fn(output);
   }
   if (rval == TH_EFAULT)
-    RCUTILS_LOG_ERROR("[theora] EFAULT in retrieving encoded video data packets");
+    RCLCPP_ERROR(node_->get_logger(), "[theora] EFAULT in retrieving encoded video data packets");
 }
 
 void freeContext(th_enc_ctx* context)
@@ -257,7 +258,7 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::msg::Image& image
   // Allocate encoding context. Smart pointer ensures that th_encode_free gets called.
   encoding_context_.reset(th_encode_alloc(&encoder_setup_), freeContext);
   if (!encoding_context_) {
-    RCUTILS_LOG_ERROR("[theora] Failed to create encoding context");
+    RCLCPP_ERROR(node_->get_logger(), "[theora] Failed to create encoding context");
     return false;
   }
 
@@ -299,9 +300,9 @@ void TheoraPublisher::updateKeyframeFrequency() const
   ogg_uint32_t desired_frequency = keyframe_frequency_;
   if (th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
                     &keyframe_frequency_, sizeof(ogg_uint32_t)))
-    RCUTILS_LOG_ERROR("Failed to change keyframe frequency");
+    RCLCPP_ERROR(node_->get_logger(), "Failed to change keyframe frequency");
   if (keyframe_frequency_ != desired_frequency)
-    RCUTILS_LOG_WARN("Couldn't set keyframe frequency to %d, actually set to %d",
+    RCLCPP_WARN(node_->get_logger(), "Couldn't set keyframe frequency to %d, actually set to %d",
                       desired_frequency, keyframe_frequency_);
 }
 

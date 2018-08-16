@@ -84,6 +84,8 @@ protected:
   mutable ogg_uint32_t keyframe_frequency_;
   mutable std::shared_ptr<th_enc_ctx> encoding_context_;
   mutable std::vector<theora_image_transport::msg::Packet> stream_header_;
+
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace compressed_image_transport
