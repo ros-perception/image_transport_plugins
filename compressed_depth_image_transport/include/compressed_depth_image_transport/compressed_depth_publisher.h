@@ -53,10 +53,10 @@ protected:
   virtual void advertiseImpl(
           rclcpp::Node::SharedPtr node,
           const std::string &base_topic,
-          rmw_qos_profile_t custom_qos);
+          rmw_qos_profile_t custom_qos) override final;
 
   virtual void publish(const sensor_msgs::msg::Image& message,
-                       const PublishFn& publish_fn) const;
+                       const PublishFn& publish_fn) const override final;
 };
 
 } //namespace compressed_depth_image_transport
