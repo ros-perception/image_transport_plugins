@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -68,11 +68,17 @@ void TheoraSubscriber::subscribeImpl(
   rclcpp::Node::SharedPtr node,
   const std::string &base_topic,
   const Callback & callback,
+  uint32_t queue_size,
   rmw_qos_profile_t custom_qos)
 {
-  // TODO: how to handle this in ROS2?
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
-  // queue_size += 4;
+  // ported this to ROS2 using the history policy that  determines how messages
+  // are saved until the message is taken by the reader.  KEEP_ALL saves all
+  // messages until they are taken.  KEEP_LAST enforces a limit on the number of
+  // messages that are saved, specified by the "depth" parameter.
+  custom_qos.history = rmw_qos_profile_default.history;
+  custom_qos.depth = queue_size + 4;
+
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
   Base::subscribeImpl(node, base_topic, callback, custom_qos);
 }
@@ -184,7 +190,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
   received_keyframe_ = received_keyframe_ || (th_packet_iskeyframe(&oggpacket) == 1);
   if (!received_keyframe_)
     return;
-  
+
   // We have a video packet we can handle, let's decode it
   int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
   switch (rval) {
@@ -238,7 +244,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
   bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
                             header_info_.pic_width, header_info_.pic_height));
 
-  latest_image_ = 
+  latest_image_ =
     cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
   /// @todo Handle RGB8 or MONO8 efficiently
   callback(latest_image_);

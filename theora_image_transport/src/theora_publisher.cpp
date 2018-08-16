@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -50,7 +50,7 @@ TheoraPublisher::TheoraPublisher()
 {
   // Initialize info structure fields that don't change
   th_info_init(&encoder_setup_);
-  
+
   encoder_setup_.pic_x = 0;
   encoder_setup_.pic_y = 0;
   encoder_setup_.colorspace = TH_CS_UNSPECIFIED;
@@ -73,14 +73,16 @@ TheoraPublisher::~TheoraPublisher()
 void TheoraPublisher::advertiseImpl(
   rclcpp::Node::SharedPtr node,
   const std::string &base_topic,
+  uint32_t queue_size,
   rmw_qos_profile_t custom_qos)
 {
-  // TODO: how to port these configurations to ROS2?
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
-  // queue_size += 4;
-  // Latching doesn't make a lot of sense with this transport. Could try to save the last keyframe,
-  // but do you then send all following delta frames too?
-  // latch = false;
+  // ported this to ROS2 using the history policy that  determines how messages
+  // are saved until the message is taken by the reader.  KEEP_ALL saves all
+  // messages until they are taken.  KEEP_LAST enforces a limit on the number of
+  // messages that are saved, specified by the "depth" parameter.
+  custom_qos.history = rmw_qos_profile_default.history;
+  custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
@@ -100,7 +102,7 @@ void TheoraPublisher::advertiseImpl(
   //  encoder_setup_.quality = config.quality;
   //  encoder_setup_.target_bitrate = bitrate;
   //  keyframe_frequency_ = config.keyframe_frequency;
-  //  
+  //
   //  if (encoding_context_) {
   //    int err = 0;
   //    // libtheora 1.1 lets us change quality or bitrate on the fly, 1.0 does not.
@@ -194,7 +196,7 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   // Convert image to Y'CbCr color space used by Theora
   cv::Mat ycrcb;
   cv::cvtColor(bgr_padded, ycrcb, cv::COLOR_BGR2YCrCb);
-  
+
   // Split channels
   cv::Mat ycrcb_planes[3];
   cv::split(ycrcb, ycrcb_planes);

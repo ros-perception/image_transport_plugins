@@ -50,12 +50,12 @@ public:
   virtual std::string getTransportName() const { return "theora"; }
 
 protected:
-  // TODO: Overridden to bump queue_size, otherwise we might lose headers. How
-  // in ROS2?
+  // Overridden to bump queue_size, otherwise we might lose headers
   virtual void subscribeImpl(
     rclcpp::Node::SharedPtr node,
     const std::string &base_topic,
     const Callback & callback,
+    uint32_t queue_size,
     rmw_qos_profile_t custom_qos);
   
   // The function that does the actual decompression and calls a user supplied 

@@ -57,10 +57,10 @@ public:
   virtual std::string getTransportName() const { return "theora"; }
 
 protected:
-  // Overridden to tweak arguments and set up reconfigure server
   virtual void advertiseImpl(
     rclcpp::Node::SharedPtr node,
     const std::string &base_topic,
+    uint32_t queue_size,
     rmw_qos_profile_t custom_qos);
 
   // TODO: Callback to send header packets to new clients
