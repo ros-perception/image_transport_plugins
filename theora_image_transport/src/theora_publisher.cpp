@@ -88,8 +88,8 @@ void TheoraPublisher::advertiseImpl(
   Base::advertiseImpl(node, base_topic, custom_qos);
 }
 
-  // TODO: this method should be called when configuration change through
-  // user events
+  // TODO(ros2): this method should be called when configuration change through
+  // user events. It was previosly used by Dynamic Reconfigure in ROS1
   //
   //void TheoraPublisher::configCb(Config& config, uint32_t level)
   //{
