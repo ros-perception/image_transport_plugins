@@ -140,7 +140,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       }
       catch (cv::Exception& e)
       {
-        RCUTILS_LOG_ERROR(%s);
+        RCUTILS_LOG_ERROR(e.what());
         return sensor_msgs::msg::Image::SharedPtr();
       }
 
@@ -158,14 +158,11 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
 }
 
 sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
-    const sensor_msgs::msg::Image& message)
+  const sensor_msgs::msg::Image& message,
+  double depth_max,
+  double depth_quantization,
+  int png_level)
 {
-  // TODO: let the user change this hardcoded values using events or dynamic
-  // reconfigure
-  double depth_max = 10.0;
-  double depth_quantization = 100.0;
-  double png_level = 9;
-
   // Compressed image message
   sensor_msgs::msg::CompressedImage::SharedPtr compressed(new sensor_msgs::msg::CompressedImage());
   compressed->header = message.header;
@@ -206,7 +203,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (cv_bridge::Exception& e)
     {
-      RCUTILS_LOG_ERROR(%s);
+      RCUTILS_LOG_ERROR(e.what());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -308,7 +305,8 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
       {
         float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
             / (float)compressedImage.size();
-        //ROS_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
+        RCUTILS_LOG_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)",
+                          cRatio, compressedImage.size());
       }
       else
       {

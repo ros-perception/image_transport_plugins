@@ -45,6 +45,10 @@
 #include <vector>
 #include <sstream>
 
+constexpr int kDefaultPngLevel = 9;
+constexpr double kDefaultDepthMax = 10.0;
+constexpr double KDefaultDepthQuantization = 100.0;
+
 using namespace cv;
 using namespace std;
 
@@ -62,20 +66,19 @@ void CompressedDepthPublisher::advertiseImpl(
   Base::advertiseImpl(node, base_topic, custom_qos);
 
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  while (!parameters_client->wait_for_service(1s)) {
+  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
       RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
     }
     RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
   }
 
-  std::stringstream ss;
-  // Get a few of the parameters just set.
-  for (auto & parameter : parameters_client->get_parameters({"format"})) {
-    ss << "\nParameter name: " << parameter.get_name();
-    ss << "\nParameter value (" << parameter.get_type_name() << "): " <<
-      parameter.value_to_string();
-  }
+  config_.png_level =
+    parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
+  config_.depth_max =
+    parameters_client->get_parameter<double>("depth_max", kDefaultDepthMax);
+  config_.depth_quantization =
+    parameters_client->get_parameter<double>("depth_quantization", KDefaultDepthQuantization);
 }
 
 void CompressedDepthPublisher::publish(
@@ -83,8 +86,10 @@ void CompressedDepthPublisher::publish(
   const PublishFn& publish_fn) const
 {
   sensor_msgs::msg::CompressedImage::SharedPtr compressed_image =
-    encodeCompressedDepthImage(message);
-
+    encodeCompressedDepthImage(message,
+                               config_.depth_max,
+                               config_.depth_quantization,
+                               config_.png_level);
   if (compressed_image)
   {
     publish_fn(*compressed_image);

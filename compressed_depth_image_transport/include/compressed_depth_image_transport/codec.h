@@ -50,6 +50,8 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
 // Compress a depth image. The png_compression parameter is passed straight through to
 // OpenCV as IMWRITE_PNG_COMPRESSION. Returns a null pointer on bad input.
 sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
-  const sensor_msgs::msg::Image& message);
-
+  const sensor_msgs::msg::Image& message,
+  double depth_max = 10.0,
+  double depth_quantization = 100.0,
+  int png_level = 9);
 }  // namespace compressed_depth_image_transport

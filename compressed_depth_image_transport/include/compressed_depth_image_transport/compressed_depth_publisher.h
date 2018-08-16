@@ -57,6 +57,14 @@ protected:
 
   virtual void publish(const sensor_msgs::msg::Image& message,
                        const PublishFn& publish_fn) const override final;
+
+  struct Config {
+    int png_level;
+    double depth_max;
+    double depth_quantization;
+  };
+
+  Config config_;
 };
 
 } //namespace compressed_depth_image_transport
