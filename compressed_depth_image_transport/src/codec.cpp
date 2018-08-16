@@ -37,9 +37,10 @@
 #include <string>
 #include <vector>
 
-#include <opencv2/highgui/highgui.hpp>
-
 #include "cv_bridge/cv_bridge.h"
+#include <opencv2/highgui/highgui.hpp>
+#include <rcutils/logging_macros.h>
+
 #include "compressed_depth_image_transport/codec.h"
 #include "compressed_depth_image_transport/compression_common.h"
 
@@ -96,7 +97,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       }
       catch (cv::Exception& e)
       {
-        //ROS_ERROR("%s", e.what());
+        RCUTILS_LOG_ERROR(e.what());
         return sensor_msgs::msg::Image::SharedPtr();
       }
 
@@ -139,7 +140,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       }
       catch (cv::Exception& e)
       {
-        //ROS_ERROR("%s", e.what());
+        RCUTILS_LOG_ERROR(%s);
         return sensor_msgs::msg::Image::SharedPtr();
       }
 
@@ -205,7 +206,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (cv_bridge::Exception& e)
     {
-      //ROS_ERROR("%s", e.what());
+      RCUTILS_LOG_ERROR(%s);
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -253,17 +254,17 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
         {
           float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
               / (float)compressedImage.size();
-          //ROS_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
+          RCUTILS_LOG_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
         }
         else
         {
-          //ROS_ERROR("cv::imencode (png) failed on input image");
+          RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
       }
       catch (cv::Exception& e)
       {
-        //ROS_ERROR("%s", e.msg.c_str());
+        RCUTILS_LOG_ERROR(e.msg.c_str());
         return sensor_msgs::msg::CompressedImage::SharedPtr();
       }
     }
@@ -279,7 +280,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (Exception& e)
     {
-      //ROS_ERROR("%s", e.msg.c_str());
+      RCUTILS_LOG_ERROR(e.msg.c_str());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -311,14 +312,14 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
       }
       else
       {
-        //ROS_ERROR("cv::imencode (png) failed on input image");
+        RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
         return sensor_msgs::msg::CompressedImage::SharedPtr();
       }
     }
   }
   else
   {
-    //ROS_ERROR("Compressed Depth Image Transport - Compression requires single-channel 32bit-floating point or 16bit raw depth images (input format is: %s).", message.encoding.c_str());
+    RCUTILS_LOG_ERROR("Compressed Depth Image Transport - Compression requires single-channel 32bit-floating point or 16bit raw depth images (input format is: %s).", message.encoding.c_str());
     return sensor_msgs::msg::CompressedImage::SharedPtr();
   }
 
