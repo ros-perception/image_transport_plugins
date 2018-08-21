@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -33,15 +33,21 @@
 *********************************************************************/
 
 #include "compressed_image_transport/compressed_publisher.h"
+
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/image_encodings.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <boost/make_shared.hpp>
 
 #include "compressed_image_transport/compression_common.h"
 
-#include <vector>
+#include <rclcpp/parameter_client.hpp>
+
 #include <sstream>
+#include <vector>
+
+constexpr const char* kDefaultFormat = "jpeg";
+constexpr int kDefaultPngLevel = 3;
+constexpr int KDefaultJpegQuality = 95;
 
 using namespace cv;
 using namespace std;
@@ -51,29 +57,34 @@ namespace enc = sensor_msgs::image_encodings;
 namespace compressed_image_transport
 {
 
-void CompressedPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                                        const image_transport::SubscriberStatusCallback &user_connect_cb,
-                                        const image_transport::SubscriberStatusCallback &user_disconnect_cb,
-                                        const ros::VoidPtr &tracked_object, bool latch)
+void CompressedPublisher::advertiseImpl(
+  rclcpp::Node::SharedPtr node,
+  const std::string& base_topic,
+  rmw_qos_profile_t custom_qos)
 {
-  typedef image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage> Base;
-  Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
+  typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
+  Base::advertiseImpl(node, base_topic, custom_qos);
+  node_ = node;
 
-  // Set up reconfigure server for this topic
-  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
-  ReconfigureServer::CallbackType f = boost::bind(&CompressedPublisher::configCb, this, _1, _2);
-  reconfigure_server_->setCallback(f);
+  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
+    }
+    RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...n");
+  }
+
+  config_.format =  parameters_client->get_parameter<std::string>("format", kDefaultFormat);
+  config_.png_level = parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
+  config_.jpeg_quality = parameters_client->get_parameter<int>("jpeg_quality", KDefaultJpegQuality);
 }
 
-void CompressedPublisher::configCb(Config& config, uint32_t level)
-{
-  config_ = config;
-}
-
-void CompressedPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
+void CompressedPublisher::publish(
+  const sensor_msgs::msg::Image& message,
+  const PublishFn& publish_fn) const
 {
   // Compressed image message
-  sensor_msgs::CompressedImage compressed;
+  sensor_msgs::msg::CompressedImage compressed;
   compressed.header = message.header;
   compressed.format = message.encoding;
 
@@ -83,14 +94,13 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
-  if (config_.format == compressed_image_transport::CompressedPublisher_jpeg)
+  if (config_.format == "jpeg")
     encodingFormat = JPEG;
-  if (config_.format == compressed_image_transport::CompressedPublisher_png)
+  if (config_.format == "png")
     encodingFormat = PNG;
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
-  int numChannels = enc::numChannels(message.encoding);
 
   switch (encodingFormat)
   {
@@ -118,7 +128,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         // OpenCV-ros bridge
         try
         {
-          boost::shared_ptr<CompressedPublisher> tracked_object;
+          std::shared_ptr<CompressedPublisher> tracked_object;
           cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat);
 
           // Compress image
@@ -127,28 +137,29 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            ROS_DEBUG("Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCLCPP_DEBUG(node_->get_logger(), "Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            ROS_ERROR("cv::imencode (jpeg) failed on input image");
+            RCLCPP_ERROR(node_->get_logger(), "cv::imencode (jpeg) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          ROS_ERROR("%s", e.what());
+          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
         }
         catch (cv::Exception& e)
         {
-          ROS_ERROR("%s", e.what());
+          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
         }
 
         // Publish message
         publish_fn(compressed);
       }
       else
-        ROS_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
-
+      {
+        RCLCPP_ERROR(node_->get_logger(), "Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
+      }
       break;
     }
       // PNG Compression
@@ -176,7 +187,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         // OpenCV-ros bridge
         try
         {
-          boost::shared_ptr<CompressedPublisher> tracked_object;
+          std::shared_ptr<CompressedPublisher> tracked_object;
           cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat.str());
 
           // Compress image
@@ -185,21 +196,21 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            ROS_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            ROS_ERROR("cv::imencode (png) failed on input image");
+            RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
           return;
         }
         catch (cv::Exception& e)
         {
-          ROS_ERROR("%s", e.what());
+          RCUTILS_LOG_ERROR("%s", e.what());
           return;
         }
 
@@ -207,15 +218,13 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
         publish_fn(compressed);
       }
       else
-        ROS_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
+        RCUTILS_LOG_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
       break;
     }
 
     default:
-      ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", config_.format.c_str());
+      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", config_.format.c_str());
       break;
   }
-
 }
-
 } //namespace compressed_image_transport

@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -32,14 +32,18 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <string>
+
+#include <rclcpp/node.hpp>
+
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
+
 #include "image_transport/simple_subscriber_plugin.h"
-#include <sensor_msgs/CompressedImage.h>
-#include <dynamic_reconfigure/server.h>
-#include <compressed_image_transport/CompressedSubscriberConfig.h>
 
 namespace compressed_image_transport {
 
-class CompressedSubscriber : public image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage>
+class CompressedSubscriber : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
 {
 public:
   virtual ~CompressedSubscriber() {}
@@ -51,21 +55,21 @@ public:
 
 protected:
   // Overridden to set up reconfigure server
-  virtual void subscribeImpl(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
-          const Callback& callback, const ros::VoidPtr& tracked_object,
-          const image_transport::TransportHints& transport_hints);
+  virtual void subscribeImpl(
+      rclcpp::Node::SharedPtr,
+      const std::string& base_topic,
+      const Callback& callback,
+      rmw_qos_profile_t custom_qos);
 
-
-  virtual void internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
+  virtual void internalCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
                                 const Callback& user_cb);
 
-  typedef compressed_image_transport::CompressedSubscriberConfig Config;
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
-  Config config_;
-  int imdecode_flag_;
+  struct Config {
+    int imdecode_flag;
+  };
 
-  void configCb(Config& config, uint32_t level);
+  Config config_;
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace image_transport
