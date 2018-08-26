@@ -1,4 +1,4 @@
-<library path="lib/libtheora_image_transport">
+<library path="lib/theora_image_transport">
   <class name="image_transport/theora_pub" type="theora_image_transport::TheoraPublisher" base_class_type="image_transport::PublisherPlugin">
     <description>
       This plugin publishes a video packet stream encoded using Theora.

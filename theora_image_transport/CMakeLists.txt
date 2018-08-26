@@ -21,7 +21,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED imgproc)
 find_package(PkgConfig)
 pkg_check_modules(PC_OGG REQUIRED ogg)
 pkg_check_modules(PC_THEORA REQUIRED theora)
@@ -62,17 +62,6 @@ ament_target_dependencies(${LIBRARY_NAME}
   ${PROJECT_NAME}
 )
 
-install(TARGETS ${LIBRARY_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-install(
-  DIRECTORY "include/"
-  DESTINATION include
-)
-
 add_definitions(${PC_OGG_CFLAGS_OTHER}
                 ${PC_THEORA_CFLAGS_OTHER}
                 ${PC_THEORAENC_CFLAGS_OTHER}
@@ -87,6 +76,7 @@ target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY}
 
 ament_target_dependencies(ogg_saver
   "rclcpp"
+  "rcutils"
   ${PROJECT_NAME})
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -104,11 +94,17 @@ rosidl_target_interfaces(${LIBRARY_NAME}
 rosidl_target_interfaces(ogg_saver
   ${PROJECT_NAME} "rosidl_typesupport_cpp") 
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_export_dependencies(rosidl_default_runtime
+  ${OpenCV_LIBRARIES}
+  ${PC_OGG_LIBRARIES}
+  ${PC_THEORA_LIBRARIES}
+  ${PC_THEORAENC_LIBRARIES}
+  ${PC_THEORADEC_LIBRARIES}
+  ${LIBRARY_NAME})
 
 install(TARGETS ${LIBRARY_NAME} ogg_saver
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+  LIBRARY DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
 
