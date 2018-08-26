@@ -39,7 +39,7 @@
 
 #include "cv_bridge/cv_bridge.h"
 #include <opencv2/highgui/highgui.hpp>
-#include <rcutils/logging_macros.h>
+#include <rclcpp/logging.hpp>
 
 #include "compressed_depth_image_transport/codec.h"
 #include "compressed_depth_image_transport/compression_common.h"
@@ -61,6 +61,8 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
 {
 
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+
+  auto logger = rclcpp::get_logger("compressed_depth_image_transport");
 
   // Copy message header
   cv_ptr->header = message.header;
@@ -97,7 +99,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       }
       catch (cv::Exception& e)
       {
-        RCUTILS_LOG_ERROR(e.what());
+        RCLCPP_ERROR(logger, e.what());
         return sensor_msgs::msg::Image::SharedPtr();
       }
 
@@ -140,7 +142,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       }
       catch (cv::Exception& e)
       {
-        RCUTILS_LOG_ERROR(e.what());
+        RCLCPP_ERROR(logger, e.what());
         return sensor_msgs::msg::Image::SharedPtr();
       }
 
@@ -167,6 +169,8 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   sensor_msgs::msg::CompressedImage::SharedPtr compressed(new sensor_msgs::msg::CompressedImage());
   compressed->header = message.header;
   compressed->format = message.encoding;
+
+  auto logger = rclcpp::get_logger("compressed_depth_image_transport");
 
   // Compression settings
   std::vector<int> params;
@@ -203,7 +207,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (cv_bridge::Exception& e)
     {
-      RCUTILS_LOG_ERROR(e.what());
+      RCLCPP_ERROR(logger, e.what());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -251,17 +255,18 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
         {
           float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
               / (float)compressedImage.size();
-          RCUTILS_LOG_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
+          RCLCPP_DEBUG(logger,
+                       "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
         }
         else
         {
-          RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
+          RCLCPP_ERROR(logger, "cv::imencode (png) failed on input image");
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
       }
       catch (cv::Exception& e)
       {
-        RCUTILS_LOG_ERROR(e.msg.c_str());
+        RCLCPP_ERROR(logger, e.msg.c_str());
         return sensor_msgs::msg::CompressedImage::SharedPtr();
       }
     }
@@ -277,7 +282,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (Exception& e)
     {
-      RCUTILS_LOG_ERROR(e.msg.c_str());
+      RCLCPP_ERROR(logger, e.msg.c_str());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -305,19 +310,20 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
       {
         float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
             / (float)compressedImage.size();
-        RCUTILS_LOG_DEBUG("Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)",
-                          cRatio, compressedImage.size());
+        RCLCPP_DEBUG(logger,
+          "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
       }
       else
       {
-        RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
+        RCLCPP_ERROR(logger, "cv::imencode (png) failed on input image");
         return sensor_msgs::msg::CompressedImage::SharedPtr();
       }
     }
   }
   else
   {
-    RCUTILS_LOG_ERROR("Compressed Depth Image Transport - Compression requires single-channel 32bit-floating point or 16bit raw depth images (input format is: %s).", message.encoding.c_str());
+    RCLCPP_ERROR(logger,
+      "Compressed Depth Image Transport - Compression requires single-channel 32bit-floating point or 16bit raw depth images (input format is: %s).", message.encoding.c_str());
     return sensor_msgs::msg::CompressedImage::SharedPtr();
   }
 
