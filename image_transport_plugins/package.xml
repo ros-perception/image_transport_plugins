@@ -1,4 +1,8 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schem/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+  <!-- TODO: Make this a metapackage, see
+       https://github.com/ros2/ros2/issues/408 -->
   <name>image_transport_plugins</name>
   <version>1.9.5</version>
     <description>
@@ -10,19 +14,19 @@
   </description>
   <author>Patrick Mihelich</author>
   <author>Julius Kammerl</author>
-  <maintainer email="dgossow@willowgarage.com">David Gossow</maintainer>
+  <maintainer email="michael@openrobotics.org">Michael Carroll</maintainer>
   <license>BSD</license>
-  
+
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <run_depend>compressed_depth_image_transport</run_depend>
-  <run_depend>compressed_image_transport</run_depend>
-  <run_depend>theora_image_transport</run_depend>
+  <exec_depend>compressed_depth_image_transport</exec_depend>
+  <exec_depend>compressed_image_transport</exec_depend>
+  <exec_depend>theora_image_transport</exec_depend>
 
   <export>
-    <metapackage/>
+    <build_type>ament_cmake</build_type>
   </export>
 
 </package>
