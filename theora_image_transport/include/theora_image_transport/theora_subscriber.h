@@ -33,9 +33,7 @@
 *********************************************************************/
 
 #include <image_transport/simple_subscriber_plugin.h>
-#include <dynamic_reconfigure/server.h>
-#include <theora_image_transport/TheoraSubscriberConfig.h>
-#include <theora_image_transport/Packet.h>
+#include <theora_image_transport/msg/packet.hpp>
 
 #include <theora/codec.h>
 #include <theora/theoraenc.h>
@@ -43,7 +41,7 @@
 
 namespace theora_image_transport {
 
-class TheoraSubscriber : public image_transport::SimpleSubscriberPlugin<theora_image_transport::Packet>
+class TheoraSubscriber : public image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>
 {
 public:
   TheoraSubscriber();
@@ -53,33 +51,33 @@ public:
 
 protected:
   // Overridden to bump queue_size, otherwise we might lose headers
-  // Overridden to tweak arguments and set up reconfigure server
-  virtual void subscribeImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                             const Callback &callback, const ros::VoidPtr &tracked_object,
-                             const image_transport::TransportHints &transport_hints);
+  virtual void subscribeImpl(
+    rclcpp::Node::SharedPtr node,
+    const std::string &base_topic,
+    const Callback & callback,
+    uint32_t queue_size,
+    rmw_qos_profile_t custom_qos);
   
-  // The function that does the actual decompression and calls a user supplied callback with the resulting image
-  virtual void internalCallback(const theora_image_transport::PacketConstPtr &msg, const Callback& user_cb);
-
-  // Dynamic reconfigure support
-  typedef theora_image_transport::TheoraSubscriberConfig Config;
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
-  int pplevel_; // Post-processing level
-
-  void configCb(Config& config, uint32_t level);
+  // The function that does the actual decompression and calls a user supplied 
+  // callback with the resulting image
+  virtual void internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr &msg,
+                                const Callback& user_cb);
 
   // Utility functions
   int updatePostProcessingLevel(int level);
-  void msgToOggPacket(const theora_image_transport::Packet &msg, ogg_packet &ogg);
+  void msgToOggPacket(const theora_image_transport::msg::Packet &msg,
+                      ogg_packet &ogg);
 
+  int pplevel_; // Post-processing level
   bool received_header_;
   bool received_keyframe_;
   th_dec_ctx* decoding_context_;
   th_info header_info_;
   th_comment header_comment_;
   th_setup_info* setup_info_;
-  sensor_msgs::ImagePtr latest_image_;
+  sensor_msgs::msg::Image::SharedPtr latest_image_;
+
+  rclcpp::Node::SharedPtr node_;
 };
 
 } //namespace theora_image_transport
