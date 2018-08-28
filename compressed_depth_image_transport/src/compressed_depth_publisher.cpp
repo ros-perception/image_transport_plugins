@@ -34,15 +34,20 @@
 
 #include "compressed_depth_image_transport/compressed_depth_publisher.h"
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/image_encodings.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <boost/make_shared.hpp>
 
 #include "compressed_depth_image_transport/codec.h"
 #include "compressed_depth_image_transport/compression_common.h"
 
+#include <rclcpp/parameter_client.hpp>
+
 #include <vector>
 #include <sstream>
+
+constexpr int kDefaultPngLevel = 9;
+constexpr double kDefaultDepthMax = 10.0;
+constexpr double KDefaultDepthQuantization = 100.0;
 
 using namespace cv;
 using namespace std;
@@ -52,30 +57,39 @@ namespace enc = sensor_msgs::image_encodings;
 namespace compressed_depth_image_transport
 {
 
-void CompressedDepthPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                                        const image_transport::SubscriberStatusCallback &user_connect_cb,
-                                        const image_transport::SubscriberStatusCallback &user_disconnect_cb,
-                                        const ros::VoidPtr &tracked_object, bool latch)
+void CompressedDepthPublisher::advertiseImpl(
+  rclcpp::Node::SharedPtr node,
+  const std::string& base_topic,
+  rmw_qos_profile_t custom_qos)
 {
-  typedef image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage> Base;
-  Base::advertiseImpl(nh, base_topic, queue_size, user_connect_cb, user_disconnect_cb, tracked_object, latch);
+  typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
+  Base::advertiseImpl(node, base_topic, custom_qos);
 
-  // Set up reconfigure server for this topic
-  reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
-  ReconfigureServer::CallbackType f = boost::bind(&CompressedDepthPublisher::configCb, this, _1, _2);
-  reconfigure_server_->setCallback(f);
+  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+    }
+    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+  }
+
+  config_.png_level =
+    parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
+  config_.depth_max =
+    parameters_client->get_parameter<double>("depth_max", kDefaultDepthMax);
+  config_.depth_quantization =
+    parameters_client->get_parameter<double>("depth_quantization", KDefaultDepthQuantization);
 }
 
-void CompressedDepthPublisher::configCb(Config& config, uint32_t level)
+void CompressedDepthPublisher::publish(
+  const sensor_msgs::msg::Image& message,
+  const PublishFn& publish_fn) const
 {
-  config_ = config;
-}
-
-void CompressedDepthPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
-{
-  sensor_msgs::CompressedImage::Ptr compressed_image =
-      encodeCompressedDepthImage(message, config_.depth_max, config_.depth_quantization, config_.png_level);
-
+  sensor_msgs::msg::CompressedImage::SharedPtr compressed_image =
+    encodeCompressedDepthImage(message,
+                               config_.depth_max,
+                               config_.depth_quantization,
+                               config_.png_level);
   if (compressed_image)
   {
     publish_fn(*compressed_image);

@@ -32,14 +32,13 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include "image_transport/simple_publisher_plugin.h"
-#include <sensor_msgs/CompressedImage.h>
-#include <dynamic_reconfigure/server.h>
-#include <compressed_depth_image_transport/CompressedDepthPublisherConfig.h>
 
 namespace compressed_depth_image_transport {
 
-class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::CompressedImage>
+class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage>
 {
 public:
   virtual ~CompressedDepthPublisher() {}
@@ -51,20 +50,21 @@ public:
 
 protected:
   // Overridden to set up reconfigure server
-  virtual void advertiseImpl(ros::NodeHandle &nh, const std::string &base_topic, uint32_t queue_size,
-                             const image_transport::SubscriberStatusCallback  &user_connect_cb,
-                             const image_transport::SubscriberStatusCallback  &user_disconnect_cb,
-                             const ros::VoidPtr &tracked_object, bool latch);
-  
-  virtual void publish(const sensor_msgs::Image& message,
-                       const PublishFn& publish_fn) const;
+  virtual void advertiseImpl(
+          rclcpp::Node::SharedPtr node,
+          const std::string &base_topic,
+          rmw_qos_profile_t custom_qos) override final;
 
-  typedef compressed_depth_image_transport::CompressedDepthPublisherConfig Config;
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer> reconfigure_server_;
+  virtual void publish(const sensor_msgs::msg::Image& message,
+                       const PublishFn& publish_fn) const override final;
+
+  struct Config {
+    int png_level;
+    double depth_max;
+    double depth_quantization;
+  };
+
   Config config_;
-
-  void configCb(Config& config, uint32_t level);
 };
 
 } //namespace compressed_depth_image_transport
