@@ -1,4 +1,4 @@
-<package>
+<package format="2">
   <name>compressed_depth_image_transport</name>
   <version>1.9.5</version>
   <description>
@@ -11,18 +11,13 @@
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Julius Kammerl</author>
 
-  <buildtool_depend>catkin</buildtool_depend>  
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>cv_bridge</build_depend>
-  <build_depend>dynamic_reconfigure</build_depend>
-  <build_depend>image_transport</build_depend>
-
-  <run_depend>cv_bridge</run_depend>
-  <run_depend>dynamic_reconfigure</run_depend>
-  <run_depend>image_transport</run_depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
 
   <export>
-    <rviz plugin="${prefix}/plugin_description.xml"/>
+    <build_type>ament_cmake</build_type>
     <image_transport plugin="${prefix}/compressed_depth_plugins.xml" />
   </export>
 </package>

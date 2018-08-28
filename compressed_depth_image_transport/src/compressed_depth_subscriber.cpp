@@ -40,10 +40,11 @@
 namespace compressed_depth_image_transport
 {
 
-void CompressedDepthSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
-                                            const Callback& user_cb)
+void CompressedDepthSubscriber::internalCallback(
+  const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
+  const Callback& user_cb)
 {
-  sensor_msgs::Image::Ptr image = decodeCompressedDepthImage(*message);
+  sensor_msgs::msg::Image::Ptr image = decodeCompressedDepthImage(*message);
   if (image)
   {
     user_cb(image);
