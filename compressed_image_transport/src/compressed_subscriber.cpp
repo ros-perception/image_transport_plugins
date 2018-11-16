@@ -58,24 +58,16 @@ namespace compressed_image_transport
 {
 
 void CompressedSubscriber::subscribeImpl(
-    rclcpp::Node::SharedPtr node,
+    rclcpp::Node * node,
     const std::string& base_topic,
     const Callback& callback,
     rmw_qos_profile_t custom_qos)
 {
+    logger_ = node->get_logger();
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
-    node_ = node;
-
-    auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-    while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
-      if (!rclcpp::ok()) {
-        RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
-      }
-      RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
-    }
-
-    auto mode = parameters_client->get_parameter<std::string>("mode", kDefaultMode);
+    std::string mode;
+    node->get_parameter_or<std::string>("mode", mode, kDefaultMode);
 
     if (mode == "unchanged") {
       config_.imdecode_flag = cv::IMREAD_UNCHANGED;
@@ -84,7 +76,7 @@ void CompressedSubscriber::subscribeImpl(
     } else if (mode == "color") {
       config_.imdecode_flag = cv::IMREAD_COLOR;
     } else {
-      RCLCPP_ERROR(node_->get_logger(), "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
+      RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
       config_.imdecode_flag = cv::IMREAD_UNCHANGED;
     }
 }
@@ -118,7 +110,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
           cv_ptr->encoding = enc::BGR8;
           break;
         default:
-          RCLCPP_ERROR(node_->get_logger(), "Unsupported number of channels: %i", cv_ptr->image.channels());
+          RCLCPP_ERROR(logger_, "Unsupported number of channels: %i", cv_ptr->image.channels());
           break;
       }
     } else
@@ -161,7 +153,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   }
   catch (cv::Exception& e)
   {
-    RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
+    RCLCPP_ERROR(logger_, "%s", e.what());
   }
 
   size_t rows = cv_ptr->image.rows;
