@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -50,15 +50,14 @@ class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_ima
 {
 public:
   TheoraPublisher();
+  virtual ~TheoraPublisher();
 
-  ~TheoraPublisher();
-  
   // Return the system unique string representing the theora transport type
   virtual std::string getTransportName() const { return "theora"; }
 
 protected:
   virtual void advertiseImpl(
-    rclcpp::Node::SharedPtr node,
+    rclcpp::Node* node,
     const std::string &base_topic,
     uint32_t queue_size,
     rmw_qos_profile_t custom_qos);
@@ -67,9 +66,9 @@ protected:
   // virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
 
   // Main publish function
-  virtual void publish(const sensor_msgs::msg::Image& message,
-                       const PublishFn& publish_fn) const;
-  
+  void publish(const sensor_msgs::msg::Image& message,
+               const PublishFn& publish_fn) const;
+
   // Utility functions
   bool ensureEncodingContext(const sensor_msgs::msg::Image& image, const PublishFn& publish_fn) const;
   void oggPacketToMsg(const std_msgs::msg::Header& header,
@@ -85,7 +84,7 @@ protected:
   mutable std::shared_ptr<th_enc_ctx> encoding_context_;
   mutable std::vector<theora_image_transport::msg::Packet> stream_header_;
 
-  rclcpp::Node::SharedPtr node_;
+  rclcpp::Logger logger_;
 };
 
 } //namespace compressed_image_transport

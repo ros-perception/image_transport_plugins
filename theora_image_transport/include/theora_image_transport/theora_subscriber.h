@@ -1,13 +1,13 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
-* 
+*
 *  Copyright (c) 20012, Willow Garage, Inc.
 *  All rights reserved.
-* 
+*
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions
 *  are met:
-* 
+*
 *   * Redistributions of source code must retain the above copyright
 *     notice, this list of conditions and the following disclaimer.
 *   * Redistributions in binary form must reproduce the above
@@ -17,7 +17,7 @@
 *   * Neither the name of the Willow Garage nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
-* 
+*
 *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -52,13 +52,13 @@ public:
 protected:
   // Overridden to bump queue_size, otherwise we might lose headers
   virtual void subscribeImpl(
-    rclcpp::Node::SharedPtr node,
+    rclcpp::Node* node,
     const std::string &base_topic,
     const Callback & callback,
     uint32_t queue_size,
     rmw_qos_profile_t custom_qos);
-  
-  // The function that does the actual decompression and calls a user supplied 
+
+  // The function that does the actual decompression and calls a user supplied
   // callback with the resulting image
   virtual void internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr &msg,
                                 const Callback& user_cb);
@@ -77,7 +77,7 @@ protected:
   th_setup_info* setup_info_;
   sensor_msgs::msg::Image::SharedPtr latest_image_;
 
-  rclcpp::Node::SharedPtr node_;
+  rclcpp::Logger logger_;
 };
 
 } //namespace theora_image_transport

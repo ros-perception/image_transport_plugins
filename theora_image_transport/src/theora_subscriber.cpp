@@ -50,7 +50,8 @@ TheoraSubscriber::TheoraSubscriber()
     received_header_(false),
     received_keyframe_(false),
     decoding_context_(NULL),
-    setup_info_(NULL)
+    setup_info_(NULL),
+    logger_(rclcpp::get_logger("TheoraSubscriber"))
 {
   th_info_init(&header_info_);
   th_comment_init(&header_comment_);
@@ -65,12 +66,13 @@ TheoraSubscriber::~TheoraSubscriber()
 }
 
 void TheoraSubscriber::subscribeImpl(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::Node * node,
   const std::string &base_topic,
   const Callback & callback,
   uint32_t queue_size,
   rmw_qos_profile_t custom_qos)
 {
+  logger_ = node->get_logger();
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
   // ported this to ROS2 using the history policy that  determines how messages
   // are saved until the message is taken by the reader.  KEEP_ALL saves all
@@ -80,9 +82,7 @@ void TheoraSubscriber::subscribeImpl(
   custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
-  Base::subscribeImpl(node_, base_topic, callback, custom_qos);
-
-  node_ = node;
+  Base::subscribeImpl(node, base_topic, callback, custom_qos);
 }
 
 // TODO: port this check to ROS2 user events
@@ -101,15 +101,15 @@ int TheoraSubscriber::updatePostProcessingLevel(int level)
   int pplevel_max;
   int err = th_decode_ctl(decoding_context_, TH_DECCTL_GET_PPLEVEL_MAX, &pplevel_max, sizeof(int));
   if (err) {
-    RCLCPP_WARN(node_->get_logger(), "Failed to get maximum post-processing level, error code %d", err);
+    RCLCPP_WARN(logger_, "Failed to get maximum post-processing level, error code %d", err);
   } else if (level > pplevel_max) {
-    RCLCPP_WARN(node_->get_logger(), "Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
+    RCLCPP_WARN(logger_, "Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
     level = pplevel_max;
   }
 
   err = th_decode_ctl(decoding_context_, TH_DECCTL_SET_PPLEVEL, &level, sizeof(int));
   if (err) {
-    RCLCPP_ERROR(node_->get_logger(), "Failed to set post-processing level, error code %d", err);
+    RCLCPP_ERROR(logger_, "Failed to set post-processing level, error code %d", err);
     return pplevel_; // old value
   }
   return level;
@@ -162,28 +162,28 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
         // We've received the full header; this is the first video packet.
         decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
         if (!decoding_context_) {
-          RCLCPP_ERROR(node_->get_logger(), "[theora] Decoding parameters were invalid");
+          RCLCPP_ERROR(logger_, "[theora] Decoding parameters were invalid");
           return;
         }
         received_header_ = true;
         pplevel_ = updatePostProcessingLevel(pplevel_);
         break; // Continue on the video decoding
       case TH_EFAULT:
-        RCLCPP_WARN(node_->get_logger(), "[theora] EFAULT when processing header packet");
+        RCLCPP_WARN(logger_, "[theora] EFAULT when processing header packet");
         return;
       case TH_EBADHEADER:
-        RCLCPP_WARN(node_->get_logger(), "[theora] Bad header packet");
+        RCLCPP_WARN(logger_, "[theora] Bad header packet");
         return;
       case TH_EVERSION:
-        RCLCPP_WARN(node_->get_logger(), "[theora] Header packet not decodable with this version of libtheora");
+        RCLCPP_WARN(logger_, "[theora] Header packet not decodable with this version of libtheora");
         return;
       case TH_ENOTFORMAT:
-        RCLCPP_WARN(node_->get_logger(), "[theora] Packet was not a Theora header");
+        RCLCPP_WARN(logger_, "[theora] Packet was not a Theora header");
         return;
       default:
         // If rval > 0, we successfully received a header packet.
         if (rval < 0)
-          RCLCPP_WARN(node_->get_logger(), "[theora] Error code %d when processing header packet", rval);
+          RCLCPP_WARN(logger_, "[theora] Error code %d when processing header packet", rval);
         return;
     }
   }
@@ -200,23 +200,23 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
       break; // Yay, we got a frame. Carry on below.
     case TH_DUPFRAME:
       // Video data hasn't changed, so we update the timestamp and reuse the last received frame.
-      RCLCPP_DEBUG(node_->get_logger(), "[theora] Got a duplicate frame");
+      RCLCPP_DEBUG(logger_, "[theora] Got a duplicate frame");
       if (latest_image_) {
         latest_image_->header = message->header;
         callback(latest_image_);
       }
       return;
     case TH_EFAULT:
-      RCLCPP_WARN(node_->get_logger(), "[theora] EFAULT processing video packet");
+      RCLCPP_WARN(logger_, "[theora] EFAULT processing video packet");
       return;
     case TH_EBADPACKET:
-      RCLCPP_WARN(node_->get_logger(), "[theora] Packet does not contain encoded video data");
+      RCLCPP_WARN(logger_, "[theora] Packet does not contain encoded video data");
       return;
     case TH_EIMPL:
-      RCLCPP_WARN(node_->get_logger(), "[theora] The video data uses bitstream features not supported by this version of libtheora");
+      RCLCPP_WARN(logger_, "[theora] The video data uses bitstream features not supported by this version of libtheora");
       return;
     default:
-      RCLCPP_WARN(node_->get_logger(), "[theora] Error code %d when decoding video packet", rval);
+      RCLCPP_WARN(logger_, "[theora] Error code %d when decoding video packet", rval);
       return;
   }
 
