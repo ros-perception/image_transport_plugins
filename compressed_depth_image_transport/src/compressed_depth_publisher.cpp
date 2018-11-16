@@ -58,27 +58,16 @@ namespace compressed_depth_image_transport
 {
 
 void CompressedDepthPublisher::advertiseImpl(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::Node * node,
   const std::string& base_topic,
   rmw_qos_profile_t custom_qos)
 {
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
 
-  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
-    }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
-  }
-
-  config_.png_level =
-    parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
-  config_.depth_max =
-    parameters_client->get_parameter<double>("depth_max", kDefaultDepthMax);
-  config_.depth_quantization =
-    parameters_client->get_parameter<double>("depth_quantization", KDefaultDepthQuantization);
+  node->get_parameter_or<int>("png_level", config_.png_level, kDefaultPngLevel);
+  node->get_parameter_or<double>("depth_max", config_.depth_max, kDefaultDepthMax);
+  node->get_parameter_or<double>("depth_quantization", config_.depth_max, KDefaultDepthQuantization);
 }
 
 void CompressedDepthPublisher::publish(
