@@ -47,7 +47,7 @@
 
 constexpr const char* kDefaultFormat = "jpeg";
 constexpr int kDefaultPngLevel = 3;
-constexpr int KDefaultJpegQuality = 95;
+constexpr int kDefaultJpegQuality = 95;
 
 using namespace cv;
 using namespace std;
@@ -58,25 +58,16 @@ namespace compressed_image_transport
 {
 
 void CompressedPublisher::advertiseImpl(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::Node* node,
   const std::string& base_topic,
   rmw_qos_profile_t custom_qos)
 {
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
-  node_ = node;
 
-  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  while (!parameters_client->wait_for_service(std::chrono::seconds(1))) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
-    }
-    RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...n");
-  }
-
-  config_.format =  parameters_client->get_parameter<std::string>("format", kDefaultFormat);
-  config_.png_level = parameters_client->get_parameter<int>("png_level", kDefaultPngLevel);
-  config_.jpeg_quality = parameters_client->get_parameter<int>("jpeg_quality", KDefaultJpegQuality);
+  node->get_parameter_or<std::string>("format", config_.format, kDefaultFormat);
+  node->get_parameter_or<int>("png_level", config_.png_level, kDefaultPngLevel);
+  node->get_parameter_or<int>("jpeg_quality", config_.jpeg_quality, kDefaultJpegQuality);
 }
 
 void CompressedPublisher::publish(
@@ -137,20 +128,20 @@ void CompressedPublisher::publish(
 
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
-            RCLCPP_DEBUG(node_->get_logger(), "Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+            RCLCPP_DEBUG(logger_, "Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
           }
           else
           {
-            RCLCPP_ERROR(node_->get_logger(), "cv::imencode (jpeg) failed on input image");
+            RCLCPP_ERROR(logger_, "cv::imencode (jpeg) failed on input image");
           }
         }
         catch (cv_bridge::Exception& e)
         {
-          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
+          RCLCPP_ERROR(logger_, "%s", e.what());
         }
         catch (cv::Exception& e)
         {
-          RCLCPP_ERROR(node_->get_logger(), "%s", e.what());
+          RCLCPP_ERROR(logger_, "%s", e.what());
         }
 
         // Publish message
@@ -158,7 +149,7 @@ void CompressedPublisher::publish(
       }
       else
       {
-        RCLCPP_ERROR(node_->get_logger(), "Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
+        RCLCPP_ERROR(logger_, "Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
       }
       break;
     }

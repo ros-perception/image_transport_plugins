@@ -47,7 +47,8 @@ using CompressedImage = sensor_msgs::msg::CompressedImage;
 class CompressedPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
 public:
-  virtual ~CompressedPublisher() {}
+  CompressedPublisher(): logger_(rclcpp::get_logger("CompressedPublisher")) {}
+  virtual ~CompressedPublisher() = default;
 
   virtual std::string getTransportName() const
   {
@@ -56,13 +57,13 @@ public:
 
 protected:
   // Overridden to set up reconfigure server
-  virtual void advertiseImpl(
-      rclcpp::Node::SharedPtr node,
+  void advertiseImpl(
+      rclcpp::Node* node,
       const std::string& base_topic,
-      rmw_qos_profile_t custom_qos);
+      rmw_qos_profile_t custom_qos) override;
 
-  virtual void publish(const sensor_msgs::msg::Image& message,
-                       const PublishFn& publish_fn) const;
+  void publish(const sensor_msgs::msg::Image& message,
+               const PublishFn& publish_fn) const;
 
   struct Config {
     // Compression format to use "jpeg" or "png"
@@ -78,7 +79,7 @@ protected:
   };
 
   Config config_;
-  rclcpp::Node::SharedPtr node_;
+  rclcpp::Logger logger_;
 };
 
 } //namespace compressed_image_transport

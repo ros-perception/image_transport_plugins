@@ -44,7 +44,7 @@ void CompressedDepthSubscriber::internalCallback(
   const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
   const Callback& user_cb)
 {
-  sensor_msgs::msg::Image::Ptr image = decodeCompressedDepthImage(*message);
+  auto image = decodeCompressedDepthImage(*message);
   if (image)
   {
     user_cb(image);

@@ -46,7 +46,8 @@ namespace compressed_image_transport {
 class CompressedSubscriber : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
 {
 public:
-  virtual ~CompressedSubscriber() {}
+  CompressedSubscriber(): logger_(rclcpp::get_logger("CompressedSubscriber")) {}
+  virtual ~CompressedSubscriber() = default;
 
   virtual std::string getTransportName() const
   {
@@ -55,21 +56,21 @@ public:
 
 protected:
   // Overridden to set up reconfigure server
-  virtual void subscribeImpl(
-      rclcpp::Node::SharedPtr,
+  void subscribeImpl(
+      rclcpp::Node * ,
       const std::string& base_topic,
       const Callback& callback,
-      rmw_qos_profile_t custom_qos);
+      rmw_qos_profile_t custom_qos) override;
 
-  virtual void internalCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
-                                const Callback& user_cb);
+  void internalCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
+                        const Callback& user_cb) override;
 
   struct Config {
     int imdecode_flag;
   };
 
   Config config_;
-  rclcpp::Node::SharedPtr node_;
+  rclcpp::Logger logger_;
 };
 
 } //namespace image_transport

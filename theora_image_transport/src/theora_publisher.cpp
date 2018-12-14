@@ -46,7 +46,8 @@ using namespace std;
 
 namespace theora_image_transport {
 
-TheoraPublisher::TheoraPublisher()
+TheoraPublisher::TheoraPublisher():
+  logger_(rclcpp::get_logger("TheoraPublisher"))
 {
   // Initialize info structure fields that don't change
   th_info_init(&encoder_setup_);
@@ -71,11 +72,12 @@ TheoraPublisher::~TheoraPublisher()
 }
 
 void TheoraPublisher::advertiseImpl(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::Node *node,
   const std::string &base_topic,
   uint32_t queue_size,
   rmw_qos_profile_t custom_qos)
 {
+  logger_ = node->get_logger();
   // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
   // ported this to ROS2 using the history policy that  determines how messages
   // are saved until the message is taken by the reader.  KEEP_ALL saves all
@@ -85,8 +87,7 @@ void TheoraPublisher::advertiseImpl(
   custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
-  Base::advertiseImpl(node_, base_topic, custom_qos);
-  node_ = node;
+  Base::advertiseImpl(node, base_topic, custom_qos);
 }
 
   // TODO(ros2): this method should be called when configuration change through
@@ -167,17 +168,17 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   }
   catch (cv_bridge::Exception& e)
   {
-    RCLCPP_ERROR(node_->get_logger(), "cv_bridge exception: '%s'", e.what());
+    RCLCPP_ERROR(logger_, "cv_bridge exception: '%s'", e.what());
     return;
   }
   catch (cv::Exception& e)
   {
-    RCLCPP_ERROR(node_->get_logger(), "OpenCV exception: '%s'", e.what());
+    RCLCPP_ERROR(logger_, "OpenCV exception: '%s'", e.what());
     return;
   }
 
   if (cv_image_ptr == 0) {
-    RCLCPP_ERROR(node_->get_logger(), "Unable to convert from '%s' to 'bgr8'", message.encoding.c_str());
+    RCLCPP_ERROR(logger_, "Unable to convert from '%s' to 'bgr8'", message.encoding.c_str());
     return;
   }
 
@@ -216,11 +217,11 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   // Submit frame to the encoder
   int rval = th_encode_ycbcr_in(encoding_context_.get(), ycbcr_buffer);
   if (rval == TH_EFAULT) {
-    RCLCPP_ERROR(node_->get_logger(), "[theora] EFAULT in submitting uncompressed frame to encoder");
+    RCLCPP_ERROR(logger_, "[theora] EFAULT in submitting uncompressed frame to encoder");
     return;
   }
   if (rval == TH_EINVAL) {
-    RCLCPP_ERROR(node_->get_logger(), "[theora] EINVAL in submitting uncompressed frame to encoder");
+    RCLCPP_ERROR(logger_, "[theora] EINVAL in submitting uncompressed frame to encoder");
     return;
   }
 
@@ -232,7 +233,7 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
     publish_fn(output);
   }
   if (rval == TH_EFAULT)
-    RCLCPP_ERROR(node_->get_logger(), "[theora] EFAULT in retrieving encoded video data packets");
+    RCLCPP_ERROR(logger_, "[theora] EFAULT in retrieving encoded video data packets");
 }
 
 void freeContext(th_enc_ctx* context)
@@ -258,7 +259,7 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::msg::Image& image
   // Allocate encoding context. Smart pointer ensures that th_encode_free gets called.
   encoding_context_.reset(th_encode_alloc(&encoder_setup_), freeContext);
   if (!encoding_context_) {
-    RCLCPP_ERROR(node_->get_logger(), "[theora] Failed to create encoding context");
+    RCLCPP_ERROR(logger_, "[theora] Failed to create encoding context");
     return false;
   }
 
@@ -300,9 +301,9 @@ void TheoraPublisher::updateKeyframeFrequency() const
   ogg_uint32_t desired_frequency = keyframe_frequency_;
   if (th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
                     &keyframe_frequency_, sizeof(ogg_uint32_t)))
-    RCLCPP_ERROR(node_->get_logger(), "Failed to change keyframe frequency");
+    RCLCPP_ERROR(logger_, "Failed to change keyframe frequency");
   if (keyframe_frequency_ != desired_frequency)
-    RCLCPP_WARN(node_->get_logger(), "Couldn't set keyframe frequency to %d, actually set to %d",
+    RCLCPP_WARN(logger_, "Couldn't set keyframe frequency to %d, actually set to %d",
                       desired_frequency, keyframe_frequency_);
 }
 
