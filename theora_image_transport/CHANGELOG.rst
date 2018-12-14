@@ -2,8 +2,8 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2018-12-13)
+------------------
 * Pointer api updates (`#31 <https://github.com/ros-perception/image_transport_plugins/issues/31>`_)
 * Bring ros2-devel back into ros2 mainline. (`#29 <https://github.com/ros-perception/image_transport_plugins/issues/29>`_)
 * Update compressed_image_transport to ros2 (`#26 <https://github.com/ros-perception/image_transport_plugins/issues/26>`_)
