@@ -2,6 +2,12 @@
 Changelog for package image_transport_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [ros2] image_transport_plugins 'meta'package. (`#30 <https://github.com/ros-perception/image_transport_plugins/issues/30>`_)
+* Update compressed_image_transport to ros2 (`#26 <https://github.com/ros-perception/image_transport_plugins/issues/26>`_)
+* Contributors: Michael Carroll, Jose Luis Rivero
+
 1.9.5 (2016-10-03)
 ------------------
 

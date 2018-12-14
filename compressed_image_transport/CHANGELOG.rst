@@ -2,6 +2,12 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Pointer api updates (`#31 <https://github.com/ros-perception/image_transport_plugins/issues/31>`_)
+* Update compressed_image_transport to ros2 (`#26 <https://github.com/ros-perception/image_transport_plugins/issues/26>`_)
+* Contributors: Michael Carroll, Jose Luis Rivero
+
 1.9.5 (2016-10-03)
 ------------------
 
