@@ -43,6 +43,11 @@
 #include <vector>
 #include <sstream>
 
+// If OpenCV4
+#if CV_VERSION_MAJOR > 3
+#include <opencv2/imgcodecs/legacy/constants_c.h>
+#endif
+
 using namespace cv;
 using namespace std;
 
