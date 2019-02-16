@@ -1,4 +1,4 @@
-<library path="libcompressed_depth_image_transport">
+<library path="compressed_depth_image_transport">
   <class
     name="image_transport/compressedDepth_pub"
     type="compressed_depth_image_transport::CompressedDepthPublisher"
