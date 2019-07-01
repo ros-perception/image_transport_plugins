@@ -49,6 +49,8 @@ public:
     return "compressed";
   }
 
+  virtual void shutdown();
+
 protected:
   // Overridden to set up reconfigure server
   virtual void subscribeImpl(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
