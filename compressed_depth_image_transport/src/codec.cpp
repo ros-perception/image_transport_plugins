@@ -47,6 +47,11 @@
 // If OpenCV3
 #ifndef CV_VERSION_EPOCH
 #include <opencv2/imgcodecs.hpp>
+
+// If OpenCV4
+#if CV_VERSION_MAJOR > 3
+#include <opencv2/imgcodecs/legacy/constants_c.h>
+#endif
 #endif
 
 namespace enc = sensor_msgs::image_encodings;
