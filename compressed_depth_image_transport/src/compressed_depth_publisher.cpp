@@ -73,6 +73,10 @@ void CompressedDepthPublisher::configCb(Config& config, uint32_t level)
 
 void CompressedDepthPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
 {
+  if (!config_.enable) {
+    return;
+  }
+
   sensor_msgs::CompressedImage::Ptr compressed_image =
       encodeCompressedDepthImage(message, config_.format, config_.depth_max, config_.depth_quantization, config_.png_level);
 

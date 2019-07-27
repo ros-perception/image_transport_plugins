@@ -73,6 +73,7 @@ protected:
   typedef theora_image_transport::TheoraPublisherConfig Config;
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;
+  Config config_;
 
   void configCb(Config& config, uint32_t level);
 
