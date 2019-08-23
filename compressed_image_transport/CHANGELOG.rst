@@ -2,6 +2,9 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2019-08-23)
+------------------
+
 2.0.0 (2018-12-13)
 ------------------
 * Pointer api updates (`#31 <https://github.com/ros-perception/image_transport_plugins/issues/31>`_)

@@ -2,6 +2,15 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2019-08-23)
+------------------
+* Fix Dashing deprecation warning. (`#41 <https://github.com/ros-perception/image_transport_plugins/issues/41>`_)
+  Signed-off-by: Michael Carroll <michael@openrobotics.org>
+* Merge pull request `#38 <https://github.com/ros-perception/image_transport_plugins/issues/38>`_ from Kapernikov/ros2
+  Fix theora plugin wrong path (`#37 <https://github.com/ros-perception/image_transport_plugins/issues/37>`_)
+* Fix theora plugin wrong path
+* Contributors: David Gossow, Frank Dekervel, Michael Carroll
+
 2.0.0 (2018-12-13)
 ------------------
 * Pointer api updates (`#31 <https://github.com/ros-perception/image_transport_plugins/issues/31>`_)

@@ -2,6 +2,9 @@
 Changelog for package image_transport_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2019-08-23)
+------------------
+
 2.0.0 (2018-12-13)
 ------------------
 * [ros2] image_transport_plugins 'meta'package. (`#30 <https://github.com/ros-perception/image_transport_plugins/issues/30>`_)

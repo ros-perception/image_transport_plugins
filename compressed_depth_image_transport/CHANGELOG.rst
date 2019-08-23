@@ -2,6 +2,13 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2019-08-23)
+------------------
+* Merge pull request `#33 <https://github.com/ros-perception/image_transport_plugins/issues/33>`_ from klintan/ros2
+  [ROS2] Fixed portability warning for compressed depth plugin.
+* fixed portability warning for name
+* Contributors: Andreas Klintberg, David Gossow
+
 2.0.0 (2018-12-13)
 ------------------
 * Pointer api updates (`#31 <https://github.com/ros-perception/image_transport_plugins/issues/31>`_)
