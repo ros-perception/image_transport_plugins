@@ -84,7 +84,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
       compression_format = "rvl";
     } else {
       ROS_ERROR("Unsupported image format: %s", message.format.c_str());
-      return nullptr;
+      return sensor_msgs::Image::Ptr();
     }
   }
 
@@ -131,7 +131,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
         RvlCodec rvl;
         rvl.DecompressRVL(&buffer[8], decompressed.ptr<unsigned short>(), cols * rows);
       } else {
-        return nullptr;
+        return sensor_msgs::Image::Ptr();
       }
 
       size_t rows = decompressed.rows;
@@ -186,7 +186,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
         RvlCodec rvl;
         rvl.DecompressRVL(&buffer[8], cv_ptr->image.ptr<unsigned short>(), cols * rows);
       } else {
-        return nullptr;
+        return sensor_msgs::Image::Ptr();
       }
 
       size_t rows = cv_ptr->image.rows;
