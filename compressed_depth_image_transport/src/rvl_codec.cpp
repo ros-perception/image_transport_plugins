@@ -4,6 +4,8 @@
 
 #include "compressed_depth_image_transport/rvl_codec.h"
 
+namespace compressed_depth_image_transport {
+
 void RvlCodec::EncodeVLE(int value) {
   do {
     int nibble = value & 0x7;        // lower 3 bits
@@ -36,19 +38,22 @@ int RvlCodec::DecodeVLE() {
   return value;
 }
 
-int RvlCodec::CompressRVL(const short* input, char* output, int numPixels) {
+int RvlCodec::CompressRVL(const unsigned short* input, unsigned char* output,
+                          int numPixels) {
   buffer = pBuffer = (int*)output;
   nibblesWritten = 0;
-  const short* end = input + numPixels;
-  short previous = 0;
+  const unsigned short* end = input + numPixels;
+  unsigned short previous = 0;
   while (input != end) {
     int zeros = 0, nonzeros = 0;
-    for (; (input != end) && !*input; input++, zeros++);
+    for (; (input != end) && !*input; input++, zeros++)
+      ;
     EncodeVLE(zeros);  // number of zeros
-    for (const short* p = input; (p != end) && *p++; nonzeros++);
+    for (const unsigned short* p = input; (p != end) && *p++; nonzeros++)
+      ;
     EncodeVLE(nonzeros);  // number of nonzeros
     for (int i = 0; i < nonzeros; i++) {
-      short current = *input++;
+      unsigned short current = *input++;
       int delta = current - previous;
       int positive = (delta << 1) ^ (delta >> 31);
       EncodeVLE(positive);  // nonzero value
@@ -57,13 +62,14 @@ int RvlCodec::CompressRVL(const short* input, char* output, int numPixels) {
   }
   if (nibblesWritten)  // last few values
     *pBuffer++ = word << 4 * (8 - nibblesWritten);
-  return int((char*)pBuffer - (char*)buffer);  // num bytes
+  return int((unsigned char*)pBuffer - (unsigned char*)buffer);  // num bytes
 }
 
-void RvlCodec::DecompressRVL(const char* input, short* output, int numPixels) {
+void RvlCodec::DecompressRVL(const unsigned char* input, unsigned short* output,
+                             int numPixels) {
   buffer = pBuffer = const_cast<int*>(reinterpret_cast<const int*>(input));
   nibblesWritten = 0;
-  short current, previous = 0;
+  unsigned short current, previous = 0;
   int numPixelsToDecode = numPixels;
   while (numPixelsToDecode) {
     int zeros = DecodeVLE();  // number of zeros
@@ -80,3 +86,5 @@ void RvlCodec::DecompressRVL(const char* input, short* output, int numPixels) {
     }
   }
 }
+
+}  // namespace compressed_depth_image_transport

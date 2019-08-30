@@ -1,13 +1,21 @@
-// This file contains a modified copy of the code published by Andrew D. Wilson
-// in "Fast Lossless Depth Image Compression" in the proceedings of SIGCHI 2017.
-// The original code is licensed under the MIT License.
+#ifndef COMPRESSED_DEPTH_IMAGE_TRANSPORT_RVL_CODEC_H_
+#define COMPRESSED_DEPTH_IMAGE_TRANSPORT_RVL_CODEC_H_
+
+namespace compressed_depth_image_transport {
 
 class RvlCodec {
-  public:
-  int CompressRVL(const short* input, char* output, int numPixels);
-  void DecompressRVL(const char* input, short* output, int numPixels);
-  private:
-    void EncodeVLE(int value);
-    int DecodeVLE();
-    int *buffer, *pBuffer, word, nibblesWritten;
+ public:
+  int CompressRVL(const unsigned short* input, unsigned char* output,
+                  int numPixels);
+  void DecompressRVL(const unsigned char* input, unsigned short* output,
+                     int numPixels);
+
+ private:
+  void EncodeVLE(int value);
+  int DecodeVLE();
+  int *buffer, *pBuffer, word, nibblesWritten;
 };
+
+}  // namespace compressed_depth_image_transport
+
+#endif  // COMPRESSED_DEPTH_IMAGE_TRANSPORT_RVL_CODEC_H_
