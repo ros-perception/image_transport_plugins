@@ -123,7 +123,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
           return sensor_msgs::Image::Ptr();
         }
       } else if (compression_format == "rvl") {
-        const unsigned char *buffer = reinterpret_cast<const unsigned char *>(&imageData[0]);
+        const unsigned char *buffer = imageData.data();
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
         memcpy(&rows, &buffer[4], 4);
@@ -178,7 +178,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
           return sensor_msgs::Image::Ptr();
         }
       } else if (compression_format == "rvl") {
-        const unsigned char *buffer = reinterpret_cast<const unsigned char *>(&imageData[0]);
+        const unsigned char *buffer = imageData.data();
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
         memcpy(&rows, &buffer[4], 4);
@@ -319,7 +319,7 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
         memcpy(&compressedImage[0], &cols, 4);
         memcpy(&compressedImage[4], &rows, 4);
         RvlCodec rvl;
-        int compressedSize = rvl.CompressRVL(invDepthImg.ptr<unsigned short>(), reinterpret_cast<unsigned char *>(&compressedImage[8]), numPixels);
+        int compressedSize = rvl.CompressRVL(invDepthImg.ptr<unsigned short>(), &compressedImage[8], numPixels);
         compressedImage.resize(8 + compressedSize);
       }
     }
@@ -380,7 +380,7 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
         memcpy(&compressedImage[0], &cols, 4);
         memcpy(&compressedImage[4], &rows, 4);
         RvlCodec rvl;
-        int compressedSize = rvl.CompressRVL(cv_ptr->image.ptr<unsigned short>(), reinterpret_cast<unsigned char *>(&compressedImage[8]), numPixels);
+        int compressedSize = rvl.CompressRVL(cv_ptr->image.ptr<unsigned short>(), &compressedImage[8], numPixels);
         compressedImage.resize(8 + compressedSize);
       }
     }
