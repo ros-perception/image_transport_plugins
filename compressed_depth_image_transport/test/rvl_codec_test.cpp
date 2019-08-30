@@ -24,7 +24,7 @@ TEST(RvlCodecTest, reciprocalTestEmpty) {
   EXPECT_TRUE(std::equal(original.begin(), original.end(), decompressed.begin()));
 
   for (int i = 0; i < size; ++i) {
-    original[i] = rand() % std::numeric_limits<uint16_t>::max();
+    original[i] = rand() % std::numeric_limits<unsigned short>::max();
   }
   for (int i = 0; i < size; ++i) {
     original[rand() % size] = 0;
