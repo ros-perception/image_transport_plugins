@@ -31,8 +31,8 @@ TEST(RvlCodecTest, reciprocalTestEmpty) {
   }
 
   // Empty depth.
-  EXPECT_EQ(rvl.CompressRVL(nullptr, nullptr, 0), 0);
-  rvl.DecompressRVL(nullptr, nullptr, 0);  // should not die.
+  EXPECT_EQ(rvl.CompressRVL(NULL, NULL, 0), 0);
+  rvl.DecompressRVL(NULL, NULL, 0);  // should not die.
 }
 
 TEST(RvlCodecTest, reciprocalTestRandom) {
