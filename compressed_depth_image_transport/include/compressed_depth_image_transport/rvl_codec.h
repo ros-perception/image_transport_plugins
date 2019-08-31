@@ -5,15 +5,23 @@ namespace compressed_depth_image_transport {
 
 class RvlCodec {
  public:
+  RvlCodec();
   int CompressRVL(const unsigned short* input, unsigned char* output,
                   int numPixels);
   void DecompressRVL(const unsigned char* input, unsigned short* output,
                      int numPixels);
 
  private:
+  RvlCodec(const RvlCodec&);
+  RvlCodec& operator=(const RvlCodec&);
+
   void EncodeVLE(int value);
   int DecodeVLE();
-  int *buffer, *pBuffer, word, nibblesWritten;
+
+  int *buffer_;
+  int *pBuffer_;
+  int word_;
+  int nibblesWritten_;
 };
 
 }  // namespace compressed_depth_image_transport

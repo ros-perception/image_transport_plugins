@@ -1,22 +1,24 @@
-// This file contains a modified copy of the code published by Andrew D. Wilson
-// in "Fast Lossless Depth Image Compression" in the proceedings of SIGCHI 2017.
+// The following code is a C++ wrapper of the code presented by
+// Andrew D. Wilson in "Fast Lossless Depth Image Compression" at SIGCHI'17.
 // The original code is licensed under the MIT License.
 
 #include "compressed_depth_image_transport/rvl_codec.h"
 
 namespace compressed_depth_image_transport {
 
+RvlCodec::RvlCodec() {}
+
 void RvlCodec::EncodeVLE(int value) {
   do {
     int nibble = value & 0x7;        // lower 3 bits
     if (value >>= 3) nibble |= 0x8;  // more to come
-    word <<= 4;
-    word |= nibble;
-    if (++nibblesWritten == 8)  // output word
+    word_ <<= 4;
+    word_ |= nibble;
+    if (++nibblesWritten_ == 8)  // output word
     {
-      *pBuffer++ = word;
-      nibblesWritten = 0;
-      word = 0;
+      *pBuffer_++ = word_;
+      nibblesWritten_ = 0;
+      word_ = 0;
     }
   } while (value);
 }
@@ -25,14 +27,14 @@ int RvlCodec::DecodeVLE() {
   unsigned int nibble;
   int value = 0, bits = 29;
   do {
-    if (!nibblesWritten) {
-      word = *pBuffer++;  // load word
-      nibblesWritten = 8;
+    if (!nibblesWritten_) {
+      word_ = *pBuffer_++;  // load word
+      nibblesWritten_ = 8;
     }
-    nibble = word & 0xf0000000;
+    nibble = word_ & 0xf0000000;
     value |= (nibble << 1) >> bits;
-    word <<= 4;
-    nibblesWritten--;
+    word_ <<= 4;
+    nibblesWritten_--;
     bits -= 3;
   } while (nibble & 0x80000000);
   return value;
@@ -40,8 +42,8 @@ int RvlCodec::DecodeVLE() {
 
 int RvlCodec::CompressRVL(const unsigned short* input, unsigned char* output,
                           int numPixels) {
-  buffer = pBuffer = (int*)output;
-  nibblesWritten = 0;
+  buffer_ = pBuffer_ = (int*)output;
+  nibblesWritten_ = 0;
   const unsigned short* end = input + numPixels;
   unsigned short previous = 0;
   while (input != end) {
@@ -60,15 +62,15 @@ int RvlCodec::CompressRVL(const unsigned short* input, unsigned char* output,
       previous = current;
     }
   }
-  if (nibblesWritten)  // last few values
-    *pBuffer++ = word << 4 * (8 - nibblesWritten);
-  return int((unsigned char*)pBuffer - (unsigned char*)buffer);  // num bytes
+  if (nibblesWritten_)  // last few values
+    *pBuffer_++ = word_ << 4 * (8 - nibblesWritten_);
+  return int((unsigned char*)pBuffer_ - (unsigned char*)buffer_);  // num bytes
 }
 
 void RvlCodec::DecompressRVL(const unsigned char* input, unsigned short* output,
                              int numPixels) {
-  buffer = pBuffer = const_cast<int*>(reinterpret_cast<const int*>(input));
-  nibblesWritten = 0;
+  buffer_ = pBuffer_ = const_cast<int*>(reinterpret_cast<const int*>(input));
+  nibblesWritten_ = 0;
   unsigned short current, previous = 0;
   int numPixelsToDecode = numPixels;
   while (numPixelsToDecode) {
