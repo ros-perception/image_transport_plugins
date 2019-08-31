@@ -23,13 +23,6 @@ TEST(RvlCodecTest, reciprocalTestEmpty) {
   rvl.DecompressRVL(&compressed[0], &decompressed[0], size);
   EXPECT_TRUE(std::equal(original.begin(), original.end(), decompressed.begin()));
 
-  for (int i = 0; i < size; ++i) {
-    original[i] = rand() % std::numeric_limits<unsigned short>::max();
-  }
-  for (int i = 0; i < size; ++i) {
-    original[rand() % size] = 0;
-  }
-
   // Empty depth.
   EXPECT_EQ(rvl.CompressRVL(NULL, NULL, 0), 0);
   rvl.DecompressRVL(NULL, NULL, 0);  // should not die.
