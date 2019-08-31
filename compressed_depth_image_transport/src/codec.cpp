@@ -312,8 +312,8 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
         }
       } else if (compression_format == "rvl") {
         int numPixels = invDepthImg.rows * invDepthImg.cols;
-        // In the worst case, RVL compression results in 1.5x larger data.
-        compressedImage.resize(3 * numPixels);
+        // In the worst case, RVL compression results in ~1.5x larger data.
+        compressedImage.resize(3 * numPixels + 12);
         uint32_t cols = invDepthImg.cols;
         uint32_t rows = invDepthImg.rows;
         memcpy(&compressedImage[0], &cols, 4);
@@ -373,8 +373,8 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
         }
       } else if (compression_format == "rvl") {
         int numPixels = cv_ptr->image.rows * cv_ptr->image.cols;
-        // In the worst case, RVL compression results in 1.5x larger data.
-        compressedImage.resize(3 * numPixels);
+        // In the worst case, RVL compression results in ~1.5x larger data.
+        compressedImage.resize(3 * numPixels + 12);
         uint32_t cols = cv_ptr->image.cols;
         uint32_t rows = cv_ptr->image.rows;
         memcpy(&compressedImage[0], &cols, 4);

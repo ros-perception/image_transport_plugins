@@ -4,8 +4,7 @@
 TEST(RvlCodecTest, reciprocalTestEmpty) {
   const int size = 1000000;
   std::vector<unsigned short> original(size);
-  // In the worst case, RVL compression results in 1.5x larger data.
-  std::vector<unsigned char> compressed(3 * size);
+  std::vector<unsigned char> compressed(3 * size + 4);
   std::vector<unsigned short> decompressed(size);
   compressed_depth_image_transport::RvlCodec rvl;
 
@@ -31,12 +30,11 @@ TEST(RvlCodecTest, reciprocalTestEmpty) {
 TEST(RvlCodecTest, reciprocalTestRandom) {
   const int size = 1000000;
   std::vector<unsigned short> original(size);
-  // In the worst case, RVL compression results in 1.5x larger data.
-  std::vector<unsigned char> compressed(3 * size);
+  std::vector<unsigned char> compressed(3 * size + 4);
   std::vector<unsigned short> decompressed(size);
   compressed_depth_image_transport::RvlCodec rvl;
 
-  // Initialize with random size of runs with random values.
+  // Populate depths with random size of runs with random values.
   for (int i = 0; i < size;) {
     int length = std::min<int>(rand() % 10, size - i);
     int value = rand() % 10;
