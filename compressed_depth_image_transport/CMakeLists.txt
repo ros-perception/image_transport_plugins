@@ -20,7 +20,8 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME} src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp src/codec.cpp)
+set(SOURCE_FILES src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp src/codec.cpp src/rvl_codec.cpp)
+add_library(${PROJECT_NAME} ${SOURCE_FILES})
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -39,3 +40,13 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(FILES compressed_depth_plugins.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+if(CATKIN_ENABLE_TESTING)
+  # Build ${PROJECT_NAME}_test library with symbols exported.
+  add_library(${PROJECT_NAME}_test ${SOURCE_FILES})
+  add_dependencies(${PROJECT_NAME}_test ${PROJECT_NAME}_gencfg)
+  target_link_libraries(${PROJECT_NAME}_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+  catkin_add_gtest(rvl_codec_test test/rvl_codec_test.cpp)
+  target_link_libraries(rvl_codec_test ${PROJECT_NAME}_test)
+endif()

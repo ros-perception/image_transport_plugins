@@ -46,10 +46,10 @@ namespace compressed_depth_image_transport
 // Returns a null pointer on bad input.
 sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::CompressedImage& compressed_image);
 
-// Compress a depth image. The png_compression parameter is passed straight through to
-// OpenCV as IMWRITE_PNG_COMPRESSION. Returns a null pointer on bad input.
+// Compress a depth image. Returns a null pointer on bad input.
 sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
     const sensor_msgs::Image& message,
+    const std::string& compression_format,
     double depth_max,
     double depth_quantization,
     int png_level);
