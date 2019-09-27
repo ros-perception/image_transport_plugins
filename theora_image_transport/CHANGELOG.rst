@@ -2,6 +2,9 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2019-09-27)
+------------------
+
 2.1.0 (2019-08-23)
 ------------------
 * Fix Dashing deprecation warning. (`#41 <https://github.com/ros-perception/image_transport_plugins/issues/41>`_)

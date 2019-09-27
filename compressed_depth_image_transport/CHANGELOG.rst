@@ -2,6 +2,9 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2019-09-27)
+------------------
+
 2.1.0 (2019-08-23)
 ------------------
 * Merge pull request `#33 <https://github.com/ros-perception/image_transport_plugins/issues/33>`_ from klintan/ros2
