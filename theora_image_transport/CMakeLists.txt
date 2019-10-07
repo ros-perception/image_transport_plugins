@@ -59,7 +59,6 @@ ament_target_dependencies(${LIBRARY_NAME}
   "rclcpp"
   "pluginlib"
   "sensor_msgs"
-  ${PROJECT_NAME}
 )
 
 add_definitions(${PC_OGG_CFLAGS_OTHER}
@@ -68,16 +67,16 @@ add_definitions(${PC_OGG_CFLAGS_OTHER}
                 ${PC_THEORADEC_CFLAGS_OTHER})
 
 add_executable(ogg_saver src/ogg_saver.cpp)
-target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} 
-                                ${PC_OGG_LIBRARY} 
-                                ${OpenCV_LIBRARIES} 
+target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY}
+                                ${PC_OGG_LIBRARY}
+                                ${OpenCV_LIBRARIES}
                                 ${PC_THEORAENC_LIBRARIES}
-                                ${PC_THEORADEC_LIBRARIES})
+                                ${PC_THEORADEC_LIBRARIES}
+                                ${LIBRARY_NAME})
 
 ament_target_dependencies(ogg_saver
   "rclcpp"
-  "rcutils"
-  ${PROJECT_NAME})
+  "rcutils")
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Packet.msg"
@@ -89,18 +88,17 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 rosidl_target_interfaces(${LIBRARY_NAME}
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 rosidl_target_interfaces(ogg_saver
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 ament_export_dependencies(rosidl_default_runtime
   ${OpenCV_LIBRARIES}
   ${PC_OGG_LIBRARIES}
   ${PC_THEORA_LIBRARIES}
   ${PC_THEORAENC_LIBRARIES}
-  ${PC_THEORADEC_LIBRARIES}
-  ${LIBRARY_NAME})
+  ${PC_THEORADEC_LIBRARIES})
 
 install(TARGETS ${LIBRARY_NAME} ogg_saver
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
