@@ -59,7 +59,6 @@ ament_target_dependencies(${LIBRARY_NAME}
   "rclcpp"
   "pluginlib"
   "sensor_msgs"
-  ${PROJECT_NAME}
 )
 
 add_definitions(${PC_OGG_CFLAGS_OTHER}
@@ -77,7 +76,7 @@ target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY}
 ament_target_dependencies(ogg_saver
   "rclcpp"
   "rcutils"
-  ${PROJECT_NAME})
+)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Packet.msg"
