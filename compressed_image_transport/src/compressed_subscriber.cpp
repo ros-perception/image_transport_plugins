@@ -67,7 +67,13 @@ void CompressedSubscriber::subscribeImpl(
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
     std::string mode;
-    node->get_parameter_or<std::string>("mode", mode, kDefaultMode);
+    rcl_interfaces::msg::ParameterDescriptor mode_description;
+    mode_description.name = "mode";
+    mode_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    mode_description.description = "OpenCV imdecode flags to use";
+    mode_description.read_only = false;
+    mode_description.additional_constraints = "Supported values: [unchanged, gray, color]";
+    mode = node->declare_parameter("mode", kDefaultMode, mode_description);
 
     if (mode == "unchanged") {
       config_.imdecode_flag = cv::IMREAD_UNCHANGED;
