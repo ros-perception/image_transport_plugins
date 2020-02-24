@@ -49,7 +49,7 @@ install(FILES compressed_depth_plugins.xml
 
 if(CATKIN_ENABLE_TESTING)
   # Build ${PROJECT_NAME}_test library with symbols exported.
-  add_library(${PROJECT_NAME}_test ${SOURCE_FILES})
+  add_library(${PROJECT_NAME}_test ${SOURCE_FILES} ${CODEC_SOURCE_FILES})
   add_dependencies(${PROJECT_NAME}_test ${PROJECT_NAME}_gencfg)
   target_link_libraries(${PROJECT_NAME}_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
