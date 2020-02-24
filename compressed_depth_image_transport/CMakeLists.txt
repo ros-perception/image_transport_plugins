@@ -13,19 +13,25 @@ generate_dynamic_reconfigure_options(cfg/CompressedDepthPublisher.cfg)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_codecs
   CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport
   DEPENDS OpenCV
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
-set(SOURCE_FILES src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp src/codec.cpp src/rvl_codec.cpp)
+set(CODEC_SOURCE_FILES src/codec.cpp src/rvl_codec.cpp)
+set(SOURCE_FILES src/compressed_depth_publisher.cpp src/compressed_depth_subscriber.cpp src/manifest.cpp)
+
+add_library(${PROJECT_NAME}_codecs ${CODEC_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}_codecs ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_codecs ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 class_loader_hide_library_symbols(${PROJECT_NAME})
+
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
