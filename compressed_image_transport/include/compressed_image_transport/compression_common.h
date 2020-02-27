@@ -35,6 +35,9 @@
 #ifndef COMPRESSED_IMAGE_TRANSPORT_COMPRESSION_COMMON
 #define COMPRESSED_IMAGE_TRANSPORT_COMPRESSION_COMMON
 
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/Image.h>
+
 namespace compressed_image_transport
 {
 
@@ -43,6 +46,9 @@ enum compressionFormat
 {
   UNDEFINED = -1, JPEG, PNG
 };
+
+// standadlone decoding function
+sensor_msgs::ImagePtr decodeCompressedImage(const sensor_msgs::CompressedImageConstPtr& image, int decode_flag);
 
 } //namespace compressed_image_transport
 
