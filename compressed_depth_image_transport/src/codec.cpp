@@ -76,12 +76,15 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
   // Older version of compressed_depth_image_transport supports only png.
   if (split_pos == std::string::npos) {
     compression_format = "png";
-  } else {
+  }
+  else {
     std::string format = message.format.substr(split_pos);
-    if (format.find("compressedDepth png") != std::string::npos) {
-      compression_format = "png";
-    } else if (format.find("compressedDepth rvl") != std::string::npos) {
+    if (format.find("compressedDepth rvl") != std::string::npos)  {
       compression_format = "rvl";
+    } else if (format.find("compressedDepth png") != std::string::npos) {
+      compression_format = "png";
+    } else if (format.find("compressedDepth") != std::string::npos) {
+      compression_format = "png";
     } else {
       ROS_ERROR("Unsupported image format: %s", message.format.c_str());
       return sensor_msgs::Image::Ptr();
