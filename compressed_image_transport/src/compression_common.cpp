@@ -64,9 +64,11 @@ namespace compressed_image_transport {
                 case 3:
                     cv_ptr->encoding = enc::BGR8;
                     break;
-                default:
-                    throw std::runtime_error(
-                            "Unsupported number of channels: " + std::to_string(cv_ptr->image.channels()));
+                default: {
+                    std::stringstream ss;
+                    ss << "Unsupported number of channels: " << cv_ptr->image.channels();
+                    throw std::runtime_error(ss.str());
+                }
             }
         } else {
             std::string image_encoding = image->format.substr(0, split_pos);
@@ -104,8 +106,11 @@ namespace compressed_image_transport {
 
         if ((cv_ptr->image.rows > 0) && (cv_ptr->image.cols > 0))
             return cv_ptr->toImageMsg();
-        else
-            throw std::runtime_error("Could not extract meaningful image. One of the dimensions was 0. Rows: " +
-                std::to_string(cv_ptr->image.rows) + ", columns: " + std::to_string(cv_ptr->image.cols) + ".");
+        else {
+            std::stringstream ss;
+            ss << "Could not extract meaningful image. One of the dimensions was 0. Rows: "
+               << cv_ptr->image.rows << ", columns: " << cv_ptr->image.cols << ".";
+            throw std::runtime_error(ss.str());
+        }
     }
 }
