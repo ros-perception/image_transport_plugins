@@ -104,7 +104,6 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params[7] = config_.jpeg_restart_interval;
 
       // Publish message
-      ROS_INFO("Encoding as JPEG");
       compressed = encodeImage(message, encodingFormat, params);
       break;
     }
@@ -115,7 +114,6 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params.resize(2, 0);
       params[0] = IMWRITE_PNG_COMPRESSION;
       params[1] = config_.png_level;
-      ROS_INFO("Encoding as PNG");
       compressed = encodeImage(message, encodingFormat, params);
       break;
     }
