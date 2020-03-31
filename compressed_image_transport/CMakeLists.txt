@@ -9,7 +9,7 @@ generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg cfg/CompressedS
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_compression
   CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport
   DEPENDS OpenCV
 )
