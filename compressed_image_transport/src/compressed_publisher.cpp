@@ -87,7 +87,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
   // Compression settings
   std::vector<int> params;
-  sensor_msgs::CompressedImageConstPtr compressed;
+  sensor_msgs::CompressedImagePtr compressed;
   switch (encodingFormat)
   {
     // JPEG Compression

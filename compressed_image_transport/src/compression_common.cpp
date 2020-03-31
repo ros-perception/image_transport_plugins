@@ -115,7 +115,7 @@ namespace compressed_image_transport {
         }
     }
 
-    sensor_msgs::CompressedImageConstPtr encodeImage(const sensor_msgs::Image &message, compressionFormat encode_flag, std::vector<int> params) {
+    sensor_msgs::CompressedImagePtr encodeImage(const sensor_msgs::Image &message, compressionFormat encode_flag, std::vector<int> params) {
 
         boost::shared_ptr <sensor_msgs::CompressedImage> compressed(new sensor_msgs::CompressedImage);
         compressed->header = message.header;
@@ -128,12 +128,6 @@ namespace compressed_image_transport {
         switch (encode_flag) {
             case JPEG:
             {
-                if( params.size()!= 8){
-                    std::ostringstream err;
-                    err<<"Encoding image using JPEG called with wrong number of parameters."
-                       <<" Got "<<params.size()<<", but expected 8";
-                    throw std::runtime_error(err.str());
-                }
                 compressed->format += "; jpeg compressed ";
 
                 // Check input format
@@ -178,12 +172,6 @@ namespace compressed_image_transport {
             }
             case PNG:
             {
-                if( params.size() != 2){
-                    std::ostringstream err;
-                    err<<"Encoding image using PNG called with wrong number of parameters."
-                       <<" Got "<<params.size()<<", but expected 2";
-                    throw std::runtime_error(err.str());
-                }
                 // Update ros message format header
                 compressed->format += "; png compressed ";
 
