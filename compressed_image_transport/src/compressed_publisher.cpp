@@ -122,10 +122,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       break;
   }
   // Publish message
-  if (compressed != NULL)
-    publish_fn(*compressed);
-  else
-    ROS_ERROR("Compressing image failed. Check your configuration.");
+  publish_fn(*compressed);
+
 }
 
 } //namespace compressed_image_transport

@@ -158,11 +158,9 @@ namespace compressed_image_transport {
                     }
                     catch (cv_bridge::Exception &e) {
                         ROS_ERROR("%s", e.what());
-                        return NULL;
                     }
                     catch (cv::Exception &e) {
                         ROS_ERROR("%s", e.what());
-                        return NULL;
                     }
                     return compressed;
                 }
@@ -210,12 +208,10 @@ namespace compressed_image_transport {
                   catch (cv_bridge::Exception& e)
                   {
                     ROS_ERROR("%s", e.what());
-                    return NULL;
                   }
                   catch (cv::Exception& e)
                   {
                     ROS_ERROR("%s", e.what());
-                    return NULL;
                   }
 
                   // Publish message
@@ -229,6 +225,7 @@ namespace compressed_image_transport {
                 ROS_ERROR("Unknown compression type, valid options are 'jpeg(0)' and 'png(1)'");
                 break;
         }
+        return compressed;
     }
 
 }
