@@ -120,7 +120,6 @@ namespace compressed_image_transport {
         boost::shared_ptr <sensor_msgs::CompressedImage> compressed(new sensor_msgs::CompressedImage);
         compressed->header = message.header;
         compressed->format = message.encoding;
-
         // Bit depth of image encoding
         int bitDepth = enc::bitDepth(message.encoding);
         int numChannels = enc::numChannels(message.encoding);
@@ -129,7 +128,6 @@ namespace compressed_image_transport {
             case JPEG:
             {
                 compressed->format += "; jpeg compressed ";
-
                 // Check input format
                 if ((bitDepth == 8) || (bitDepth == 16)) {
                     // Target image format
@@ -155,75 +153,64 @@ namespace compressed_image_transport {
                         } else {
                             ROS_ERROR("cv::imencode (jpeg) failed on input image");
                         }
-                    }
-                    catch (cv_bridge::Exception &e) {
+                    } catch (cv_bridge::Exception &e) {
                         ROS_ERROR("%s", e.what());
-                    }
-                    catch (cv::Exception &e) {
+                    } catch (cv::Exception &e) {
                         ROS_ERROR("%s", e.what());
                     }
                     return compressed;
-                }
-                else
+                } else {
                   ROS_ERROR("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: %s)", message.encoding.c_str());
-                break;
+                  break;
+                }
             }
             case PNG:
             {
                 // Update ros message format header
                 compressed->format += "; png compressed ";
-
                 // Check input format
-                if ((bitDepth == 8) || (bitDepth == 16))
-                {
+                if ((bitDepth == 8) || (bitDepth == 16)) {
 
                   // Target image format
                   std::ostringstream targetFormat;
-                  if (enc::isColor(message.encoding))
-                  {
+                  if (enc::isColor(message.encoding)) {
                     // convert color images to RGB domain
                     targetFormat << "bgr" << bitDepth;
                     compressed->format += targetFormat.str();
                   }
 
                   // OpenCV-ros bridge
-                  try
-                  {
+                  try {
                     boost::shared_ptr<void> tracked_object;
                     cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat.str());
 
                     // Compress image
-                    if (cv::imencode(".png", cv_ptr->image, compressed->data, params))
-                    {
+                    if (cv::imencode(".png", cv_ptr->image, compressed->data, params)) {
 
                       float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                           / (float)compressed->data.size();
                       ROS_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed->data.size());
-                    }
-                    else
-                    {
+                    } else {
                       ROS_ERROR("cv::imencode (png) failed on input image");
                     }
-                  }
-                  catch (cv_bridge::Exception& e)
-                  {
+                  } catch (cv_bridge::Exception& e) {
                     ROS_ERROR("%s", e.what());
-                  }
-                  catch (cv::Exception& e)
-                  {
+                  } catch (cv::Exception& e) {
                     ROS_ERROR("%s", e.what());
                   }
 
                   // Publish message
                   return compressed;
-                }
-                else
+                } else {
                   ROS_ERROR("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: %s)", message.encoding.c_str());
-                break;
+                  break;
+                }
             }
             default:
-                ROS_ERROR("Unknown compression type, valid options are 'jpeg(0)' and 'png(1)'");
-                break;
+            {
+              ROS_ERROR("Unknown compression type, valid options are 'jpeg(0)' and 'png(1)'");
+              break;
+            }
         }
         return compressed;
     }
