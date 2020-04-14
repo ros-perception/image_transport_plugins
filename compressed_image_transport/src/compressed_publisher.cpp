@@ -65,9 +65,37 @@ void CompressedPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
 
-  node->get_parameter_or<std::string>("format", config_.format, kDefaultFormat);
-  node->get_parameter_or<int>("png_level", config_.png_level, kDefaultPngLevel);
-  node->get_parameter_or<int>("jpeg_quality", config_.jpeg_quality, kDefaultJpegQuality);
+  rcl_interfaces::msg::ParameterDescriptor format_description;
+  format_description.name = "format";
+  format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+  format_description.description = "Compression method";
+  format_description.read_only = false;
+  format_description.additional_constraints = "Supported values: [jpeg, png]";
+  config_.format = node->declare_parameter("format", kDefaultFormat, format_description);
+  
+  rcl_interfaces::msg::ParameterDescriptor png_level_description;
+  png_level_description.name = "png_level";
+  png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+  png_level_description.description = "Compression level for PNG format";
+  png_level_description.read_only = false;
+  rcl_interfaces::msg::IntegerRange png_range;
+  png_range.from_value = 0;
+  png_range.to_value = 9;
+  png_range.step = 1;
+  png_level_description.integer_range.push_back(png_range);
+  config_.png_level = node->declare_parameter("png_level", kDefaultPngLevel, png_level_description);
+
+  rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
+  jpeg_quality_description.name = "jpeg_quality";
+  jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+  jpeg_quality_description.description = "Image quality for JPEG format";
+  jpeg_quality_description.read_only = false;
+  rcl_interfaces::msg::IntegerRange jpeg_range;
+  jpeg_range.from_value = 1;
+  jpeg_range.to_value = 100;
+  jpeg_range.step = 1;
+  jpeg_quality_description.integer_range.push_back(jpeg_range);
+  config_.jpeg_quality = node->declare_parameter("jpeg_quality", kDefaultJpegQuality, jpeg_quality_description);
 }
 
 void CompressedPublisher::publish(
