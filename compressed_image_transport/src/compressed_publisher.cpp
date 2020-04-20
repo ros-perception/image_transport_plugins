@@ -104,7 +104,18 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params[7] = config_.jpeg_restart_interval;
 
       // Publish message
-      compressed = encodeImage(message, encodingFormat, params);
+      try {
+        compressed = encodeImage(message, encodingFormat, params);
+      }
+      catch (cv_bridge::Exception& e) {
+        ROS_ERROR("%s", e.what());
+      }
+      catch (cv::Exception& e) {
+        ROS_ERROR("%s", e.what());
+      }
+      catch (std::runtime_error& e) {
+        ROS_ERROR("%s", e.what());
+      }
       break;
     }
 
@@ -114,7 +125,18 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       params.resize(2, 0);
       params[0] = IMWRITE_PNG_COMPRESSION;
       params[1] = config_.png_level;
-      compressed = encodeImage(message, encodingFormat, params);
+      try { 
+        compressed = encodeImage(message, encodingFormat, params);
+      }
+      catch (cv_bridge::Exception& e) {
+        ROS_ERROR("%s", e.what());
+      }
+      catch (cv::Exception& e) {
+        ROS_ERROR("%s", e.what());
+      }
+      catch (std::runtime_error& e) {
+        ROS_ERROR("%s", e.what());
+      }
       break;
     }
     default:
