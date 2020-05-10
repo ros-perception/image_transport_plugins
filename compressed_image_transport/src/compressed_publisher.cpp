@@ -65,37 +65,62 @@ void CompressedPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
 
-  rcl_interfaces::msg::ParameterDescriptor format_description;
-  format_description.name = "format";
-  format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-  format_description.description = "Compression method";
-  format_description.read_only = false;
-  format_description.additional_constraints = "Supported values: [jpeg, png]";
-  config_.format = node->declare_parameter("format", kDefaultFormat, format_description);
-  
-  rcl_interfaces::msg::ParameterDescriptor png_level_description;
-  png_level_description.name = "png_level";
-  png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-  png_level_description.description = "Compression level for PNG format";
-  png_level_description.read_only = false;
-  rcl_interfaces::msg::IntegerRange png_range;
-  png_range.from_value = 0;
-  png_range.to_value = 9;
-  png_range.step = 1;
-  png_level_description.integer_range.push_back(png_range);
-  config_.png_level = node->declare_parameter("png_level", kDefaultPngLevel, png_level_description);
+  uint ns_len = node->get_effective_namespace().length();
+  std::string format_param_name = base_topic.substr(ns_len) + ".format";
+  if (!node->has_parameter(format_param_name))
+  {
+    rcl_interfaces::msg::ParameterDescriptor format_description;
+    format_description.name = "format";
+    format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    format_description.description = "Compression method";
+    format_description.read_only = false;
+    format_description.additional_constraints = "Supported values: [jpeg, png]";
+    config_.format = node->declare_parameter(format_param_name, kDefaultFormat, format_description);
+  }
+  else
+  {
+    RCLCPP_WARN(logger_, format_param_name + " was previously delared");
+  }
 
-  rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
-  jpeg_quality_description.name = "jpeg_quality";
-  jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-  jpeg_quality_description.description = "Image quality for JPEG format";
-  jpeg_quality_description.read_only = false;
-  rcl_interfaces::msg::IntegerRange jpeg_range;
-  jpeg_range.from_value = 1;
-  jpeg_range.to_value = 100;
-  jpeg_range.step = 1;
-  jpeg_quality_description.integer_range.push_back(jpeg_range);
-  config_.jpeg_quality = node->declare_parameter("jpeg_quality", kDefaultJpegQuality, jpeg_quality_description);
+  std::string png_level_param_name = base_topic.substr(ns_len) + ".png_level";
+  if (!node->has_parameter(png_level_param_name))
+  {
+    rcl_interfaces::msg::ParameterDescriptor png_level_description;
+    png_level_description.name = "png_level";
+    png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    png_level_description.description = "Compression level for PNG format";
+    png_level_description.read_only = false;
+    rcl_interfaces::msg::IntegerRange png_range;
+    png_range.from_value = 0;
+    png_range.to_value = 9;
+    png_range.step = 1;
+    png_level_description.integer_range.push_back(png_range);
+    config_.png_level = node->declare_parameter(png_level_param_name, kDefaultPngLevel, png_level_description);
+  }
+  else
+  {
+    RCLCPP_WARN(logger_, png_level_param_name + " was previously delared");
+  }
+
+  std::string jpeg_quality_param_name = base_topic.substr(ns_len) + ".jpeg_quality";
+  if (!node->has_parameter(jpeg_quality_param_name))
+  {
+    rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
+    jpeg_quality_description.name = "jpeg_quality";
+    jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    jpeg_quality_description.description = "Image quality for JPEG format";
+    jpeg_quality_description.read_only = false;
+    rcl_interfaces::msg::IntegerRange jpeg_range;
+    jpeg_range.from_value = 1;
+    jpeg_range.to_value = 100;
+    jpeg_range.step = 1;
+    jpeg_quality_description.integer_range.push_back(jpeg_range);
+    config_.jpeg_quality = node->declare_parameter(jpeg_quality_param_name, kDefaultJpegQuality, jpeg_quality_description);
+  }
+  else
+  {
+    RCLCPP_WARN(logger_, jpeg_quality_param_name + " was previously delared");
+  }
 }
 
 void CompressedPublisher::publish(
