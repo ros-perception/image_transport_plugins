@@ -2,6 +2,14 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.14.0 (2020-05-14)
+-------------------
+* Bump CMake version to avoid CMP0048 warning (`#53 <https://github.com/ros-perception/image_transport_plugins/issues/53>`_)
+* Add depth compression by RVL `#42 <https://github.com/ros-perception/image_transport_plugins/issues/42>`_
+* Fix binary install locations for Windows build `#34 <https://github.com/ros-perception/image_transport_plugins/issues/34>`_
+* Add legacy constants when using opencv4 `#32 <https://github.com/ros-perception/image_transport_plugins/issues/32>`_
+* Contributors: Alejandro Hernández Cordero, David Gossow, Hans Gaiser, Sean Yen, Shuntaro Yamazaki
+
 1.9.5 (2016-10-03)
 ------------------
 * disable -Werr
@@ -10,7 +18,7 @@ Changelog for package compressed_depth_image_transport
 1.9.4 (2016-10-02)
 ------------------
 * address gcc6 build error and tune
-  With gcc6, compiling fails with `stdlib.h: No such file or directory`,
+  With gcc6, compiling fails with 'stdlib.h: No such file or directory',
   as including '-isystem /usr/include' breaks with gcc6, cf.,
   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129.
   This commit addresses this issue for this package in the same way
