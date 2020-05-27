@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "cv_bridge/cv_bridge.h"
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <rclcpp/logging.hpp>
 
 #include "compressed_depth_image_transport/codec.h"
@@ -138,7 +138,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       // Decode raw image
       try
       {
-        cv_ptr->image = cv::imdecode(imageData, CV_LOAD_IMAGE_UNCHANGED);
+        cv_ptr->image = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
       }
       catch (cv::Exception& e)
       {
