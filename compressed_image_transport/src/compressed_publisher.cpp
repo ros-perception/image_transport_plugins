@@ -36,7 +36,7 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include "compressed_image_transport/compression_common.h"
 
@@ -126,7 +126,7 @@ void CompressedPublisher::publish(
     // JPEG Compression
     case JPEG:
     {
-      params[0] = CV_IMWRITE_JPEG_QUALITY;
+      params[0] = cv::IMWRITE_JPEG_QUALITY;
       params[1] = config_.jpeg_quality;
 
       // Update ros message format header
@@ -184,7 +184,7 @@ void CompressedPublisher::publish(
       // PNG Compression
     case PNG:
     {
-      params[0] = CV_IMWRITE_PNG_COMPRESSION;
+      params[0] = cv::IMWRITE_PNG_COMPRESSION;
       params[1] = config_.png_level;
 
       // Update ros message format header
