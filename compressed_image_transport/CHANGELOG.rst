@@ -2,6 +2,12 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2020-05-28)
+------------------
+* Use non-deprecated image_transport headers (`#59 <https://github.com/ros-perception/image_transport_plugins/issues/59>`_)
+* Add parameter declarations (`#52 <https://github.com/ros-perception/image_transport_plugins/issues/52>`_)
+* Contributors: Michael Carroll, Łukasz Mitka
+
 2.2.1 (2019-10-23)
 ------------------
 

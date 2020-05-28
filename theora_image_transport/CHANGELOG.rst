@@ -2,6 +2,9 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2020-05-28)
+------------------
+
 2.2.1 (2019-10-23)
 ------------------
 * Remove dependency to ${PROJECT_NAME} (`#46 <https://github.com/ros-perception/image_transport_plugins/issues/46>`_)
