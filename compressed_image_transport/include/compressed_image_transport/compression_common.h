@@ -50,6 +50,16 @@ enum compressionFormat
 // standadlone decoding function
 sensor_msgs::ImagePtr decodeCompressedImage(const sensor_msgs::CompressedImageConstPtr& image, int decode_flag);
 
+
+/**
+ * @brief encodeImage standadlone encoding function wrapping around cv::imencode for compressin sensor_msgs::Image messages
+ * @param iamge the image message to encode
+ * @param encode_flag one of compressionFormat::JPEG or compressionFormat::PNG
+ * @param params Format-specific parameters. See cv::imwrite and cv::ImwriteFlags.
+ * @return
+ */
+sensor_msgs::CompressedImagePtr encodeImage(const sensor_msgs::Image &image, compressionFormat encode_flag, std::vector<int> params = std::vector<int>());
+
 } //namespace compressed_image_transport
 
 #endif

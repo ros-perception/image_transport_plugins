@@ -37,6 +37,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <ros/ros.h>
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -113,4 +114,90 @@ namespace compressed_image_transport {
             throw std::runtime_error(ss.str());
         }
     }
+
+    sensor_msgs::CompressedImagePtr encodeImage(const sensor_msgs::Image &message, compressionFormat encode_flag, std::vector<int> params) {
+
+        boost::shared_ptr <sensor_msgs::CompressedImage> compressed(new sensor_msgs::CompressedImage);
+        compressed->header = message.header;
+        compressed->format = message.encoding;
+        // Bit depth of image encoding
+        int bitDepth = enc::bitDepth(message.encoding);
+        int numChannels = enc::numChannels(message.encoding);
+
+        switch (encode_flag) {
+            case JPEG:
+            {
+                compressed->format += "; jpeg compressed ";
+                // Check input format
+                if ((bitDepth == 8) || (bitDepth == 16)) {
+                    // Target image format
+                    std::string targetFormat;
+                    if (enc::isColor(message.encoding)) {
+                        // convert color images to BGR8 format
+                        targetFormat = "bgr8";
+                        compressed->format += targetFormat;
+                    }
+
+                    // OpenCV-ros bridge
+                    boost::shared_ptr<void> tracked_object;
+                    cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat);
+
+                    // Compress image
+                    if (cv::imencode(".jpg", cv_ptr->image, compressed->data, params)) {
+
+                        float cRatio = (float) (cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
+                                       / (float) compressed->data.size();
+                        ROS_DEBUG("Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)", cRatio,
+                                  compressed->data.size());
+                    } else {
+                        throw std::runtime_error("cv::imencode (jpeg) failed on input image");
+                    }
+                    return compressed;
+                } else {
+                  throw std::runtime_error("Compressed Image Transport - JPEG compression requires 8/16-bit color format (input format is: "+ message.encoding +
+ ")");
+                }
+            }
+            case PNG:
+            {
+                // Update ros message format header
+                compressed->format += "; png compressed ";
+                // Check input format
+                if ((bitDepth == 8) || (bitDepth == 16)) {
+
+                  // Target image format
+                  std::ostringstream targetFormat;
+                  if (enc::isColor(message.encoding)) {
+                    // convert color images to RGB domain
+                    targetFormat << "bgr" << bitDepth;
+                    compressed->format += targetFormat.str();
+                  }
+
+                  boost::shared_ptr<void> tracked_object;
+                  cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat.str());
+
+                  // Compress image
+                  if (cv::imencode(".png", cv_ptr->image, compressed->data, params)) {
+
+                    float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())/ (float)compressed->data.size();
+                    ROS_DEBUG("Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed->data.size());
+                  } else {
+                    throw std::runtime_error("cv::imencode (png) failed on input image");
+                  }
+                  // Publish message
+                  return compressed;
+                } else {
+                  throw std::runtime_error("Compressed Image Transport - PNG compression requires 8/16-bit encoded color format (input format is: "+  message.encoding +")");
+                  break;
+                }
+            }
+            default:
+            {
+              throw std::runtime_error("Unknown compression type, valid options are 'jpeg(0)' and 'png(1)'");
+              break;
+            }
+        }
+        return compressed;
+    }
+
 }
