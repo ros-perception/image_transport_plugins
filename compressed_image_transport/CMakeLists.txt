@@ -9,20 +9,24 @@ generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg cfg/CompressedS
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_compression
   CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport
   DEPENDS OpenCV
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
+add_library(${PROJECT_NAME}_compression src/compression_common.cpp)
+add_dependencies(${PROJECT_NAME}_compression ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_compression ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_library(${PROJECT_NAME} src/compressed_publisher.cpp src/compressed_subscriber.cpp src/manifest.cpp)
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_compression)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PROJECT_NAME}_compression)
 
 class_loader_hide_library_symbols(${PROJECT_NAME})
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_compression
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
