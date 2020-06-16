@@ -66,7 +66,9 @@ void CompressedPublisher::advertiseImpl(
   Base::advertiseImpl(node, base_topic, custom_qos);
 
   uint ns_len = node->get_effective_namespace().length();
-  std::string format_param_name = base_topic.substr(ns_len) + ".format";
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  std::string format_param_name = param_base_name + ".format";
   if (!node->has_parameter(format_param_name))
   {
     rcl_interfaces::msg::ParameterDescriptor format_description;
@@ -82,7 +84,7 @@ void CompressedPublisher::advertiseImpl(
     RCLCPP_WARN(logger_, format_param_name + " was previously delared");
   }
 
-  std::string png_level_param_name = base_topic.substr(ns_len) + ".png_level";
+  std::string png_level_param_name = param_base_name + ".png_level";
   if (!node->has_parameter(png_level_param_name))
   {
     rcl_interfaces::msg::ParameterDescriptor png_level_description;
@@ -102,7 +104,7 @@ void CompressedPublisher::advertiseImpl(
     RCLCPP_WARN(logger_, png_level_param_name + " was previously delared");
   }
 
-  std::string jpeg_quality_param_name = base_topic.substr(ns_len) + ".jpeg_quality";
+  std::string jpeg_quality_param_name = param_base_name + ".jpeg_quality";
   if (!node->has_parameter(jpeg_quality_param_name))
   {
     rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
