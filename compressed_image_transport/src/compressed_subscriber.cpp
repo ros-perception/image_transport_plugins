@@ -100,9 +100,11 @@ sensor_msgs::ImagePtr CompressedSubscriber::decompressJPEG(const std::vector<uin
 
   int width, height, jpegSub, jpegColor;
 
-  // If we cannot decode the JPEG header, silently fall back to OpenCV
-  if (tjDecompressHeader3(tj_, data.data(), data.size(), &width, &height, &jpegSub, &jpegColor) != 0)
-    return {};
+  // Old TurboJPEG require a const_cast here. This was fixed in TurboJPEG 1.5.
+  uint8_t* src = const_cast<uint8_t*>(data.data());
+
+  if (tjDecompressHeader3(tj_, src, data.size(), &width, &height, &jpegSub, &jpegColor) != 0)
+    return sensor_msgs::ImagePtr(); // If we cannot decode the JPEG header, silently fall back to OpenCV
 
   sensor_msgs::ImagePtr ret(new sensor_msgs::Image);
   ret->header = header;
@@ -163,13 +165,13 @@ sensor_msgs::ImagePtr CompressedSubscriber::decompressJPEG(const std::vector<uin
   else
   {
     ROS_WARN_THROTTLE(10.0, "Encountered a source encoding that is not supported by TurboJPEG: '%s'", source_encoding.c_str());
-    return {};
+    return sensor_msgs::ImagePtr();
   }
 
-  if (tjDecompress2(tj_, data.data(), data.size(), ret->data.data(), width, 0, height, pixelFormat, 0) != 0)
+  if (tjDecompress2(tj_, src, data.size(), ret->data.data(), width, 0, height, pixelFormat, 0) != 0)
   {
     ROS_WARN_THROTTLE(10.0, "Could not decompress data using TurboJPEG, falling back to OpenCV");
-    return {};
+    return sensor_msgs::ImagePtr();
   }
 
   return ret;
