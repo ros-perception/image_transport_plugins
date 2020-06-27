@@ -7,7 +7,8 @@
 
 include(FindPackageHandleStandardArgs)
 
-find_library(TurboJPEG_LIBRARY turbojpeg)
+# On Ubuntu Xenial, a missing symlink means we have to specify the name exactly
+find_library(TurboJPEG_LIBRARY libturbojpeg.so.0 turbojpeg)
 find_path(TurboJPEG_INCLUDE_DIR turbojpeg.h)
 
 find_package_handle_standard_args(TurboJPEG
