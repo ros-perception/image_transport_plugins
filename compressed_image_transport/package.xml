@@ -22,6 +22,8 @@
   <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>image_transport</run_depend>
 
+  <test_depend>rostest</test_depend>
+
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
     <image_transport plugin="${prefix}/compressed_plugins.xml" />
