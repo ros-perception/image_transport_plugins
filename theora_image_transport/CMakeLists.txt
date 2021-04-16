@@ -94,12 +94,8 @@ rosidl_target_interfaces(ogg_saver
   ${PROJECT_NAME} "rosidl_typesupport_cpp") 
 
 ament_export_dependencies(rosidl_default_runtime
-  ${OpenCV_LIBRARIES}
-  ${PC_OGG_LIBRARIES}
-  ${PC_THEORA_LIBRARIES}
-  ${PC_THEORAENC_LIBRARIES}
-  ${PC_THEORADEC_LIBRARIES}
-  ${LIBRARY_NAME})
+  OpenCV
+  PkgConfig)
 
 install(TARGETS ${LIBRARY_NAME} ogg_saver
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
