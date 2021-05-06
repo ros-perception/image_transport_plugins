@@ -45,7 +45,6 @@
 
 #include <limits>
 #include <vector>
-#include <iostream> //DELETE!
 
 constexpr const char* kDefaultMode = "unchanged";
 
@@ -91,10 +90,6 @@ void CompressedSubscriber::subscribeImpl(
         RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
         config_.imdecode_flag = cv::IMREAD_UNCHANGED;
       }
-    }
-    else
-    {
-      RCLCPP_WARN(logger_, mode_param_name + " was previously delared");
     }
 
 }
