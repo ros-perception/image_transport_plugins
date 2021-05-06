@@ -45,6 +45,7 @@
 
 #include <limits>
 #include <vector>
+#include <iostream>
 
 constexpr const char* kDefaultMode = "unchanged";
 
