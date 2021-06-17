@@ -121,7 +121,7 @@ void CompressedPublisher::advertiseImpl(
   }
   else
   {
-    RCLCPP_WARN(logger_, "%s was previously delared", jpeg_quality_param_name);
+    RCLCPP_WARN(logger_, "%s was previously delared", jpeg_quality_param_name.c_str());
   }
 }
 
