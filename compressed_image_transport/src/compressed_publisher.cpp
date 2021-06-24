@@ -166,6 +166,10 @@ void CompressedPublisher::publish(
           // convert color images to BGR8 format
           targetFormat = "bgr8";
           compressed.format += targetFormat;
+        } else {
+          // convert gray images to mono8 format
+          targetFormat = "mono8";
+          compressed.format += targetFormat;
         }
 
         // OpenCV-ros bridge
