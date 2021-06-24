@@ -163,6 +163,9 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
         }
       }
+      if (enc::bitDepth(image_encoding) == 16) {
+        cv_ptr->image.convertTo(cv_ptr->image, CV_16U, 256);
+      }
     }
   }
   catch (cv::Exception& e)
