@@ -81,7 +81,7 @@ void CompressedPublisher::advertiseImpl(
   }
   else
   {
-    RCLCPP_WARN(logger_, format_param_name + " was previously delared");
+    RCLCPP_WARN(logger_, "%s was previously delared",format_param_name);
   }
 
   std::string png_level_param_name = param_base_name + ".png_level";
@@ -101,7 +101,7 @@ void CompressedPublisher::advertiseImpl(
   }
   else
   {
-    RCLCPP_WARN(logger_, png_level_param_name + " was previously delared");
+    RCLCPP_WARN(logger_,"%s was previously delared",png_level_param_name);
   }
 
   std::string jpeg_quality_param_name = param_base_name + ".jpeg_quality";
@@ -121,7 +121,7 @@ void CompressedPublisher::advertiseImpl(
   }
   else
   {
-    RCLCPP_WARN(logger_, jpeg_quality_param_name + " was previously delared");
+    RCLCPP_WARN(logger_, "%s was previously delared",jpeg_quality_param_name);
   }
 }
 
