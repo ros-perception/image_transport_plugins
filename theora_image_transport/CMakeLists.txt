@@ -28,6 +28,16 @@ pkg_check_modules(PC_THEORA REQUIRED theora)
 pkg_check_modules(PC_THEORAENC REQUIRED theoraenc)
 pkg_check_modules(PC_THEORADEC REQUIRED theoradec)
 
+link_directories(${PC_OGG_LIBRARY_DIRS} 
+                 ${PC_THEORA_LIBRARY_DIRS}
+                 ${PC_THEORAENC_LIBRARY_DIRS}
+                 ${PC_THEORADEC_LIBRARY_DIRS})
+add_definitions(${PC_OGG_CFLAGS_OTHER} 
+                ${PC_THEORA_CFLAGS_OTHER}
+                ${PC_THEORAENC_CFLAGS_OTHER}
+                ${PC_THEORADEC_CFLAGS_OTHER}
+)
+
 set (LIBRARY_NAME ${PROJECT_NAME}_component)
 
 add_library(
