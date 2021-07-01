@@ -120,6 +120,43 @@ void CompressedPublisher::advertiseImpl(
     RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name.c_str());
     config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name).get_value<int64_t>();
   }
+
+  std::string tiff_res_unit_param_name = param_base_name + ".tiff.res_unit";
+  rcl_interfaces::msg::ParameterDescriptor tiff_res_unit_description;
+  tiff_res_unit_description.description = "tiff ResUnit";
+  tiff_res_unit_description.read_only = false;
+  tiff_res_unit_description.additional_constraints = "Supported values: [none, inch, centimeter]";
+  try {
+    config_.tiff_res_unit = node->declare_parameter(
+      tiff_res_unit_param_name, "inch", tiff_res_unit_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_res_unit_param_name.c_str());
+    config_.tiff_res_unit = node->get_parameter(tiff_res_unit_param_name).get_value<std::string>();
+  }
+
+  std::string tiff_xdpi_param_name = param_base_name + ".tiff.xdpi";
+  rcl_interfaces::msg::ParameterDescriptor tiff_xdpi_description;
+  tiff_xdpi_description.description = "tiff xdpi";
+  tiff_xdpi_description.read_only = false;
+  try {
+    config_.tiff_xdpi = node->declare_parameter(
+      tiff_xdpi_param_name, -1, tiff_xdpi_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_xdpi_param_name.c_str());
+    config_.tiff_xdpi = node->get_parameter(tiff_xdpi_param_name).get_value<int64_t>();
+  }
+
+  std::string tiff_ydpi_param_name = param_base_name + ".tiff.ydpi";
+  rcl_interfaces::msg::ParameterDescriptor tiff_ydpi_description;
+  tiff_ydpi_description.description = "tiff ydpi";
+  tiff_ydpi_description.read_only = false;
+  try {
+    config_.tiff_ydpi = node->declare_parameter(
+      tiff_ydpi_param_name, -1, tiff_ydpi_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_ydpi_param_name.c_str());
+    config_.tiff_ydpi = node->get_parameter(tiff_xdpi_param_name).get_value<int64_t>();
+  }
 }
 
 void CompressedPublisher::publish(
@@ -276,6 +313,27 @@ void CompressedPublisher::publish(
     {
       // Update ros message format header
       compressed.format += "; tiff compressed ";
+      int res_unit = -1;
+      // See https://gitlab.com/libtiff/libtiff/-/blob/v4.3.0/libtiff/tiff.h#L282-284
+      if (config_.tiff_res_unit == "inch") {
+        res_unit = 2;
+      } else if (config_.tiff_res_unit == "centimeter") {
+        res_unit = 3;
+      } else if (config_.tiff_res_unit == "none") {
+        res_unit = 1;
+      } else {
+        RCLCPP_WARN(
+          logger_,
+          "tiff.res_unit parameter should be either 'inch', 'centimeter' or 'none'; "
+          "defaulting to 'inch'. Found '%s'", config_.tiff_res_unit.c_str());
+      }
+      params.reserve(3);
+      params.emplace_back(cv::IMWRITE_TIFF_XDPI);
+      params.emplace_back(config_.tiff_xdpi);
+      params.emplace_back(cv::IMWRITE_TIFF_YDPI);
+      params.emplace_back(config_.tiff_ydpi);
+      params.emplace_back(cv::IMWRITE_TIFF_RESUNIT);
+      params.emplace_back(res_unit);
 
       // Check input format
       if ((bitDepth == 8) || (bitDepth == 16) || (bitDepth == 32))

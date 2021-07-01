@@ -76,6 +76,12 @@ protected:
     // JPEG Quality from 0 to 100 (higher is better quality).
     // Default to OpenCV default of 95.
     int jpeg_quality;
+
+    // TIFF resolution unit
+    // Can be one of "none", "inch", "centimeter".
+    std::string tiff_res_unit;
+    int tiff_xdpi;
+    int tiff_ydpi;
   };
 
   Config config_;
