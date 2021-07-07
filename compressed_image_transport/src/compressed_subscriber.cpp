@@ -63,28 +63,44 @@ void CompressedSubscriber::subscribeImpl(
     const Callback& callback,
     rmw_qos_profile_t custom_qos)
 {
-    logger_ = node->get_logger();
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
-    std::string mode;
-    rcl_interfaces::msg::ParameterDescriptor mode_description;
-    mode_description.name = "mode";
-    mode_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    mode_description.description = "OpenCV imdecode flags to use";
-    mode_description.read_only = false;
-    mode_description.additional_constraints = "Supported values: [unchanged, gray, color]";
-    mode = node->declare_parameter("mode", kDefaultMode, mode_description);
+    subscribeImplCommon(node);
+    
+}
+void CompressedSubscriber::subscribeImplCommon(rclcpp::Node * node){
+  logger_ = node->get_logger();
+  std::string mode;
+  rcl_interfaces::msg::ParameterDescriptor mode_description;
+  mode_description.name = "mode";
+  mode_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+  mode_description.description = "OpenCV imdecode flags to use";
+  mode_description.read_only = false;
+  mode_description.additional_constraints = "Supported values: [unchanged, gray, color]";
+  mode = node->declare_parameter("mode", kDefaultMode, mode_description);
 
-    if (mode == "unchanged") {
-      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
-    } else if (mode == "gray") {
-      config_.imdecode_flag = cv::IMREAD_GRAYSCALE;
-    } else if (mode == "color") {
-      config_.imdecode_flag = cv::IMREAD_COLOR;
-    } else {
-      RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
-      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
-    }
+  if (mode == "unchanged") {
+    config_.imdecode_flag = cv::IMREAD_UNCHANGED;
+  } else if (mode == "gray") {
+    config_.imdecode_flag = cv::IMREAD_GRAYSCALE;
+  } else if (mode == "color") {
+    config_.imdecode_flag = cv::IMREAD_COLOR;
+  } else {
+    RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
+    config_.imdecode_flag = cv::IMREAD_UNCHANGED;
+  }
+}
+
+void CompressedSubscriber::subscribeImpl(
+    rclcpp::Node * node,
+    const std::string& base_topic,
+    const Callback& callback,
+    rmw_qos_profile_t custom_qos,
+    rclcpp::SubscriptionOptions options)
+{
+    typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
+    Base::subscribeImplWithOptions(node, base_topic, callback, custom_qos, options);
+    subscribeImplCommon(node);
 }
 
 
