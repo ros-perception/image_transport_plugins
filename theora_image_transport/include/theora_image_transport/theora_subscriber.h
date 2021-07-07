@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-#include <image_transport/simple_subscriber_plugin.h>
+#include <image_transport/simple_subscriber_plugin.hpp>
 #include <theora_image_transport/msg/packet.hpp>
 
 #include <theora/codec.h>
