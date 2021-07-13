@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2021-07-13)
+------------------
+* [ros2] Fix RCLCPP\_* logs, a string literal must be the first argument (`#72 <https://github.com/ros-perception/image_transport_plugins/issues/72>`_)
+* Contributors: Ivan Santiago Paunovic, Łukasz Mitka
+
 2.3.0 (2020-05-28)
 ------------------
 * Use non-deprecated image_transport headers (`#59 <https://github.com/ros-perception/image_transport_plugins/issues/59>`_)
