@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2021-07-13)
+------------------
+* Fix ament_export_dependencies syntax in CMake (`#65 <https://github.com/ros-perception/image_transport_plugins/issues/65>`_)
+* Contributors: Chen Bainian
+
 2.3.0 (2020-05-28)
 ------------------
 

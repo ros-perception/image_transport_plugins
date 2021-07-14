@@ -40,6 +40,7 @@
 
 #include "compressed_image_transport/compression_common.h"
 
+#include <rclcpp/exceptions/exceptions.hpp>
 #include <rclcpp/parameter_client.hpp>
 
 #include <sstream>
@@ -69,59 +70,55 @@ void CompressedPublisher::advertiseImpl(
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
   std::string format_param_name = param_base_name + ".format";
-  if (!node->has_parameter(format_param_name))
-  {
-    rcl_interfaces::msg::ParameterDescriptor format_description;
-    format_description.name = "format";
-    format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    format_description.description = "Compression method";
-    format_description.read_only = false;
-    format_description.additional_constraints = "Supported values: [jpeg, png]";
+  rcl_interfaces::msg::ParameterDescriptor format_description;
+  format_description.name = "format";
+  format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+  format_description.description = "Compression method";
+  format_description.read_only = false;
+  format_description.additional_constraints = "Supported values: [jpeg, png]";
+  try {
     config_.format = node->declare_parameter(format_param_name, kDefaultFormat, format_description);
-  }
-  else
-  {
-    RCLCPP_WARN(logger_, format_param_name + " was previously delared");
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", format_param_name.c_str());
+    config_.format = node->get_parameter(format_param_name).get_value<std::string>();
   }
 
   std::string png_level_param_name = param_base_name + ".png_level";
-  if (!node->has_parameter(png_level_param_name))
-  {
-    rcl_interfaces::msg::ParameterDescriptor png_level_description;
-    png_level_description.name = "png_level";
-    png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    png_level_description.description = "Compression level for PNG format";
-    png_level_description.read_only = false;
-    rcl_interfaces::msg::IntegerRange png_range;
-    png_range.from_value = 0;
-    png_range.to_value = 9;
-    png_range.step = 1;
-    png_level_description.integer_range.push_back(png_range);
-    config_.png_level = node->declare_parameter(png_level_param_name, kDefaultPngLevel, png_level_description);
-  }
-  else
-  {
-    RCLCPP_WARN(logger_, png_level_param_name + " was previously delared");
+  rcl_interfaces::msg::ParameterDescriptor png_level_description;
+  png_level_description.name = "png_level";
+  png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+  png_level_description.description = "Compression level for PNG format";
+  png_level_description.read_only = false;
+  rcl_interfaces::msg::IntegerRange png_range;
+  png_range.from_value = 0;
+  png_range.to_value = 9;
+  png_range.step = 1;
+  png_level_description.integer_range.push_back(png_range);
+  try {
+    config_.png_level = node->declare_parameter(
+      png_level_param_name, kDefaultPngLevel, png_level_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", png_level_param_name.c_str());
+    config_.png_level = node->get_parameter(png_level_param_name).get_value<int64_t>();
   }
 
   std::string jpeg_quality_param_name = param_base_name + ".jpeg_quality";
-  if (!node->has_parameter(jpeg_quality_param_name))
-  {
-    rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
-    jpeg_quality_description.name = "jpeg_quality";
-    jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    jpeg_quality_description.description = "Image quality for JPEG format";
-    jpeg_quality_description.read_only = false;
-    rcl_interfaces::msg::IntegerRange jpeg_range;
-    jpeg_range.from_value = 1;
-    jpeg_range.to_value = 100;
-    jpeg_range.step = 1;
-    jpeg_quality_description.integer_range.push_back(jpeg_range);
-    config_.jpeg_quality = node->declare_parameter(jpeg_quality_param_name, kDefaultJpegQuality, jpeg_quality_description);
-  }
-  else
-  {
-    RCLCPP_WARN(logger_, jpeg_quality_param_name + " was previously delared");
+  rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
+  jpeg_quality_description.name = "jpeg_quality";
+  jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+  jpeg_quality_description.description = "Image quality for JPEG format";
+  jpeg_quality_description.read_only = false;
+  rcl_interfaces::msg::IntegerRange jpeg_range;
+  jpeg_range.from_value = 1;
+  jpeg_range.to_value = 100;
+  jpeg_range.step = 1;
+  jpeg_quality_description.integer_range.push_back(jpeg_range);
+  try {
+    config_.jpeg_quality = node->declare_parameter(
+      jpeg_quality_param_name, kDefaultJpegQuality, jpeg_quality_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name.c_str());
+    config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name).get_value<int64_t>();
   }
 }
 
@@ -168,6 +165,10 @@ void CompressedPublisher::publish(
         {
           // convert color images to BGR8 format
           targetFormat = "bgr8";
+          compressed.format += targetFormat;
+        } else {
+          // convert gray images to mono8 format
+          targetFormat = "mono8";
           compressed.format += targetFormat;
         }
 
