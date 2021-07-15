@@ -66,7 +66,7 @@ protected:
                const PublishFn& publish_fn) const;
 
   struct Config {
-    // Compression format to use "jpeg" or "png"
+    // Compression format to use "jpeg", "png" or "tiff".
     std::string format;
 
     // PNG Compression Level from 0 to 9.  A higher value means a smaller size.
@@ -76,6 +76,12 @@ protected:
     // JPEG Quality from 0 to 100 (higher is better quality).
     // Default to OpenCV default of 95.
     int jpeg_quality;
+
+    // TIFF resolution unit
+    // Can be one of "none", "inch", "centimeter".
+    std::string tiff_res_unit;
+    int tiff_xdpi;
+    int tiff_ydpi;
   };
 
   Config config_;
