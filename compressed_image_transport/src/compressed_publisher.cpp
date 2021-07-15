@@ -123,7 +123,7 @@ void CompressedPublisher::advertiseImpl(
 
   std::string tiff_res_unit_param_name = param_base_name + ".tiff.res_unit";
   rcl_interfaces::msg::ParameterDescriptor tiff_res_unit_description;
-  tiff_res_unit_description.description = "tiff ResUnit";
+  tiff_res_unit_description.description = "tiff resolution unit";
   tiff_res_unit_description.read_only = false;
   tiff_res_unit_description.additional_constraints = "Supported values: [none, inch, centimeter]";
   try {
