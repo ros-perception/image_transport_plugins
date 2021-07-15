@@ -347,7 +347,6 @@ void CompressedPublisher::publish(
           // Compress image
           if (cv::imencode(".tiff", cv_ptr->image, compressed.data, params))
           {
-
             float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
                 / (float)compressed.data.size();
             RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: tiff, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
