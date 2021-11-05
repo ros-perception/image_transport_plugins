@@ -120,4 +120,5 @@ install(
 
 pluginlib_export_plugin_description_file(image_transport theora_plugins.xml)
 
+ament_export_libraries(${PROJECT_NAME})
 ament_package()
