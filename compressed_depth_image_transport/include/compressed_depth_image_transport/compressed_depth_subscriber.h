@@ -36,7 +36,7 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
-#include "image_transport/simple_subscriber_plugin.h"
+#include <image_transport/simple_subscriber_plugin.hpp>
 
 namespace compressed_depth_image_transport {
 
