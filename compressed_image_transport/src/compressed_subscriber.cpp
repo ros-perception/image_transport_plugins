@@ -66,14 +66,22 @@ void CompressedSubscriber::subscribeImpl(
     logger_ = node->get_logger();
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos);
+    uint ns_len = node->get_effective_namespace().length();
+    std::string param_base_name = base_topic.substr(ns_len);
+    std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+    std::string mode_param_name = param_base_name + ".mode";
+
     std::string mode;
     rcl_interfaces::msg::ParameterDescriptor mode_description;
-    mode_description.name = "mode";
-    mode_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     mode_description.description = "OpenCV imdecode flags to use";
     mode_description.read_only = false;
     mode_description.additional_constraints = "Supported values: [unchanged, gray, color]";
-    mode = node->declare_parameter("mode", kDefaultMode, mode_description);
+    try {
+      mode = node->declare_parameter(mode_param_name, kDefaultMode, mode_description);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", mode_param_name.c_str());
+      mode = node->get_parameter(mode_param_name).get_value<std::string>();
+    }
 
     if (mode == "unchanged") {
       config_.imdecode_flag = cv::IMREAD_UNCHANGED;
