@@ -2,6 +2,12 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.2 (2022-02-18)
+------------------
+* Fix copyright year 20012 -> 2012 (`#79 <https://github.com/ros-perception/image_transport_plugins/issues/79>`_)
+* JPEG only supports 8 bits images (`#73 <https://github.com/ros-perception/image_transport_plugins/issues/73>`_)
+* Contributors: Ivan Santiago Paunovic, Michael Carroll
+
 2.3.1 (2021-07-13)
 ------------------
 

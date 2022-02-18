@@ -2,6 +2,13 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.2 (2022-02-18)
+------------------
+* Fix copyright year 20012 -> 2012 (`#79 <https://github.com/ros-perception/image_transport_plugins/issues/79>`_)
+* mac fix (`#76 <https://github.com/ros-perception/image_transport_plugins/issues/76>`_)
+* JPEG only supports 8 bits images (`#73 <https://github.com/ros-perception/image_transport_plugins/issues/73>`_)
+* Contributors: Ivan Santiago Paunovic, Michael Carroll, Steve Nogar
+
 2.3.1 (2021-07-13)
 ------------------
 * Fix ament_export_dependencies syntax in CMake (`#65 <https://github.com/ros-perception/image_transport_plugins/issues/65>`_)
