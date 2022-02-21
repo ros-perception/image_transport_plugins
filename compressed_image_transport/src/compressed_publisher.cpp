@@ -69,6 +69,7 @@ void CompressedPublisher::advertiseImpl(
   uint ns_len = node->get_effective_namespace().length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  if (param_base_name.find(".") == 0) {param_base_name = param_base_name.substr(1);}
   std::string format_param_name = param_base_name + ".format";
   rcl_interfaces::msg::ParameterDescriptor format_description;
   format_description.name = "format";
