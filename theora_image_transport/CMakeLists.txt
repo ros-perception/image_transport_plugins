@@ -97,11 +97,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
    ADD_LINTER_TESTS
 )
 
-rosidl_target_interfaces(${LIBRARY_NAME}
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-rosidl_target_interfaces(ogg_saver
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+target_link_libraries(${LIBRARY_NAME} ${cpp_typesupport_target})
+target_link_libraries(ogg_saver ${cpp_typesupport_target})
 
 ament_export_dependencies(rosidl_default_runtime
   OpenCV
