@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.3 (2022-04-08)
+------------------
+* Avoid parameter exception for compressed image transport (`#86 <https://github.com/ros-perception/image_transport_plugins/issues/86>`_)
+* Contributors: Daisuke Nishimatsu
+
 2.3.1 (2021-07-13)
 ------------------
 * [ros2] Fix RCLCPP\_* logs, a string literal must be the first argument (`#72 <https://github.com/ros-perception/image_transport_plugins/issues/72>`_)

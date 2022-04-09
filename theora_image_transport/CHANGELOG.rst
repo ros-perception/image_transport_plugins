@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.3 (2022-04-08)
+------------------
+* Avoid parameter exception for compressed image transport (`#86 <https://github.com/ros-perception/image_transport_plugins/issues/86>`_)
+* Contributors: Daisuke Nishimatsu
+
 2.3.1 (2021-07-13)
 ------------------
 * Fix ament_export_dependencies syntax in CMake (`#65 <https://github.com/ros-perception/image_transport_plugins/issues/65>`_)
