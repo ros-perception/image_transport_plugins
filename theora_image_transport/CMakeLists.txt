@@ -28,11 +28,11 @@ pkg_check_modules(PC_THEORA REQUIRED theora)
 pkg_check_modules(PC_THEORAENC REQUIRED theoraenc)
 pkg_check_modules(PC_THEORADEC REQUIRED theoradec)
 
-link_directories(${PC_OGG_LIBRARY_DIRS} 
+link_directories(${PC_OGG_LIBRARY_DIRS}
                  ${PC_THEORA_LIBRARY_DIRS}
                  ${PC_THEORAENC_LIBRARY_DIRS}
                  ${PC_THEORADEC_LIBRARY_DIRS})
-add_definitions(${PC_OGG_CFLAGS_OTHER} 
+add_definitions(${PC_OGG_CFLAGS_OTHER}
                 ${PC_THEORA_CFLAGS_OTHER}
                 ${PC_THEORAENC_CFLAGS_OTHER}
                 ${PC_THEORADEC_CFLAGS_OTHER}
@@ -77,9 +77,9 @@ add_definitions(${PC_OGG_CFLAGS_OTHER}
                 ${PC_THEORADEC_CFLAGS_OTHER})
 
 add_executable(ogg_saver src/ogg_saver.cpp)
-target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} 
-                                ${PC_OGG_LIBRARY} 
-                                ${OpenCV_LIBRARIES} 
+target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY}
+                                ${PC_OGG_LIBRARY}
+                                ${OpenCV_LIBRARIES}
                                 ${PC_THEORAENC_LIBRARIES}
                                 ${PC_THEORADEC_LIBRARIES})
 
@@ -98,10 +98,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 rosidl_target_interfaces(${LIBRARY_NAME}
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 rosidl_target_interfaces(ogg_saver
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 ament_export_dependencies(rosidl_default_runtime
   OpenCV
