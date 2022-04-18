@@ -58,7 +58,6 @@ target_include_directories(${LIBRARY_NAME} PRIVATE
 )
 target_link_libraries(${LIBRARY_NAME}
   opencv_imgproc
-  ${OpenCV_LIBRARIES}
   ${PC_OGG_LIBRARIES}
   ${PC_THEORA_LIBRARIES}
   ${PC_THEORAENC_LIBRARIES}
