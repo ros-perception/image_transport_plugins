@@ -57,6 +57,7 @@ target_include_directories(${LIBRARY_NAME} PRIVATE
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 target_link_libraries(${LIBRARY_NAME}
+  opencv_imgproc
   ${OpenCV_LIBRARIES}
   ${PC_OGG_LIBRARIES}
   ${PC_THEORA_LIBRARIES}
@@ -80,7 +81,6 @@ target_compile_definitions(ogg_saver PRIVATE
 target_link_libraries(ogg_saver
   ${PC_THEORA_LIBRARY}
   ${PC_OGG_LIBRARY}
-  ${OpenCV_LIBRARIES}
   ${PC_THEORAENC_LIBRARIES}
   ${PC_THEORADEC_LIBRARIES}
   "${cpp_typesupport_target}"
@@ -91,7 +91,6 @@ target_link_libraries(ogg_saver
 ament_export_dependencies(
   rosidl_default_runtime
   OpenCV
-  PkgConfig
   cv_bridge
   image_transport
   pluginlib
@@ -106,6 +105,8 @@ install(TARGETS ${LIBRARY_NAME} EXPORT export_${LIBRARY_NAME}
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+ament_export_targets(export_${LIBRARY_NAME})
 
 install(TARGETS ogg_saver
   DESTINATION lib/${PROJECT_NAME}
