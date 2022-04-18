@@ -2,8 +2,8 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.5.0 (2022-04-18)
+------------------
 * Cleanup the cmake code to be more modern (`#96 <https://github.com/ros-perception/image_transport_plugins/issues/96>`_)
 * Contributors: Chris Lalancette
 
