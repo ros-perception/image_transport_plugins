@@ -16,7 +16,7 @@ find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(builtin_interfaces REQUIRED)
+find_package(rcutils REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -28,17 +28,16 @@ pkg_check_modules(PC_THEORA REQUIRED theora)
 pkg_check_modules(PC_THEORAENC REQUIRED theoraenc)
 pkg_check_modules(PC_THEORADEC REQUIRED theoradec)
 
-link_directories(${PC_OGG_LIBRARY_DIRS} 
-                 ${PC_THEORA_LIBRARY_DIRS}
-                 ${PC_THEORAENC_LIBRARY_DIRS}
-                 ${PC_THEORADEC_LIBRARY_DIRS})
-add_definitions(${PC_OGG_CFLAGS_OTHER} 
-                ${PC_THEORA_CFLAGS_OTHER}
-                ${PC_THEORAENC_CFLAGS_OTHER}
-                ${PC_THEORADEC_CFLAGS_OTHER}
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Packet.msg"
+  DEPENDENCIES
+    std_msgs
+   ADD_LINTER_TESTS
 )
 
-set (LIBRARY_NAME ${PROJECT_NAME}_component)
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+
+set(LIBRARY_NAME ${PROJECT_NAME}_component)
 
 add_library(
   ${LIBRARY_NAME}
@@ -47,75 +46,74 @@ add_library(
   src/theora_subscriber.cpp
   src/manifest.cpp
 )
-
-include_directories(include
-  ${OpenCV_INCLUDE_DIRS}
-  ${PC_OGG_INCLUDE_DIRS}
-  ${PC_THEORA_INCLUDE_DIRS}
-  ${PC_THEORAENC_INCLUDE_DIRS}
-  ${PC_THEORADEC_INCLUDE_DIRS})
-
+target_compile_definitions(${LIBRARY_NAME} PRIVATE
+  ${PC_OGG_CFLAGS_OTHER}
+  ${PC_THEORA_CFLAGS_OTHER}
+  ${PC_THEORAENC_CFLAGS_OTHER}
+  ${PC_THEORADEC_CFLAGS_OTHER}
+)
+target_include_directories(${LIBRARY_NAME} PRIVATE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 target_link_libraries(${LIBRARY_NAME}
-  ${OpenCV_LIBRARIES}
+  opencv_imgproc
   ${PC_OGG_LIBRARIES}
   ${PC_THEORA_LIBRARIES}
   ${PC_THEORAENC_LIBRARIES}
   ${PC_THEORADEC_LIBRARIES}
+  "${cpp_typesupport_target}"
+  ${sensor_msgs_TARGETS}
+  cv_bridge::cv_bridge
+  image_transport::image_transport
+  pluginlib::pluginlib
+  rclcpp::rclcpp
 )
-
-ament_target_dependencies(${LIBRARY_NAME}
-  "image_transport"
-  "cv_bridge"
-  "rclcpp"
-  "pluginlib"
-  "sensor_msgs"
-)
-
-add_definitions(${PC_OGG_CFLAGS_OTHER}
-                ${PC_THEORA_CFLAGS_OTHER}
-                ${PC_THEORAENC_CFLAGS_OTHER}
-                ${PC_THEORADEC_CFLAGS_OTHER})
 
 add_executable(ogg_saver src/ogg_saver.cpp)
-target_link_libraries(ogg_saver ${PC_THEORA_LIBRARY} 
-                                ${PC_OGG_LIBRARY} 
-                                ${OpenCV_LIBRARIES} 
-                                ${PC_THEORAENC_LIBRARIES}
-                                ${PC_THEORADEC_LIBRARIES})
-
-ament_target_dependencies(ogg_saver
-  "rclcpp"
-  "rcutils"
+target_compile_definitions(ogg_saver PRIVATE
+  ${PC_OGG_CFLAGS_OTHER}
+  ${PC_THEORA_CFLAGS_OTHER}
+  ${PC_THEORAENC_CFLAGS_OTHER}
+  ${PC_THEORADEC_CFLAGS_OTHER}
+)
+target_link_libraries(ogg_saver
+  ${PC_THEORA_LIBRARY}
+  ${PC_OGG_LIBRARY}
+  ${PC_THEORAENC_LIBRARIES}
+  ${PC_THEORADEC_LIBRARIES}
+  "${cpp_typesupport_target}"
+  rclcpp::rclcpp
+  rcutils::rcutils
 )
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Packet.msg"
-  DEPENDENCIES
-    builtin_interfaces
-    std_msgs
-    sensor_msgs
-   ADD_LINTER_TESTS
-)
-
-rosidl_target_interfaces(${LIBRARY_NAME}
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
-
-rosidl_target_interfaces(ogg_saver
-  ${PROJECT_NAME} "rosidl_typesupport_cpp") 
-
-ament_export_dependencies(rosidl_default_runtime
+ament_export_dependencies(
+  rosidl_default_runtime
   OpenCV
-  PkgConfig)
+  cv_bridge
+  image_transport
+  pluginlib
+  rclcpp
+  rcutils
+  sensor_msgs
+  std_msgs
+)
 
-install(TARGETS ${LIBRARY_NAME} ogg_saver
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
+install(TARGETS ${LIBRARY_NAME} EXPORT export_${LIBRARY_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
+ament_export_targets(export_${LIBRARY_NAME})
+
+install(TARGETS ogg_saver
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(
-  DIRECTORY "include/"
-  DESTINATION include
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
 )
 
 pluginlib_export_plugin_description_file(image_transport theora_plugins.xml)

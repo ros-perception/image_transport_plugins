@@ -16,21 +16,20 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <buildtool_depend>pkg-config</buildtool_depend>
 
-  <build_depend>builtin_interfaces</build_depend>
-  <build_depend>std_msgs</build_depend>
-
-  <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
 
-  <depend>rclcpp</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>libogg</depend>
+  <depend>libopencv-imgproc-dev</depend>
   <depend>libtheora</depend>
   <depend>pluginlib</depend>
-  <!--  <build_depend>rosbag</build_depend> -->
+  <depend>rclcpp</depend>
+  <depend>rcutils</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
 
   <test_depend>ament_lint_common</test_depend>
 
