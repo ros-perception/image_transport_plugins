@@ -2,6 +2,9 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.3.2 (2022-02-18)
 ------------------
 * Add tiff compression support. (`#75 <https://github.com/ros-perception/image_transport_plugins/issues/75>`_)

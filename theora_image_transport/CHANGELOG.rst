@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Cleanup the cmake code to be more modern (`#96 <https://github.com/ros-perception/image_transport_plugins/issues/96>`_)
+* Contributors: Chris Lalancette
+
 2.3.2 (2022-02-18)
 ------------------
 * Fix copyright year 20012 -> 2012 (`#79 <https://github.com/ros-perception/image_transport_plugins/issues/79>`_)
@@ -70,7 +75,7 @@ Changelog for package theora_image_transport
 1.9.1 (2014-07-18)
 ------------------
 * Some cleanup in package.xml and CMakeLists.txt
-  - builds broke sporadically (I think because of the missing *_gencpp in
+  - builds broke sporadically (I think because of the missing _gencpp in
   add_dependencies) with missing Packet.h file.
   - I’m no catkin expert, but these changes make catkin_lint happy (no
   more errors at least).
