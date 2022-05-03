@@ -62,7 +62,8 @@ void CompressedDepthPublisher::advertiseImpl(ros::NodeHandle &nh, const std::str
 
   // Set up reconfigure server for this topic
   reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
-  ReconfigureServer::CallbackType f = boost::bind(&CompressedDepthPublisher::configCb, this, _1, _2);
+  ReconfigureServer::CallbackType f = boost::bind(&CompressedDepthPublisher::configCb, this,
+      boost::placeholders::_1, boost::placeholders::_2);
   reconfigure_server_->setCallback(f);
 }
 

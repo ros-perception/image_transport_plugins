@@ -84,7 +84,8 @@ void TheoraPublisher::advertiseImpl(ros::NodeHandle &nh, const std::string &base
 
   // Set up reconfigure server for this topic
   reconfigure_server_ = boost::make_shared<ReconfigureServer>(this->nh());
-  ReconfigureServer::CallbackType f = boost::bind(&TheoraPublisher::configCb, this, _1, _2);
+  ReconfigureServer::CallbackType f = boost::bind(&TheoraPublisher::configCb, this,
+      boost::placeholders::_1, boost::placeholders::_2);
   reconfigure_server_->setCallback(f);
 }
 
