@@ -87,7 +87,7 @@ void TheoraPublisher::advertiseImpl(
   custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos);
+  Base::advertiseImpl(node, base_topic, custom_qos, rclcpp::PublisherOptions{});
 }
 
   // TODO(ros2): this method should be called when configuration change through
