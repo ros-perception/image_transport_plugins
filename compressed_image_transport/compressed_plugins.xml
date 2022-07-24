@@ -1,7 +1,7 @@
 <library path="lib/libcompressed_image_transport">
   <class name="image_transport/compressed_pub" type="compressed_image_transport::CompressedPublisher" base_class_type="image_transport::PublisherPlugin">
     <description>
-      This plugin publishes a CompressedImage using either JPEG or PNG compression.
+      This plugin publishes a CompressedImage using either JPEG, PNG or QOI compression.
     </description>
   </class>
 

@@ -3,7 +3,7 @@
   <version>1.14.0</version>
   <description>
     Compressed_image_transport provides a plugin to image_transport for transparently sending images
-    encoded as JPEG or PNG.
+    encoded as JPEG, PNG or QOI.
   </description>
   <maintainer email="dgossow@willowgarage.com">David Gossow</maintainer>
   <license>BSD</license>
@@ -11,6 +11,7 @@
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Patrick Mihelich</author>
   <author>Julius Kammerl</author>
+  <author>Sammy Pfeiffer</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
