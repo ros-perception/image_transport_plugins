@@ -39,6 +39,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include "compressed_image_transport/compression_common.h"
+#include "compressed_image_transport/qoi.hpp"
 
 #include <rclcpp/exceptions/exceptions.hpp>
 #include <rclcpp/parameter_client.hpp>
@@ -75,7 +76,7 @@ void CompressedPublisher::advertiseImpl(
   format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
   format_description.description = "Compression method";
   format_description.read_only = false;
-  format_description.additional_constraints = "Supported values: [jpeg, png, tiff]";
+  format_description.additional_constraints = "Supported values: [jpeg, png, tiff, qoi]";
   try {
     config_.format = node->declare_parameter(format_param_name, kDefaultFormat, format_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
@@ -179,7 +180,9 @@ void CompressedPublisher::publish(
     encodingFormat = PNG;
   } else if (config_.format == "tiff") {
     encodingFormat = TIFF;
-  }
+  } else if (config_.format == "qoi") {
+    encodingFormat = QOI;
+}
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
@@ -375,6 +378,58 @@ void CompressedPublisher::publish(
       }
       break;
     }
+   // QOI Compression
+    case QOI:
+    {
+      // Update ros message format header
+      compressed.format += "; qoi compressed ";
+
+      // Check input format
+      int channels = message.step / message.width;
+      if (channels == 3 || channels == 4)
+      {
+
+        // OpenCV-ros bridge
+        try
+        {
+          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, nullptr, "");
+
+        // Compress image
+          const std::size_t size = static_cast<std::size_t>(cv_ptr->image.rows) * static_cast<std::size_t>(cv_ptr->image.cols) * static_cast<std::size_t>(cv_ptr->image.channels());
+          std::vector<unsigned char> orig_pixels;
+          orig_pixels.resize(size);
+          std::memcpy(orig_pixels.data(), cv_ptr->image.data, size);
+
+          compressed.data = qoi::encode(orig_pixels,
+                                        cv_ptr->image.cols,
+                                        cv_ptr->image.rows, 
+                                        cv_ptr->image.channels());
+
+            float cRatio = static_cast<float>((cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize()))
+                / static_cast<float>((float)compressed.data.size());
+            RCUTILS_LOG_DEBUG("Compressed Image Transport - Codec: qoi, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+
+        }
+        catch (cv_bridge::Exception& e)
+        {
+          RCUTILS_LOG_ERROR("%s", e.what());
+          return;
+        }
+        catch (cv::Exception& e)
+        {
+          RCUTILS_LOG_ERROR("%s", e.what());
+          return;
+        }
+
+        // Publish message
+        publish_fn(compressed);
+      } else {
+        RCUTILS_LOG_ERROR(
+          "Compressed Image Transport - QOI compression requires 3 or 4 channels (input channel number is: %i)", channels);
+      }
+      break;
+     }
+
 
     default:
       RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg', 'png' and 'tiff'", config_.format.c_str());

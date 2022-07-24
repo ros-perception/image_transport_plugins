@@ -28,6 +28,7 @@ add_library(
   src/compressed_publisher.cpp
   src/compressed_subscriber.cpp
   src/manifest.cpp
+  src/qoi.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

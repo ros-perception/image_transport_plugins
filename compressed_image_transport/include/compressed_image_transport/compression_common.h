@@ -45,6 +45,7 @@ enum compressionFormat
   JPEG = 0,
   PNG = 1,
   TIFF = 2,
+  QOI = 3,
 };
 
 } //namespace compressed_image_transport
