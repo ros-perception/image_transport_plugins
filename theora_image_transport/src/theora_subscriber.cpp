@@ -82,7 +82,7 @@ void TheoraSubscriber::subscribeImpl(
   custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
-  Base::subscribeImpl(node, base_topic, callback, custom_qos);
+  Base::subscribeImpl(node, base_topic, callback, custom_qos, rclcpp::SubscriptionOptions());
 }
 
 // TODO: port this check to ROS2 user events
