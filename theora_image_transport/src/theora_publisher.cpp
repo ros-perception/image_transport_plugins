@@ -74,20 +74,13 @@ TheoraPublisher::~TheoraPublisher()
 void TheoraPublisher::advertiseImpl(
   rclcpp::Node *node,
   const std::string &base_topic,
-  uint32_t queue_size,
-  rmw_qos_profile_t custom_qos)
+  rmw_qos_profile_t custom_qos,
+  rclcpp::PublisherOptions options)
 {
   logger_ = node->get_logger();
-  // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
-  // ported this to ROS2 using the history policy that  determines how messages
-  // are saved until the message is taken by the reader.  KEEP_ALL saves all
-  // messages until they are taken.  KEEP_LAST enforces a limit on the number of
-  // messages that are saved, specified by the "depth" parameter.
-  custom_qos.history = rmw_qos_profile_default.history;
-  custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos);
+  Base::advertiseImpl(node, base_topic, custom_qos, options);
 }
 
   // TODO(ros2): this method should be called when configuration change through

@@ -50,17 +50,17 @@ class TheoraPublisher : public image_transport::SimplePublisherPlugin<theora_ima
 {
 public:
   TheoraPublisher();
-  virtual ~TheoraPublisher();
+  ~TheoraPublisher() override;
 
   // Return the system unique string representing the theora transport type
-  virtual std::string getTransportName() const { return "theora"; }
+  std::string getTransportName() const override { return "theora"; }
 
 protected:
-  virtual void advertiseImpl(
+  void advertiseImpl(
     rclcpp::Node* node,
     const std::string &base_topic,
-    uint32_t queue_size,
-    rmw_qos_profile_t custom_qos);
+    rmw_qos_profile_t custom_qos,
+    rclcpp::PublisherOptions options) override;
 
   // TODO: Callback to send header packets to new clients
   // virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);

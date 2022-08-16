@@ -51,12 +51,12 @@ public:
 
 protected:
   // Overridden to bump queue_size, otherwise we might lose headers
-  virtual void subscribeImpl(
+  void subscribeImpl(
     rclcpp::Node* node,
     const std::string &base_topic,
     const Callback & callback,
-    uint32_t queue_size,
-    rmw_qos_profile_t custom_qos);
+    rmw_qos_profile_t custom_qos,
+    rclcpp::SubscriptionOptions options) override;
 
   // The function that does the actual decompression and calls a user supplied
   // callback with the resulting image

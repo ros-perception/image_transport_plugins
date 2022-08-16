@@ -69,20 +69,13 @@ void TheoraSubscriber::subscribeImpl(
   rclcpp::Node * node,
   const std::string &base_topic,
   const Callback & callback,
-  uint32_t queue_size,
-  rmw_qos_profile_t custom_qos)
+  rmw_qos_profile_t custom_qos,
+  rclcpp::SubscriptionOptions options)
 {
   logger_ = node->get_logger();
-  // queue_size doesn't account for the 3 header packets, so we correct (with a little extra) here.
-  // ported this to ROS2 using the history policy that  determines how messages
-  // are saved until the message is taken by the reader.  KEEP_ALL saves all
-  // messages until they are taken.  KEEP_LAST enforces a limit on the number of
-  // messages that are saved, specified by the "depth" parameter.
-  custom_qos.history = rmw_qos_profile_default.history;
-  custom_qos.depth = queue_size + 4;
 
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
-  Base::subscribeImpl(node, base_topic, callback, custom_qos);
+  Base::subscribeImpl(node, base_topic, callback, custom_qos, options);
 }
 
 // TODO: port this check to ROS2 user events

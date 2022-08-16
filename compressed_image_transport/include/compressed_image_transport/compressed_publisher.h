@@ -48,9 +48,9 @@ class CompressedPublisher : public image_transport::SimplePublisherPlugin<Compre
 {
 public:
   CompressedPublisher(): logger_(rclcpp::get_logger("CompressedPublisher")) {}
-  virtual ~CompressedPublisher() = default;
+  ~CompressedPublisher() override = default;
 
-  virtual std::string getTransportName() const
+  std::string getTransportName() const override
   {
     return "compressed";
   }
@@ -60,7 +60,8 @@ protected:
   void advertiseImpl(
       rclcpp::Node* node,
       const std::string& base_topic,
-      rmw_qos_profile_t custom_qos) override;
+      rmw_qos_profile_t custom_qos,
+      rclcpp::PublisherOptions options) override;
 
   void publish(const sensor_msgs::msg::Image& message,
                const PublishFn& publish_fn) const;
