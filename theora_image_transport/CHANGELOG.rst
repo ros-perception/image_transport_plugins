@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix advertiseImpl() in theora_publisher and subscribeImpl() in theora_subscriber. (`#106 <https://github.com/ros-perception/image_transport_plugins/issues/106>`_)
+* Contributors: Ivan Santiago Paunovic
+
 2.5.0 (2022-04-18)
 ------------------
 * Cleanup the cmake code to be more modern (`#96 <https://github.com/ros-perception/image_transport_plugins/issues/96>`_)

@@ -2,6 +2,11 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix advertiseImpl() in compressed_depth_publisher and subscribeImpl() in compressed_depth_subscriber. (`#106 <https://github.com/ros-perception/image_transport_plugins/issues/106>`_)
+* Contributors: Ivan Santiago Paunovic
+
 2.5.0 (2022-04-18)
 ------------------
 
