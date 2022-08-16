@@ -77,6 +77,7 @@ protected:
     // JPEG Quality from 0 to 100 (higher is better quality).
     // Default to OpenCV default of 95.
     int jpeg_quality;
+    bool jpeg_compress_bayer;
 
     // TIFF resolution unit
     // Can be one of "none", "inch", "centimeter".

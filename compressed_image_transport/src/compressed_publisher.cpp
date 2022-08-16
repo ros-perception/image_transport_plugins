@@ -49,6 +49,7 @@
 constexpr const char* kDefaultFormat = "jpeg";
 constexpr int kDefaultPngLevel = 3;
 constexpr int kDefaultJpegQuality = 95;
+constexpr bool kDefaultJpegCompressBayer = false;
 
 using namespace cv;
 using namespace std;
@@ -120,6 +121,20 @@ void CompressedPublisher::advertiseImpl(
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name.c_str());
     config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name).get_value<int64_t>();
+  }
+
+  std::string jpeg_compress_bayer_param_name = param_base_name + ".jpeg_compress_bayer";
+  rcl_interfaces::msg::ParameterDescriptor jpeg_compress_bayer_description;
+  jpeg_compress_bayer_description.name = "jpeg_compress_bayer";
+  jpeg_compress_bayer_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+  jpeg_compress_bayer_description.description = "Compress bayer format without converting to mono8 first";
+  jpeg_compress_bayer_description.read_only = false;
+  try {
+    config_.jpeg_compress_bayer = node->declare_parameter(
+        jpeg_compress_bayer_param_name, kDefaultJpegCompressBayer, jpeg_compress_bayer_description);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_compress_bayer_param_name.c_str());
+    config_.jpeg_compress_bayer = node->get_parameter(jpeg_compress_bayer_param_name).get_value<bool>();
   }
 
   std::string tiff_res_unit_param_name = param_base_name + ".tiff.res_unit";
@@ -207,7 +222,13 @@ void CompressedPublisher::publish(
           // convert color images to BGR8 format
           targetFormat = "bgr8";
           compressed.format += targetFormat;
-        } else {
+        }
+        else if (enc::isBayer(message.encoding) and config_.jpeg_compress_bayer)
+        {
+          targetFormat = message.encoding;
+          compressed.format += targetFormat;
+        }
+        else {
           // convert gray images to mono8 format
           targetFormat = "mono8";
           compressed.format += targetFormat;
