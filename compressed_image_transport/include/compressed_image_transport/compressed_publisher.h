@@ -67,7 +67,7 @@ protected:
                const PublishFn& publish_fn) const override;
 
   struct Config {
-    // Compression format to use "jpeg", "png" or "tiff".
+    // Compression format to use "jpeg", "png", "tiff" or "qoi".
     std::string format;
 
     // PNG Compression Level from 0 to 9.  A higher value means a smaller size.
