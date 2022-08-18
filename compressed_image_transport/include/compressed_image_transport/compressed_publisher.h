@@ -64,7 +64,7 @@ protected:
       rclcpp::PublisherOptions options) override;
 
   void publish(const sensor_msgs::msg::Image& message,
-               const PublishFn& publish_fn) const;
+               const PublishFn& publish_fn) const override;
 
   struct Config {
     // Compression format to use "jpeg", "png" or "tiff".
@@ -84,9 +84,17 @@ protected:
     int tiff_xdpi;
     int tiff_ydpi;
   };
+  Config get_updated_config_from_parameters() const;
 
   Config config_;
+  std::string format_param_name_;
+  std::string png_level_param_name_;
+  std::string jpeg_quality_param_name_;
+  std::string tiff_res_unit_param_name_;
+  std::string tiff_xdpi_param_name_;
+  std::string tiff_ydpi_param_name_;
   rclcpp::Logger logger_;
+  rclcpp::Node * node_;
 };
 
 } //namespace compressed_image_transport

@@ -64,13 +64,15 @@ void CompressedPublisher::advertiseImpl(
   rmw_qos_profile_t custom_qos,
   rclcpp::PublisherOptions options)
 {
+  node_ = node;
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos, options);
 
   uint ns_len = node->get_effective_namespace().length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-  std::string format_param_name = param_base_name + ".format";
+
+  format_param_name_ = param_base_name + ".format";
   rcl_interfaces::msg::ParameterDescriptor format_description;
   format_description.name = "format";
   format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
@@ -78,13 +80,13 @@ void CompressedPublisher::advertiseImpl(
   format_description.read_only = false;
   format_description.additional_constraints = "Supported values: [jpeg, png, tiff]";
   try {
-    config_.format = node->declare_parameter(format_param_name, kDefaultFormat, format_description);
+    config_.format = node->declare_parameter(format_param_name_, kDefaultFormat, format_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", format_param_name.c_str());
-    config_.format = node->get_parameter(format_param_name).get_value<std::string>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", format_param_name_.c_str());
+    config_.format = node->get_parameter(format_param_name_).get_value<std::string>();
   }
 
-  std::string png_level_param_name = param_base_name + ".png_level";
+  png_level_param_name_ = param_base_name + ".png_level";
   rcl_interfaces::msg::ParameterDescriptor png_level_description;
   png_level_description.name = "png_level";
   png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
@@ -97,13 +99,13 @@ void CompressedPublisher::advertiseImpl(
   png_level_description.integer_range.push_back(png_range);
   try {
     config_.png_level = node->declare_parameter(
-      png_level_param_name, kDefaultPngLevel, png_level_description);
+      png_level_param_name_, kDefaultPngLevel, png_level_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", png_level_param_name.c_str());
-    config_.png_level = node->get_parameter(png_level_param_name).get_value<int64_t>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", png_level_param_name_.c_str());
+    config_.png_level = node->get_parameter(png_level_param_name_).get_value<int64_t>();
   }
 
-  std::string jpeg_quality_param_name = param_base_name + ".jpeg_quality";
+  jpeg_quality_param_name_ = param_base_name + ".jpeg_quality";
   rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
   jpeg_quality_description.name = "jpeg_quality";
   jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
@@ -116,54 +118,70 @@ void CompressedPublisher::advertiseImpl(
   jpeg_quality_description.integer_range.push_back(jpeg_range);
   try {
     config_.jpeg_quality = node->declare_parameter(
-      jpeg_quality_param_name, kDefaultJpegQuality, jpeg_quality_description);
+      jpeg_quality_param_name_, kDefaultJpegQuality, jpeg_quality_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name.c_str());
-    config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name).get_value<int64_t>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name_.c_str());
+    config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name_).get_value<int64_t>();
   }
 
-  std::string tiff_res_unit_param_name = param_base_name + ".tiff.res_unit";
+  tiff_res_unit_param_name_ = param_base_name + ".tiff.res_unit";
   rcl_interfaces::msg::ParameterDescriptor tiff_res_unit_description;
   tiff_res_unit_description.description = "tiff resolution unit";
   tiff_res_unit_description.read_only = false;
   tiff_res_unit_description.additional_constraints = "Supported values: [none, inch, centimeter]";
   try {
     config_.tiff_res_unit = node->declare_parameter(
-      tiff_res_unit_param_name, "inch", tiff_res_unit_description);
+      tiff_res_unit_param_name_, "inch", tiff_res_unit_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_res_unit_param_name.c_str());
-    config_.tiff_res_unit = node->get_parameter(tiff_res_unit_param_name).get_value<std::string>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_res_unit_param_name_.c_str());
+    config_.tiff_res_unit = node->get_parameter(tiff_res_unit_param_name_).get_value<std::string>();
   }
 
-  std::string tiff_xdpi_param_name = param_base_name + ".tiff.xdpi";
+  tiff_xdpi_param_name_ = param_base_name + ".tiff.xdpi";
   rcl_interfaces::msg::ParameterDescriptor tiff_xdpi_description;
   tiff_xdpi_description.description = "tiff xdpi";
   tiff_xdpi_description.read_only = false;
   try {
     config_.tiff_xdpi = node->declare_parameter(
-      tiff_xdpi_param_name, -1, tiff_xdpi_description);
+      tiff_xdpi_param_name_, -1, tiff_xdpi_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_xdpi_param_name.c_str());
-    config_.tiff_xdpi = node->get_parameter(tiff_xdpi_param_name).get_value<int64_t>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_xdpi_param_name_.c_str());
+    config_.tiff_xdpi = node->get_parameter(tiff_xdpi_param_name_).get_value<int64_t>();
   }
 
-  std::string tiff_ydpi_param_name = param_base_name + ".tiff.ydpi";
+  tiff_ydpi_param_name_ = param_base_name + ".tiff.ydpi";
   rcl_interfaces::msg::ParameterDescriptor tiff_ydpi_description;
   tiff_ydpi_description.description = "tiff ydpi";
   tiff_ydpi_description.read_only = false;
   try {
     config_.tiff_ydpi = node->declare_parameter(
-      tiff_ydpi_param_name, -1, tiff_ydpi_description);
+      tiff_ydpi_param_name_, -1, tiff_ydpi_description);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_ydpi_param_name.c_str());
-    config_.tiff_ydpi = node->get_parameter(tiff_xdpi_param_name).get_value<int64_t>();
+    RCLCPP_DEBUG(logger_, "%s was previously declared", tiff_ydpi_param_name_.c_str());
+    config_.tiff_ydpi = node->get_parameter(tiff_ydpi_param_name_).get_value<int64_t>();
   }
+}
+
+CompressedPublisher::Config CompressedPublisher::get_updated_config_from_parameters() const
+{
+  CompressedPublisher::Config config{config_};
+  if (!node_) {
+    return config;
+  }
+  config.format = node_->get_parameter(format_param_name_).get_value<std::string>();
+  config.png_level = node_->get_parameter(png_level_param_name_).get_value<int64_t>();
+  config.jpeg_quality = node_->get_parameter(jpeg_quality_param_name_).get_value<int64_t>();
+  config.tiff_res_unit = node_->get_parameter(tiff_res_unit_param_name_).get_value<std::string>();
+  config.tiff_xdpi = node_->get_parameter(tiff_xdpi_param_name_).get_value<int64_t>();
+  config.tiff_ydpi = node_->get_parameter(tiff_ydpi_param_name_).get_value<int64_t>();
+  return config;
 }
 
 void CompressedPublisher::publish(
   const sensor_msgs::msg::Image& message,
   const PublishFn& publish_fn) const
 {
+  auto config = this->get_updated_config_from_parameters();
   // Compressed image message
   sensor_msgs::msg::CompressedImage compressed;
   compressed.header = message.header;
@@ -174,11 +192,11 @@ void CompressedPublisher::publish(
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
-  if (config_.format == "jpeg") {
+  if (config.format == "jpeg") {
     encodingFormat = JPEG;
-  } else if (config_.format == "png") {
+  } else if (config.format == "png") {
     encodingFormat = PNG;
-  } else if (config_.format == "tiff") {
+  } else if (config.format == "tiff") {
     encodingFormat = TIFF;
   }
 
@@ -192,7 +210,7 @@ void CompressedPublisher::publish(
     {
       params.reserve(2);
       params.emplace_back(cv::IMWRITE_JPEG_QUALITY);
-      params.emplace_back(config_.jpeg_quality);
+      params.emplace_back(config.jpeg_quality);
 
       // Update ros message format header
       compressed.format += "; jpeg compressed ";
@@ -253,7 +271,7 @@ void CompressedPublisher::publish(
     {
       params.reserve(2);
       params.emplace_back(cv::IMWRITE_PNG_COMPRESSION);
-      params.emplace_back(config_.png_level);
+      params.emplace_back(config.png_level);
 
       // Update ros message format header
       compressed.format += "; png compressed ";
@@ -316,23 +334,23 @@ void CompressedPublisher::publish(
       compressed.format += "; tiff compressed ";
       int res_unit = -1;
       // See https://gitlab.com/libtiff/libtiff/-/blob/v4.3.0/libtiff/tiff.h#L282-284
-      if (config_.tiff_res_unit == "inch") {
+      if (config.tiff_res_unit == "inch") {
         res_unit = 2;
-      } else if (config_.tiff_res_unit == "centimeter") {
+      } else if (config.tiff_res_unit == "centimeter") {
         res_unit = 3;
-      } else if (config_.tiff_res_unit == "none") {
+      } else if (config.tiff_res_unit == "none") {
         res_unit = 1;
       } else {
         RCLCPP_WARN(
           logger_,
           "tiff.res_unit parameter should be either 'inch', 'centimeter' or 'none'; "
-          "defaulting to 'inch'. Found '%s'", config_.tiff_res_unit.c_str());
+          "defaulting to 'inch'. Found '%s'", config.tiff_res_unit.c_str());
       }
       params.reserve(3);
       params.emplace_back(cv::IMWRITE_TIFF_XDPI);
-      params.emplace_back(config_.tiff_xdpi);
+      params.emplace_back(config.tiff_xdpi);
       params.emplace_back(cv::IMWRITE_TIFF_YDPI);
-      params.emplace_back(config_.tiff_ydpi);
+      params.emplace_back(config.tiff_ydpi);
       params.emplace_back(cv::IMWRITE_TIFF_RESUNIT);
       params.emplace_back(res_unit);
 
@@ -378,7 +396,7 @@ void CompressedPublisher::publish(
     }
 
     default:
-      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg', 'png' and 'tiff'", config_.format.c_str());
+      RCUTILS_LOG_ERROR("Unknown compression type '%s', valid options are 'jpeg', 'png' and 'tiff'", config.format.c_str());
       break;
   }
 }
