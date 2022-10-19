@@ -66,9 +66,55 @@ void CompressedDepthPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos, options);
 
-  node->get_parameter_or<int>("png_level", config_.png_level, kDefaultPngLevel);
-  node->get_parameter_or<double>("depth_max", config_.depth_max, kDefaultDepthMax);
-  node->get_parameter_or<double>("depth_quantization", config_.depth_max, KDefaultDepthQuantization);
+  uint ns_len = node->get_effective_namespace().length();
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+
+  {
+    std::string param_name = param_base_name + ".png_level";
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.name = "png_level";
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.description = "PNG compression level";
+    descriptor.read_only = false;
+    try {
+      config_.png_level = node->declare_parameter(param_name, kDefaultPngLevel, descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(node->get_logger(), "%s was previously declared", param_name.c_str());
+      config_.png_level = node->get_parameter(param_name).get_value<double>();
+    }
+  }
+
+  {
+    std::string param_name = param_base_name + ".depth_max";
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.name = "depth_max";
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.description = "Maximum depth value";
+    descriptor.read_only = false;
+    try {
+      config_.depth_max = node->declare_parameter(param_name, kDefaultDepthMax, descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(node->get_logger(), "%s was previously declared", param_name.c_str());
+      config_.depth_max = node->get_parameter(param_name).get_value<double>();
+    }
+  }
+
+  {
+    std::string param_name = param_base_name + ".depth_quantization";
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.name = "depth_quantization";
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.description = "Depth quantization";
+    descriptor.read_only = false;
+    try {
+      config_.depth_quantization = node->declare_parameter(
+        param_name, KDefaultDepthQuantization, descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(node->get_logger(), "%s was previously declared", param_name.c_str());
+      config_.depth_quantization = node->get_parameter(param_name).get_value<double>();
+    }
+  }
 }
 
 void CompressedDepthPublisher::publish(
