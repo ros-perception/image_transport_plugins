@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include "theora_image_transport/theora_publisher.h"
 #include "theora_image_transport/theora_subscriber.h"
 

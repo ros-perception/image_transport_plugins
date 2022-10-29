@@ -32,7 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include "compressed_image_transport/compressed_publisher.h"
 #include "compressed_image_transport/compressed_subscriber.h"
 
