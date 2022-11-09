@@ -7,12 +7,13 @@
     Theora_image_transport provides a plugin to image_transport for
     transparently sending an image stream encoded with the Theora codec.
   </description>
-  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
+  <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
 
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Patrick Mihelich</author>
   <author>Ethan Dreyfuss</author>
+  <author email="jkammerl@willowgarage.com">Julius Kammerl</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
