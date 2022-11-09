@@ -12,12 +12,14 @@
     and latency. For low frame rate tranport of high-definition images, you
     might prefer sending them as JPEG or PNG-compressed form.
   </description>
-  <author>Patrick Mihelich</author>
-  <author>Julius Kammerl</author>
-  <maintainer email="michael@openrobotics.org">Michael Carroll</maintainer>
+  <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
 
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  <author>Patrick Mihelich</author>
+  <author>Julius Kammerl</author>
+  <author email="dgossow@willowgarage.com">David Gossow</author>
+  <author email="michael@openrobotics.org">Michael Carroll</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
