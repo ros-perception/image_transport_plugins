@@ -18,7 +18,7 @@
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Patrick Mihelich</author>
   <author>Julius Kammerl</author>
-  <author email="dgossow@willowgarage.com">David Gossow</author>
+  <author>David Gossow</author>
   <author email="michael@openrobotics.org">Michael Carroll</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
