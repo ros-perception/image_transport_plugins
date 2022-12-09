@@ -34,7 +34,7 @@
 
 #include "theora_image_transport/theora_subscriber.h"
 
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 #include <rclcpp/logging.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
