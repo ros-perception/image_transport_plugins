@@ -38,6 +38,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <boost/make_shared.hpp>
+#include "compressed_image_transport/qoi.hpp"
 
 #include "compressed_image_transport/compression_common.h"
 
@@ -92,6 +93,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
     encodingFormat = JPEG;
   if (config_.format == compressed_image_transport::CompressedPublisher_png)
     encodingFormat = PNG;
+  if (config_.format == compressed_image_transport::CompressedPublisher_qoi)
+    encodingFormat = QOI;
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
@@ -224,11 +227,73 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       break;
     }
 
-    default:
-      ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg' and 'png'", config_.format.c_str());
+    case QOI:
+    {
+      // Update ros message format header
+      compressed.format += "; qoi compressed ";
+
+      // Check input format
+      int channels = message.step / message.width;
+      if (channels == 3 || channels == 4)
+      {
+
+        // Target image format
+        stringstream targetFormat;
+        if (enc::isColor(message.encoding))
+        {
+          // convert color images to RGB domain
+          targetFormat << "bgr" << bitDepth;
+          compressed.format += targetFormat.str();
+        }
+
+        // OpenCV-ros bridge
+        try
+        {
+          boost::shared_ptr<CompressedPublisher> tracked_object;
+          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object, targetFormat.str());
+
+          const std::size_t size = static_cast<std::size_t>(cv_ptr->image.rows) * static_cast<std::size_t>(cv_ptr->image.cols) * static_cast<std::size_t>(cv_ptr->image.channels());
+          std::vector<unsigned char> orig_pixels;
+          orig_pixels.resize(size);
+          std::memcpy(orig_pixels.data(), cv_ptr->image.data, size);
+
+          compressed.data = qoi::encode(orig_pixels,
+                                        cv_ptr->image.cols,
+                                        cv_ptr->image.rows,
+                                        cv_ptr->image.channels());
+
+          float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
+              / (float)compressed.data.size();
+          ROS_DEBUG("Compressed Image Transport - Codec: qoi, Compression Ratio: 1:%.2f (%lu bytes)", cRatio, compressed.data.size());
+
+        }
+        catch (cv_bridge::Exception& e)
+        {
+          ROS_ERROR("%s", e.what());
+          return;
+        }
+        catch (cv::Exception& e)
+        {
+          ROS_ERROR("%s", e.what());
+          return;
+        }
+
+        // Publish message
+        publish_fn(compressed);
+      }
+      else
+        ROS_ERROR("Compressed Image Transport - qoi compression requires 3 or 4 channels (input channel number is: %i)", channels);
       break;
+    }
+
+    default:
+      ROS_ERROR("Unknown compression type '%s', valid options are 'jpeg', 'png' and 'qoi'", config_.format.c_str());
+      break;
+
   }
 
-}
+
+
+  }
 
 } //namespace compressed_image_transport
