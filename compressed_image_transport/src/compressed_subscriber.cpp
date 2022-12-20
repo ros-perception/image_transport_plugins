@@ -182,21 +182,21 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
 
 {
   // Parse format field
-  std::string source_encoding;
-  std::string compression;
+  std::string image_encoding;
+  std::string compressed_encoding;
   {
     const size_t split_pos = message->format.find(';');
     if (split_pos != std::string::npos)
     {
-      source_encoding = message->format.substr(0, split_pos);
-      compression = message->format.substr(split_pos);
+      image_encoding = message->format.substr(0, split_pos);
+      compressed_encoding = message->format.substr(split_pos);
     }
   }
 
   // Try TurboJPEG first (if the first bytes look like JPEG)
   if(message->data.size() > 4 && message->data[0] == 0xFF && message->data[1] == 0xD8)
   {
-    sensor_msgs::ImagePtr decoded = decompressJPEG(message->data, source_encoding, message->header);
+    sensor_msgs::ImagePtr decoded = decompressJPEG(message->data, image_encoding, message->header);
     if(decoded)
     {
       user_cb(decoded);
@@ -216,7 +216,7 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
     cv_ptr->image = cv::imdecode(cv::Mat(message->data), imdecode_flag_);
 
     // Assign image encoding string
-    if (source_encoding.empty())
+    if (image_encoding.empty())
     {
       // Older version of compressed_image_transport does not signal image format
       switch (cv_ptr->image.channels())
@@ -233,34 +233,34 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
       }
     } else
     {
-      cv_ptr->encoding = source_encoding;
+      cv_ptr->encoding = image_encoding;
 
-      if ( enc::isColor(source_encoding))
+      if ( enc::isColor(image_encoding))
       {
-        bool compressed_bgr_image = (compression.find("compressed bgr") != std::string::npos);
+        bool compressed_bgr_image = (compressed_encoding.find("compressed bgr") != std::string::npos);
 
         // Revert color transformation
         if (compressed_bgr_image)
         {
           // if necessary convert colors from bgr to rgb
-          if ((source_encoding == enc::RGB8) || (source_encoding == enc::RGB16))
+          if ((image_encoding == enc::RGB8) || (image_encoding == enc::RGB16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGB);
 
-          if ((source_encoding == enc::RGBA8) || (source_encoding == enc::RGBA16))
+          if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGBA);
 
-          if ((source_encoding == enc::BGRA8) || (source_encoding == enc::BGRA16))
+          if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2BGRA);
         } else
         {
           // if necessary convert colors from rgb to bgr
-          if ((source_encoding == enc::BGR8) || (source_encoding == enc::BGR16))
+          if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
 
-          if ((source_encoding == enc::BGRA8) || (source_encoding == enc::BGRA16))
+          if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
 
-          if ((source_encoding == enc::RGBA8) || (source_encoding == enc::RGBA16))
+          if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16))
             cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
         }
       }
