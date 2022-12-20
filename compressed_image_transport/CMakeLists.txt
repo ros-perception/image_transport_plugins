@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(compressed_image_transport)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/modules" ${CMAKE_MODULE_PATH})
-
 find_package(OpenCV REQUIRED)
-find_package(TurboJPEG REQUIRED)
 find_package(catkin REQUIRED COMPONENTS cv_bridge dynamic_reconfigure image_transport)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(TurboJPEG REQUIRED libturbojpeg)
 
 # generate the dynamic_reconfigure config file
 generate_dynamic_reconfigure_options(cfg/CompressedPublisher.cfg cfg/CompressedSubscriber.cfg)
