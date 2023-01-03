@@ -37,6 +37,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <turbojpeg.h>
 
 #include "compressed_image_transport/compression_common.h"
 
@@ -49,6 +50,16 @@ namespace enc = sensor_msgs::image_encodings;
 
 namespace compressed_image_transport
 {
+
+CompressedSubscriber::CompressedSubscriber()
+ : tj_(0)
+{}
+
+CompressedSubscriber::~CompressedSubscriber()
+{
+  if (tj_)
+    tjDestroy(tj_);
+}
 
 void CompressedSubscriber::subscribeImpl(ros::NodeHandle& nh, const std::string& base_topic, uint32_t queue_size,
                              const Callback& callback, const ros::VoidPtr& tracked_object,
@@ -82,11 +93,118 @@ void CompressedSubscriber::shutdown()
   image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage>::shutdown();
 }
 
+sensor_msgs::ImagePtr CompressedSubscriber::decompressJPEG(const std::vector<uint8_t>& data, const std::string& source_encoding, const std_msgs::Header& header)
+{
+  if (!tj_)
+    tj_ = tjInitDecompress();
+
+  int width, height, jpegSub, jpegColor;
+
+  // Old TurboJPEG require a const_cast here. This was fixed in TurboJPEG 1.5.
+  uint8_t* src = const_cast<uint8_t*>(data.data());
+
+  if (tjDecompressHeader3(tj_, src, data.size(), &width, &height, &jpegSub, &jpegColor) != 0)
+    return sensor_msgs::ImagePtr(); // If we cannot decode the JPEG header, silently fall back to OpenCV
+
+  sensor_msgs::ImagePtr ret(new sensor_msgs::Image);
+  ret->header = header;
+  ret->width = width;
+  ret->height = height;
+  ret->encoding = source_encoding;
+
+  int pixelFormat;
+
+  if (source_encoding == enc::MONO8)
+  {
+    ret->data.resize(height*width);
+    ret->step = ret->width;
+    pixelFormat = TJPF_GRAY;
+  }
+  else if (source_encoding == enc::RGB8)
+  {
+    ret->data.resize(height*width*3);
+    ret->step = width*3;
+    pixelFormat = TJPF_RGB;
+  }
+  else if (source_encoding == enc::BGR8)
+  {
+    ret->data.resize(height*width*3);
+    ret->step = width*3;
+    pixelFormat = TJPF_BGR;
+  }
+  else if (source_encoding == enc::RGBA8)
+  {
+    ret->data.resize(height*width*4);
+    ret->step = width*4;
+    pixelFormat = TJPF_RGBA;
+  }
+  else if (source_encoding == enc::BGRA8)
+  {
+    ret->data.resize(height*width*4);
+    ret->step = width*4;
+    pixelFormat = TJPF_BGRA;
+  }
+  else if (source_encoding.empty())
+  {
+    // Autodetect based on image
+    if(jpegColor == TJCS_GRAY)
+    {
+      ret->data.resize(height*width);
+      ret->step = width;
+      ret->encoding = enc::MONO8;
+      pixelFormat = TJPF_GRAY;
+    }
+    else
+    {
+      ret->data.resize(height*width*3);
+      ret->step = width*3;
+      ret->encoding = enc::RGB8;
+      pixelFormat = TJPF_RGB;
+    }
+  }
+  else
+  {
+    ROS_WARN_THROTTLE(10.0, "Encountered a source encoding that is not supported by TurboJPEG: '%s'", source_encoding.c_str());
+    return sensor_msgs::ImagePtr();
+  }
+
+  if (tjDecompress2(tj_, src, data.size(), ret->data.data(), width, 0, height, pixelFormat, 0) != 0)
+  {
+    ROS_WARN_THROTTLE(10.0, "Could not decompress data using TurboJPEG, falling back to OpenCV");
+    return sensor_msgs::ImagePtr();
+  }
+
+  return ret;
+}
+
 void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                             const Callback& user_cb)
 
 {
+  // Parse format field
+  std::string image_encoding;
+  std::string compressed_encoding;
+  {
+    const size_t split_pos = message->format.find(';');
+    if (split_pos != std::string::npos)
+    {
+      image_encoding = message->format.substr(0, split_pos);
+      compressed_encoding = message->format.substr(split_pos);
+    }
+  }
 
+  // Try TurboJPEG first (if the first bytes look like JPEG)
+  if(message->data.size() > 4 && message->data[0] == 0xFF && message->data[1] == 0xD8)
+  {
+    sensor_msgs::ImagePtr decoded = decompressJPEG(message->data, image_encoding, message->header);
+    if(decoded)
+    {
+      user_cb(decoded);
+      return;
+    }
+  }
+
+  // Otherwise, try our luck with OpenCV.
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 
   // Copy message header
@@ -98,8 +216,7 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
     cv_ptr->image = cv::imdecode(cv::Mat(message->data), imdecode_flag_);
 
     // Assign image encoding string
-    const size_t split_pos = message->format.find(';');
-    if (split_pos==std::string::npos)
+    if (image_encoding.empty())
     {
       // Older version of compressed_image_transport does not signal image format
       switch (cv_ptr->image.channels())
@@ -116,13 +233,10 @@ void CompressedSubscriber::internalCallback(const sensor_msgs::CompressedImageCo
       }
     } else
     {
-      std::string image_encoding = message->format.substr(0, split_pos);
-
       cv_ptr->encoding = image_encoding;
 
       if ( enc::isColor(image_encoding))
       {
-        std::string compressed_encoding = message->format.substr(split_pos);
         bool compressed_bgr_image = (compressed_encoding.find("compressed bgr") != std::string::npos);
 
         // Revert color transformation

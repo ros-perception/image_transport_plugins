@@ -37,12 +37,15 @@
 #include <dynamic_reconfigure/server.h>
 #include <compressed_image_transport/CompressedSubscriberConfig.h>
 
+#include <turbojpeg.h>
+
 namespace compressed_image_transport {
 
 class CompressedSubscriber : public image_transport::SimpleSubscriberPlugin<sensor_msgs::CompressedImage>
 {
 public:
-  virtual ~CompressedSubscriber() {}
+  CompressedSubscriber();
+  virtual ~CompressedSubscriber();
 
   virtual std::string getTransportName() const
   {
@@ -61,11 +64,14 @@ protected:
   virtual void internalCallback(const sensor_msgs::CompressedImageConstPtr& message,
                                 const Callback& user_cb);
 
+  sensor_msgs::ImagePtr decompressJPEG(const std::vector<uint8_t>& data, const std::string& source_encoding, const std_msgs::Header& header);
+
   typedef compressed_image_transport::CompressedSubscriberConfig Config;
   typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;
   Config config_;
   int imdecode_flag_;
+  tjhandle tj_;
 
   void configCb(Config& config, uint32_t level);
 };
