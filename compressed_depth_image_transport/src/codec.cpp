@@ -180,7 +180,7 @@ sensor_msgs::CompressedImage::Ptr encodeCompressedDepthImage(
   int numChannels = enc::numChannels(message.encoding);
 
   // Image compression configuration
-  ConfigHeader compressionConfig;
+  ConfigHeader compressionConfig {};
   compressionConfig.format = INV_DEPTH;
 
   // Compressed image data
