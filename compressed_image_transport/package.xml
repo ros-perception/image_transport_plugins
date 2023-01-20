@@ -1,4 +1,4 @@
-<package>
+<package format="2">
   <name>compressed_image_transport</name>
   <version>1.9.5</version>
   <description>
@@ -14,13 +14,15 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>image_transport</depend>
+
   <build_depend>cv_bridge</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
-  <build_depend>image_transport</build_depend>
+  <build_depend>libturbojpeg</build_depend>
 
-  <run_depend>cv_bridge</run_depend>
-  <run_depend>dynamic_reconfigure</run_depend>
-  <run_depend>image_transport</run_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
+  <exec_depend>libturbojpeg</exec_depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
