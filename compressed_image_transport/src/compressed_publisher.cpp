@@ -36,7 +36,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
 #include <boost/make_shared.hpp>
 
 #include "compressed_image_transport/compression_common.h"
@@ -85,6 +84,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
 
   // Compression settings
   std::vector<int> params;
+  params.resize(3, 0);
 
   // Get codec configuration
   compressionFormat encodingFormat = UNDEFINED;
@@ -102,15 +102,8 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
     // JPEG Compression
     case JPEG:
     {
-      params.resize(9, 0);
-      params[0] = IMWRITE_JPEG_QUALITY;
+      params[0] = CV_IMWRITE_JPEG_QUALITY;
       params[1] = config_.jpeg_quality;
-      params[2] = IMWRITE_JPEG_PROGRESSIVE;
-      params[3] = config_.jpeg_progressive ? 1 : 0;
-      params[4] = IMWRITE_JPEG_OPTIMIZE;
-      params[5] = config_.jpeg_optimize ? 1 : 0;
-      params[6] = IMWRITE_JPEG_RST_INTERVAL;
-      params[7] = config_.jpeg_restart_interval;
 
       // Update ros message format header
       compressed.format += "; jpeg compressed ";
@@ -166,8 +159,7 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       // PNG Compression
     case PNG:
     {
-      params.resize(3, 0);
-      params[0] = IMWRITE_PNG_COMPRESSION;
+      params[0] = CV_IMWRITE_PNG_COMPRESSION;
       params[1] = config_.png_level;
 
       // Update ros message format header
