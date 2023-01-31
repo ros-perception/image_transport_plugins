@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.6 (2023-01-30)
+------------------
 * Update maintainer in ros1 branches ( `#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
 * Performance optimizations for JPEG decompression (`#123 <https://github.com/ros-perception/image_transport_plugins/issues/123>`_)
 * Fixed warning when resubscribing (`#25 <https://github.com/ros-perception/image_transport_plugins/issues/25>`_)

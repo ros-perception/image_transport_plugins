@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.6 (2023-01-30)
+------------------
 * Update maintainer in ros1 branches (`#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
 * Make the default compressed depth png_level 1 instead of 9 to save cpu (`#131 <https://github.com/ros-perception/image_transport_plugins/issues/131>`_)
 * Fix uninitialized memory usage in compressedDepth transport (`#126 <https://github.com/ros-perception/image_transport_plugins/issues/126>`_)
