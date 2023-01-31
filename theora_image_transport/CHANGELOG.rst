@@ -2,6 +2,12 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches (`#132 <https://github.com/ros-perception/image_transport_plugins/issues/132>`_)
+* Fix copyright year 20012 -> 2012 (`#80 <https://github.com/ros-perception/image_transport_plugins/issues/80>`_)
+* Contributors: Kenji Brameld, Lucas Walter, Michael Carroll, ijnek, v4hn
+
 1.14.0 (2020-05-14)
 -------------------
 * Bump CMake version to avoid CMP0048 warning (`#53 <https://github.com/ros-perception/image_transport_plugins/issues/53>`_)

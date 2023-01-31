@@ -2,6 +2,17 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches (`#132 <https://github.com/ros-perception/image_transport_plugins/issues/132>`_)
+* Fix number of elements in vector parameter to call cv::imencode for OpenCV 4.7 (`#130 <https://github.com/ros-perception/image_transport_plugins/issues/130>`_)
+* Fix uninitialized memory usage (`#125 <https://github.com/ros-perception/image_transport_plugins/issues/125>`_)
+* Make the default compressed depth png_level 1 instead of 9 to save cpu (`#85 <https://github.com/ros-perception/image_transport_plugins/issues/85>`_)
+  The default 9 is so cpu intensive to be frequently unusable and results in many dropped frames, and there is still plenty of bandwidth savings from the compression at level 1.
+* Fix copyright year 20012 -> 2012 (`#80 <https://github.com/ros-perception/image_transport_plugins/issues/80>`_)
+* Fix regression in compressed_depth_image_transport with old bags (`#64 <https://github.com/ros-perception/image_transport_plugins/issues/64>`_)
+* Contributors: Johannes Meyer, Kenji Brameld, Lucas Walter, Martin Pecka, Michael Carroll, Timm Linder, ijnek, v4hn
+
 1.14.0 (2020-05-14)
 -------------------
 * Bump CMake version to avoid CMP0048 warning (`#53 <https://github.com/ros-perception/image_transport_plugins/issues/53>`_)
