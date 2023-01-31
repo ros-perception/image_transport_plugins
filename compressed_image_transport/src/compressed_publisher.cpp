@@ -102,15 +102,15 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
     // JPEG Compression
     case JPEG:
     {
-      params.resize(9, 0);
-      params[0] = IMWRITE_JPEG_QUALITY;
-      params[1] = config_.jpeg_quality;
-      params[2] = IMWRITE_JPEG_PROGRESSIVE;
-      params[3] = config_.jpeg_progressive ? 1 : 0;
-      params[4] = IMWRITE_JPEG_OPTIMIZE;
-      params[5] = config_.jpeg_optimize ? 1 : 0;
-      params[6] = IMWRITE_JPEG_RST_INTERVAL;
-      params[7] = config_.jpeg_restart_interval;
+      params.reserve(8);
+      params.emplace_back(IMWRITE_JPEG_QUALITY);
+      params.emplace_back(config_.jpeg_quality);
+      params.emplace_back(IMWRITE_JPEG_PROGRESSIVE);
+      params.emplace_back(config_.jpeg_progressive ? 1 : 0);
+      params.emplace_back(IMWRITE_JPEG_OPTIMIZE);
+      params.emplace_back(config_.jpeg_optimize ? 1 : 0);
+      params.emplace_back(IMWRITE_JPEG_RST_INTERVAL);
+      params.emplace_back(config_.jpeg_restart_interval);
 
       // Update ros message format header
       compressed.format += "; jpeg compressed ";
@@ -166,9 +166,9 @@ void CompressedPublisher::publish(const sensor_msgs::Image& message, const Publi
       // PNG Compression
     case PNG:
     {
-      params.resize(3, 0);
-      params[0] = IMWRITE_PNG_COMPRESSION;
-      params[1] = config_.png_level;
+      params.reserve(2);
+      params.emplace_back(IMWRITE_PNG_COMPRESSION);
+      params.emplace_back(config_.png_level);
 
       // Update ros message format header
       compressed.format += "; png compressed ";
