@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.0 (2023-01-30)
+-------------------
 * Update maintainer in ros1 branches (`#132 <https://github.com/ros-perception/image_transport_plugins/issues/132>`_)
 * Fix number of elements in vector parameter to call cv::imencode for OpenCV 4.7 (`#130 <https://github.com/ros-perception/image_transport_plugins/issues/130>`_)
 * Performance optimizations for JPEG decompression (`#60 <https://github.com/ros-perception/image_transport_plugins/issues/60>`_)

@@ -2,8 +2,8 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.0 (2023-01-30)
+-------------------
 * Update maintainer in ros1 branches (`#132 <https://github.com/ros-perception/image_transport_plugins/issues/132>`_)
 * Fix copyright year 20012 -> 2012 (`#80 <https://github.com/ros-perception/image_transport_plugins/issues/80>`_)
 * Contributors: Kenji Brameld, Lucas Walter, Michael Carroll, ijnek, v4hn
