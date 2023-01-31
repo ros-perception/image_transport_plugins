@@ -2,6 +2,11 @@
 Changelog for package image_transport_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches (`#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
+* Contributors: Kenji Brameld, ijnek
+
 1.9.5 (2016-10-03)
 ------------------
 

@@ -2,6 +2,15 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches (`#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
+* Make the default compressed depth png_level 1 instead of 9 to save cpu (`#131 <https://github.com/ros-perception/image_transport_plugins/issues/131>`_)
+* Fix uninitialized memory usage in compressedDepth transport (`#126 <https://github.com/ros-perception/image_transport_plugins/issues/126>`_)
+* Fix binary install locations for Windows build. (`#34 <https://github.com/ros-perception/image_transport_plugins/issues/34>`_)
+* Add legacy constants when using opencv4. (`#32 <https://github.com/ros-perception/image_transport_plugins/issues/32>`_)
+* Contributors: David Gossow, Hans Gaiser, Kenji Brameld, Lucas Walter, Martin Pecka, Sean Yen, Shuntaro Yamazaki, ijnek
+
 1.9.5 (2016-10-03)
 ------------------
 * disable -Werr

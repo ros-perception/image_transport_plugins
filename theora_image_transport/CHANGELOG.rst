@@ -2,6 +2,12 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches (`#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
+* Fix binary install locations for Windows build. (`#34 <https://github.com/ros-perception/image_transport_plugins/issues/34>`_)
+* Contributors: David Gossow, Kenji Brameld, Sean Yen, ijnek
+
 1.9.5 (2016-10-03)
 ------------------
 

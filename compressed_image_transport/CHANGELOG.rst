@@ -2,6 +2,15 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer in ros1 branches ( `#133 <https://github.com/ros-perception/image_transport_plugins/issues/133>`_)
+* Performance optimizations for JPEG decompression (`#123 <https://github.com/ros-perception/image_transport_plugins/issues/123>`_)
+* Fixed warning when resubscribing (`#25 <https://github.com/ros-perception/image_transport_plugins/issues/25>`_)
+* Fix binary install locations for Windows build. (`#34 <https://github.com/ros-perception/image_transport_plugins/issues/34>`_)
+* Add legacy constants when using opencv4. (`#32 <https://github.com/ros-perception/image_transport_plugins/issues/32>`_)
+* Contributors: David Gossow, Hans Gaiser, Kenji Brameld, Max Schwarz, Sean Yen, Till Grenzdörffer, Yuki Furuta, ijnek
+
 1.9.5 (2016-10-03)
 ------------------
 
