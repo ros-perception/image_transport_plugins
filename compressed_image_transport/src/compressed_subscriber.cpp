@@ -32,6 +32,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include <boost/endian/arithmetic.hpp>
 #include "compressed_image_transport/compressed_subscriber.h"
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
@@ -111,6 +112,8 @@ sensor_msgs::ImagePtr CompressedSubscriber::decompressJPEG(const std::vector<uin
   ret->width = width;
   ret->height = height;
   ret->encoding = source_encoding;
+  // consistent with cv_bridge
+  ret->is_bigendian = (boost::endian::order::native == boost::endian::order::big);  // NOLINT
 
   int pixelFormat;
 
