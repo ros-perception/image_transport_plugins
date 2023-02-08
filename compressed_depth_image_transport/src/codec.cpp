@@ -131,7 +131,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
         memcpy(&rows, &buffer[4], 4);
         // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check whether the output image would
         // not be more than 10x larger than the compressed one. If it is, we probably received corrupted data.
-        if ((cols * rows) * 2 * 10 > imageData.size())
+        if ((cols * rows) * 2 > imageData.size() * 10)
         {
           ROS_ERROR_THROTTLE(1.0, "Received malformed RVL-encoded image. It pretends to have size %ux%u.", cols, rows);
           return sensor_msgs::Image::Ptr();
