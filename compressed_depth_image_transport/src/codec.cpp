@@ -117,16 +117,27 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
         }
       } else if (compression_format == "rvl") {
         const unsigned char *buffer = imageData.data();
+
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
         memcpy(&rows, &buffer[4], 4);
-        // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check whether the output image would
-        // not be more than 10x larger than the compressed one. If it is, we probably received corrupted data.
-        if ((cols * rows) * 2 > imageData.size() * 10)
+        if (rows == 0 || cols == 0)
         {
-          ROS_ERROR_THROTTLE(1.0, "Received malformed RVL-encoded image. It pretends to have size %ux%u.", cols, rows);
+          ROS_ERROR_THROTTLE(1.0, "Received malformed RVL-encoded image. Size %ix%i contains zero.", cols, rows);
           return sensor_msgs::Image::Ptr();
         }
+
+        // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check whether the output image would
+        // not be more than 10x larger than the compressed one. If it is, we probably received corrupted data.
+        // The condition should be "numPixels * 2 > compressed.size() * 10" (because each pixel is 2 bytes), but to prevent
+        // overflow, we have canceled out the *2 from both sides of the inequality.
+        const auto numPixels = static_cast<uint64_t>(rows) * cols;
+        if (numPixels > std::numeric_limits<int>::max() || numPixels > static_cast<uint64_t>(compressed.size()) * 5)
+        {
+          ROS_ERROR_THROTTLE(1.0, "Received malformed RVL-encoded image. It reports size %ux%u.", cols, rows);
+          return sensor_msgs::Image::Ptr();
+        }
+
         decompressed = Mat(rows, cols, CV_16UC1);
         RvlCodec rvl;
         rvl.DecompressRVL(&buffer[8], decompressed.ptr<unsigned short>(), cols * rows);
