@@ -94,6 +94,7 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
     if (enc::bitDepth(image_encoding) == 32)
     {
       cv::Mat decompressed;
+<<<<<<< HEAD
       try
       {
         // Decode image data
@@ -102,6 +103,35 @@ sensor_msgs::Image::Ptr decodeCompressedDepthImage(const sensor_msgs::Compressed
       catch (cv::Exception& e)
       {
         ROS_ERROR("%s", e.what());
+=======
+      if (compression_format == "png") {
+        try
+        {
+          // Decode image data
+          decompressed = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
+        }
+        catch (cv::Exception& e)
+        {
+          ROS_ERROR("%s", e.what());
+          return sensor_msgs::Image::Ptr();
+        }
+      } else if (compression_format == "rvl") {
+        const unsigned char *buffer = imageData.data();
+        uint32_t cols, rows;
+        memcpy(&cols, &buffer[0], 4);
+        memcpy(&rows, &buffer[4], 4);
+        // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check whether the output image would
+        // not be more than 10x larger than the compressed one. If it is, we probably received corrupted data.
+        if ((cols * rows) * 2 * 10 > imageData.size())
+        {
+          ROS_ERROR_THROTTLE(1.0, "Received malformed RVL-encoded image. It pretends to have size %ux%u.", cols, rows);
+          return sensor_msgs::Image::Ptr();
+        }
+        decompressed = Mat(rows, cols, CV_16UC1);
+        RvlCodec rvl;
+        rvl.DecompressRVL(&buffer[8], decompressed.ptr<unsigned short>(), cols * rows);
+      } else {
+>>>>>>> bb37986 (Added basic input checking for RVL)
         return sensor_msgs::Image::Ptr();
       }
 
