@@ -92,52 +92,12 @@ private:
 
   void declareParameters(rclcpp::Node* node, const std::string& base_topic);
 
-  template<typename T>
-  void declareParameter(rclcpp::Node* node,
-                        const std::string &base_name,
-                        const std::string &transport_name,
-                        const T &default_value,
-                        T &out_parameter,
-                        const rcl_interfaces::msg::ParameterDescriptor &descriptor);
+  rclcpp::ParameterValue declareParameter(rclcpp::Node* node,
+                                          const std::string &base_name,
+                                          const std::string &transport_name,
+                                          const rclcpp::ParameterValue &default_value,
+                                          const rcl_interfaces::msg::ParameterDescriptor &descriptor);
 
 };
-
-template<typename T>
-void CompressedPublisher::declareParameter(rclcpp::Node* node,
-                                           const std::string& base_name,
-                                           const std::string &transport_name,
-                                           const T &default_value,
-                                           T &out_parameter,
-                                           const rcl_interfaces::msg::ParameterDescriptor &descriptor)
-{
-  //transport scoped parameter (e.g. image_raw.compressed.format)
-  const std::string param_name = base_name + "." + transport_name + "." + descriptor.name;
-
-  try {
-    out_parameter = node->declare_parameter(param_name, default_value, descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", descriptor.name.c_str());
-    out_parameter = node->get_parameter(param_name).get_value<T>();
-  }
-
-  T value_set = out_parameter;
-
-  //deprecated non-scoped parameter name (e.g. image_raw.format)
-  const std::string deprecated_name = base_name + "." + descriptor.name;
-  deprecatedParameters_.push_back(deprecated_name);
-
-  // transport scoped parameter as default, otherwise we would overwrite
-  try {
-    out_parameter = node->declare_parameter(deprecated_name, out_parameter, descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", descriptor.name.c_str());
-    out_parameter = node->get_parameter(deprecated_name).get_value<T>();
-  }
-
-  // in case parameter was set through deprecated keep transport scoped parameter in sync
-  if(value_set != out_parameter)
-    node->set_parameter(rclcpp::Parameter(param_name, out_parameter));
-
-}
 
 } //namespace compressed_image_transport
