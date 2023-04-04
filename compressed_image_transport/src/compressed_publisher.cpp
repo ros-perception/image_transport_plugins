@@ -42,6 +42,7 @@
 
 #include <rclcpp/exceptions/exceptions.hpp>
 #include <rclcpp/parameter_client.hpp>
+#include <rclcpp/parameter_events_filter.hpp>
 
 #include <sstream>
 #include <vector>
@@ -66,60 +67,7 @@ void CompressedPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos);
 
-  uint ns_len = node->get_effective_namespace().length();
-  std::string param_base_name = base_topic.substr(ns_len);
-  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-  std::string format_param_name = param_base_name + ".format";
-  rcl_interfaces::msg::ParameterDescriptor format_description;
-  format_description.name = "format";
-  format_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-  format_description.description = "Compression method";
-  format_description.read_only = false;
-  format_description.additional_constraints = "Supported values: [jpeg, png]";
-  try {
-    config_.format = node->declare_parameter(format_param_name, kDefaultFormat, format_description);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", format_param_name.c_str());
-    config_.format = node->get_parameter(format_param_name).get_value<std::string>();
-  }
-
-  std::string png_level_param_name = param_base_name + ".png_level";
-  rcl_interfaces::msg::ParameterDescriptor png_level_description;
-  png_level_description.name = "png_level";
-  png_level_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-  png_level_description.description = "Compression level for PNG format";
-  png_level_description.read_only = false;
-  rcl_interfaces::msg::IntegerRange png_range;
-  png_range.from_value = 0;
-  png_range.to_value = 9;
-  png_range.step = 1;
-  png_level_description.integer_range.push_back(png_range);
-  try {
-    config_.png_level = node->declare_parameter(
-      png_level_param_name, kDefaultPngLevel, png_level_description);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", png_level_param_name.c_str());
-    config_.png_level = node->get_parameter(png_level_param_name).get_value<int64_t>();
-  }
-
-  std::string jpeg_quality_param_name = param_base_name + ".jpeg_quality";
-  rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
-  jpeg_quality_description.name = "jpeg_quality";
-  jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-  jpeg_quality_description.description = "Image quality for JPEG format";
-  jpeg_quality_description.read_only = false;
-  rcl_interfaces::msg::IntegerRange jpeg_range;
-  jpeg_range.from_value = 1;
-  jpeg_range.to_value = 100;
-  jpeg_range.step = 1;
-  jpeg_quality_description.integer_range.push_back(jpeg_range);
-  try {
-    config_.jpeg_quality = node->declare_parameter(
-      jpeg_quality_param_name, kDefaultJpegQuality, jpeg_quality_description);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", jpeg_quality_param_name.c_str());
-    config_.jpeg_quality = node->get_parameter(jpeg_quality_param_name).get_value<int64_t>();
-  }
+  declareParameters(node, base_topic);
 }
 
 void CompressedPublisher::publish(
@@ -270,4 +218,78 @@ void CompressedPublisher::publish(
       break;
   }
 }
+
+void CompressedPublisher::declareParameters(rclcpp::Node* node, const std::string& base_topic)
+{
+  uint ns_len = node->get_effective_namespace().length();
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  const std::string transport_name = getTransportName();
+
+  using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
+  auto callback = std::bind(&CompressedPublisher::onParameterEvent, this, std::placeholders::_1, node->get_fully_qualified_name());
+
+  parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event<callbackT>(node, callback);
+
+  declareParameter(node, param_base_name, transport_name, std::string(kDefaultFormat), config_.format,
+                   rcl_interfaces::msg::ParameterDescriptor()
+                     .set__name("format")
+                     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+                     .set__description("Compression method")
+                     .set__read_only(false)
+                     .set__additional_constraints("Supported values: [jpeg, png]"));
+
+  declareParameter(node, param_base_name, transport_name, kDefaultPngLevel, config_.png_level,
+                   rcl_interfaces::msg::ParameterDescriptor()
+                     .set__name("png_level")
+                     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+                     .set__description("Compression level for PNG format")
+                     .set__read_only(false)
+                     .set__integer_range(
+                       {rcl_interfaces::msg::IntegerRange()
+                          .set__from_value(0)
+                          .set__to_value(9)
+                          .set__step(1)}));
+
+  declareParameter(node, param_base_name, transport_name, kDefaultJpegQuality, config_.jpeg_quality,
+                   rcl_interfaces::msg::ParameterDescriptor()
+                     .set__name("jpeg_quality")
+                     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+                     .set__description("Image quality for JPEG format")
+                     .set__read_only(false)
+                     .set__integer_range(
+                       {rcl_interfaces::msg::IntegerRange()
+                          .set__from_value(1)
+                          .set__to_value(100)
+                          .set__step(1)}));
+}
+
+void CompressedPublisher::onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name)
+{
+  // filter out events from other nodes
+  if (event->node != full_name)
+    return;
+
+  // filter out new/changed deprecated parameters
+  using EventType = rclcpp::ParameterEventsFilter::EventType;
+
+  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_, {EventType::NEW, EventType::CHANGED});
+
+  if(!filter.get_events().size())
+    return;
+
+  // emit warnings for deprecated parameters
+  const std::string transport = getTransportName();
+
+  for (auto & it : filter.get_events())
+  {
+    const std::string name = it.second->name;
+    size_t dotIndex = name.find_last_of('.');
+    std::string recommended = name.substr(0, dotIndex + 1) + transport + name.substr(dotIndex);
+
+    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
+                                "; use transport qualified name `" << recommended << "`");
+  }
+}
+
 } //namespace compressed_image_transport
