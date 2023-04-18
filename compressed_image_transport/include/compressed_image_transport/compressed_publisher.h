@@ -40,9 +40,12 @@
 
 #include <rclcpp/node.hpp>
 
+#include "compressed_image_transport/compression_common.h"
+
 namespace compressed_image_transport {
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
+using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class CompressedPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
@@ -66,35 +69,23 @@ protected:
   void publish(const sensor_msgs::msg::Image& message,
                const PublishFn& publish_fn) const override;
 
-  struct Config {
-    // Compression format to use "jpeg", "png" or "tiff".
-    std::string format;
-
-    // PNG Compression Level from 0 to 9.  A higher value means a smaller size.
-    // Default to OpenCV default of 3
-    int png_level;
-
-    // JPEG Quality from 0 to 100 (higher is better quality).
-    // Default to OpenCV default of 95.
-    int jpeg_quality;
-
-    // TIFF resolution unit
-    // Can be one of "none", "inch", "centimeter".
-    std::string tiff_res_unit;
-    int tiff_xdpi;
-    int tiff_ydpi;
-  };
-  Config get_updated_config_from_parameters() const;
-
-  Config config_;
-  std::string format_param_name_;
-  std::string png_level_param_name_;
-  std::string jpeg_quality_param_name_;
-  std::string tiff_res_unit_param_name_;
-  std::string tiff_xdpi_param_name_;
-  std::string tiff_ydpi_param_name_;
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
+
+private:
+  std::vector<std::string> parameters_;
+  std::vector<std::string> deprecatedParameters_;
+
+  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+
+  void declareParameters(rclcpp::Node* node, const std::string& base_topic);
+
+  void declareParameter(rclcpp::Node* node,
+                        const std::string &base_name,
+                        const std::string &transport_name,
+                        const ParameterDefinition &definition);
+
+  void onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name);
 };
 
 } //namespace compressed_image_transport
