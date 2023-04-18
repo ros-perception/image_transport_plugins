@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2023-04-18)
+------------------
 * Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
   * `image.format` to `image.compressed.format`
   * `image.png_level` to `image.compressed.png_level`
