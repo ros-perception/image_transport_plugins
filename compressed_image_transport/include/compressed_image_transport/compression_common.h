@@ -78,7 +78,7 @@ const struct ParameterDefinition kParameters[] =
       .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
       .set__description("Compression method")
       .set__read_only(false)
-      .set__additional_constraints("Supported values: [jpeg, png]")
+      .set__additional_constraints("Supported values: [jpeg, png, tiff]")
   },
   { //PNG_LEVEL - PNG Compression Level from 0 to 9.  A higher value means a smaller size.
     ParameterValue((int)3), //Default to OpenCV default of 3
