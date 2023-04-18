@@ -42,11 +42,10 @@
 #include "compressed_image_transport/compression_common.h"
 
 #include <rclcpp/parameter_client.hpp>
+#include <rclcpp/parameter_events_filter.hpp>
 
 #include <limits>
 #include <vector>
-
-constexpr const char* kDefaultMode = "unchanged";
 
 using namespace cv;
 
@@ -57,6 +56,24 @@ using CompressedImage = sensor_msgs::msg::CompressedImage;
 namespace compressed_image_transport
 {
 
+enum compressedParameters
+{
+  MODE = 0,
+};
+
+const struct ParameterDefinition kParameters[] =
+{
+  { //MODE - OpenCV imdecode flags to use: [unchanged, gray, color]
+    ParameterValue("unchanged"),
+    ParameterDescriptor()
+      .set__name("mode")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+      .set__description("OpenCV imdecode flags to use")
+      .set__read_only(false)
+      .set__additional_constraints("Supported values: [unchanged, gray, color]")
+  }
+};
+
 void CompressedSubscriber::subscribeImpl(
     rclcpp::Node * node,
     const std::string& base_topic,
@@ -64,43 +81,32 @@ void CompressedSubscriber::subscribeImpl(
     rmw_qos_profile_t custom_qos,
     rclcpp::SubscriptionOptions options)
 {
+    node_ = node;
     logger_ = node->get_logger();
     typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
     Base::subscribeImpl(node, base_topic, callback, custom_qos, options);
+
+    // Declare Parameters
     uint ns_len = node->get_effective_namespace().length();
     std::string param_base_name = base_topic.substr(ns_len);
     std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-    std::string mode_param_name = param_base_name + ".mode";
 
-    std::string mode;
-    rcl_interfaces::msg::ParameterDescriptor mode_description;
-    mode_description.description = "OpenCV imdecode flags to use";
-    mode_description.read_only = false;
-    mode_description.additional_constraints = "Supported values: [unchanged, gray, color]";
-    try {
-      mode = node->declare_parameter(mode_param_name, kDefaultMode, mode_description);
-    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-      RCLCPP_DEBUG(logger_, "%s was previously declared", mode_param_name.c_str());
-      mode = node->get_parameter(mode_param_name).get_value<std::string>();
-    }
+    using paramCallbackT = std::function<void(ParameterEvent::SharedPtr event)>;
+    auto paramCallback = std::bind(&CompressedSubscriber::onParameterEvent, this, std::placeholders::_1,
+                                   node->get_fully_qualified_name(), param_base_name);
 
-    if (mode == "unchanged") {
-      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
-    } else if (mode == "gray") {
-      config_.imdecode_flag = cv::IMREAD_GRAYSCALE;
-    } else if (mode == "color") {
-      config_.imdecode_flag = cv::IMREAD_COLOR;
-    } else {
-      RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
-      config_.imdecode_flag = cv::IMREAD_UNCHANGED;
-    }
+    parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<paramCallbackT>(node, paramCallback);
+
+    for(const ParameterDefinition &pd : kParameters)
+      declareParameter(param_base_name, pd);
 }
-
 
 void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPtr& message,
                                             const Callback& user_cb)
 
 {
+  int cfg_imdecode_flag = imdecodeFlagFromConfig();
+
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 
   // Copy message header
@@ -109,7 +115,7 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   // Decode color/mono image
   try
   {
-    cv_ptr->image = cv::imdecode(cv::Mat(message->data), config_.imdecode_flag);
+    cv_ptr->image = cv::imdecode(cv::Mat(message->data), cfg_imdecode_flag);
 
     // Assign image encoding string
     const size_t split_pos = message->format.find(';');
@@ -180,6 +186,88 @@ void CompressedSubscriber::internalCallback(const CompressedImage::ConstSharedPt
   if ((rows > 0) && (cols > 0))
     // Publish message to user callback
     user_cb(cv_ptr->toImageMsg());
+}
+
+int CompressedSubscriber::imdecodeFlagFromConfig()
+{
+  std::string mode = node_->get_parameter(parameters_[MODE]).get_value<std::string>();
+
+  if (mode == "unchanged")
+    return cv::IMREAD_UNCHANGED;
+  else if (mode == "gray")
+    return cv::IMREAD_GRAYSCALE;
+  else if (mode == "color")
+    return cv::IMREAD_COLOR;
+
+  RCLCPP_ERROR(logger_, "Unknown mode: %s, defaulting to 'unchanged", mode.c_str());
+
+  return cv::IMREAD_UNCHANGED;
+}
+
+void CompressedSubscriber::declareParameter(const std::string &base_name,
+                                           const ParameterDefinition &definition)
+{
+  //transport scoped parameter (e.g. image_raw.compressed.format)
+  const std::string transport_name = getTransportName();
+  const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
+  parameters_.push_back(param_name);
+
+  //deprecated non-scoped parameter name (e.g. image_raw.format)
+  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
+  deprecatedParameters_.push_back(deprecated_name);
+
+  rclcpp::ParameterValue param_value;
+
+  try {
+    param_value = node_->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    param_value = node_->get_parameter(param_name).get_parameter_value();
+  }
+
+  // transport scoped parameter as default, otherwise we would overwrite
+  try {
+    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    node_->get_parameter(deprecated_name).get_parameter_value();
+  }
+}
+
+void CompressedSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name)
+{
+  // filter out events from other nodes
+  if (event->node != full_name)
+    return;
+
+  // filter out new/changed deprecated parameters
+  using EventType = rclcpp::ParameterEventsFilter::EventType;
+
+  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_, {EventType::NEW, EventType::CHANGED});
+
+  const std::string transport = getTransportName();
+
+  // emit warnings for deprecated parameters & sync deprecated parameter value to correct
+  for (auto & it : filter.get_events())
+  {
+    const std::string name = it.second->name;
+
+    size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
+    size_t paramNameIndex = baseNameIndex + base_name.size();
+    //e.g. `color.image_raw.` + `compressed` + `format`
+    std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
+
+    rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
+
+    // do not emit warnings if deprecated value matches
+    if(it.second->value == recommendedValue.get_value_message())
+      continue;
+
+    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
+                                "; use transport qualified name `" << recommendedName << "`");
+
+    node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
+  }
 }
 
 } //namespace compressed_image_transport

@@ -33,6 +33,7 @@
 *********************************************************************/
 
 #include <string>
+#include <vector>
 
 #include <rclcpp/node.hpp>
 #include <rclcpp/subscription_options.hpp>
@@ -41,7 +42,11 @@
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 
+#include "compressed_image_transport/compression_common.h"
+
 namespace compressed_image_transport {
+
+using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class CompressedSubscriber final : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
 {
@@ -66,12 +71,21 @@ protected:
   void internalCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr& message,
                         const Callback& user_cb) override;
 
-  struct Config {
-    int imdecode_flag;
-  };
-
-  Config config_;
   rclcpp::Logger logger_;
+  rclcpp::Node * node_;
+
+private:
+  std::vector<std::string> parameters_;
+  std::vector<std::string> deprecatedParameters_;
+
+  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+
+  int imdecodeFlagFromConfig();
+
+  void declareParameter(const std::string &base_name,
+                        const ParameterDefinition &definition);
+
+  void onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name);
 };
 
 } //namespace image_transport
