@@ -2,6 +2,11 @@
 Changelog for package image_transport_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainer (`#112 <https://github.com/ros-perception/image_transport_plugins/issues/112>`_)
+* Contributors: Kenji Brameld, Michael Carroll
+
 2.6.0 (2022-08-16)
 ------------------
 

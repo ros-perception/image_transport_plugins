@@ -2,6 +2,22 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
+  * `image.format` to `image.compressed.format`
+  * `image.png_level` to `image.compressed.png_level`
+  * `image.jpeg_quality` to `image.compressed.jpeg_quality`
+  * `image.tiff.res_unit` to `image.compressed.tiff.res_unit`
+  * `image.tiff.xdpi` to `image.compressed.tiff.xdpi`
+  * `image.tiff.ydpi` to `image.compressed.tiff.ydpi`
+  The deprecated parameters emit a warning if explicitly set, but this warning will be removed in future distros.
+  (`#143 <https://github.com/ros-perception/image_transport_plugins/issues/143>`_)
+* Replace deprecated cv_bridge.h with cv_bridge.hpp (`#118 <https://github.com/ros-perception/image_transport_plugins/issues/118>`_)
+* Update maintainer (`#112 <https://github.com/ros-perception/image_transport_plugins/issues/112>`_)
+* Compressed image transport parameters are now reconfigurable (`#108 <https://github.com/ros-perception/image_transport_plugins/issues/108>`_)
+* Contributors: Bartosz Meglicki, Ivan Santiago Paunovic, Kenji Brameld
+
 2.6.0 (2022-08-16)
 ------------------
 * Fix advertiseImpl() in compressed_publisher and subscribeImpl() in compressed_subscriber. (`#106 <https://github.com/ros-perception/image_transport_plugins/issues/106>`_)

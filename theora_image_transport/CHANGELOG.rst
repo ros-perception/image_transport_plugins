@@ -2,6 +2,12 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Replace deprecated cv_bridge.h with cv_bridge.hpp (`#118 <https://github.com/ros-perception/image_transport_plugins/issues/118>`_)
+* Update maintainer (`#112 <https://github.com/ros-perception/image_transport_plugins/issues/112>`_)
+* Contributors: Kenji Brameld, Michael Carroll
+
 2.6.0 (2022-08-16)
 ------------------
 * Fix advertiseImpl() in theora_publisher and subscribeImpl() in theora_subscriber. (`#106 <https://github.com/ros-perception/image_transport_plugins/issues/106>`_)
