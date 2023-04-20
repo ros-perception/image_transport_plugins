@@ -35,6 +35,9 @@
 #ifndef COMPRESSED_IMAGE_TRANSPORT_COMPRESSION_COMMON
 #define COMPRESSED_IMAGE_TRANSPORT_COMPRESSION_COMMON
 
+#include <rclcpp/parameter_value.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
+
 namespace compressed_image_transport
 {
 
@@ -47,19 +50,6 @@ enum compressionFormat
   TIFF = 2,
 };
 
-// Parameters
-// Note - what is below would be moved to separate file, e.g. `compressed_publisher_cfg.h`
-
-enum compressedParameters
-{
-  FORMAT = 0,
-  PNG_LEVEL,
-  JPEG_QUALITY,
-  TIFF_RESOLUTION_UNIT,
-  TIFF_XDPI,
-  TIFF_YDPI
-};
-
 using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
 using ParameterValue = rclcpp::ParameterValue;
 
@@ -67,70 +57,6 @@ struct ParameterDefinition
 {
   const ParameterValue defaultValue;
   const ParameterDescriptor descriptor;
-};
-
-const struct ParameterDefinition kParameters[] =
-{
-  { //FORMAT - Compression format to use "jpeg", "png" or "tiff".
-    ParameterValue("jpeg"),
-    ParameterDescriptor()
-      .set__name("format")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-      .set__description("Compression method")
-      .set__read_only(false)
-      .set__additional_constraints("Supported values: [jpeg, png, tiff]")
-  },
-  { //PNG_LEVEL - PNG Compression Level from 0 to 9.  A higher value means a smaller size.
-    ParameterValue((int)3), //Default to OpenCV default of 3
-    ParameterDescriptor()
-      .set__name("png_level")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Compression level for PNG format")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(0)
-          .set__to_value(9)
-          .set__step(1)})
-  },
-  { //JPEG_QUALITY - JPEG Quality from 0 to 100 (higher is better quality).
-    ParameterValue((int)95), //Default to OpenCV default of 95.
-    ParameterDescriptor()
-      .set__name("jpeg_quality")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Image quality for JPEG format")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(1)
-          .set__to_value(100)
-          .set__step(1)})
-  },
-  { //TIFF_RESOLUTION_UNIT - TIFF resolution unit, can be one of "none", "inch", "centimeter".
-    ParameterValue("inch"),
-    ParameterDescriptor()
-      .set__name("tiff.res_unit")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-      .set__description("tiff resolution unit")
-      .set__read_only(false)
-      .set__additional_constraints("Supported values: [none, inch, centimeter]")
-  },
-  { //TIFF_XDPI
-    ParameterValue((int)-1),
-    ParameterDescriptor()
-      .set__name("tiff.xdpi")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("tiff xdpi")
-      .set__read_only(false)
-  },
-  { //TIFF_YDPI
-    ParameterValue((int)-1),
-    ParameterDescriptor()
-      .set__name("tiff.ydpi")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("tiff ydpi")
-      .set__read_only(false)
-  }
 };
 
 } //namespace compressed_image_transport

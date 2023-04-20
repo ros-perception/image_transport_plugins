@@ -55,6 +55,80 @@ namespace enc = sensor_msgs::image_encodings;
 namespace compressed_image_transport
 {
 
+enum compressedParameters
+{
+  FORMAT = 0,
+  PNG_LEVEL,
+  JPEG_QUALITY,
+  TIFF_RESOLUTION_UNIT,
+  TIFF_XDPI,
+  TIFF_YDPI
+};
+
+const struct ParameterDefinition kParameters[] =
+{
+  { //FORMAT - Compression format to use "jpeg", "png" or "tiff".
+    ParameterValue("jpeg"),
+    ParameterDescriptor()
+      .set__name("format")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+      .set__description("Compression method")
+      .set__read_only(false)
+      .set__additional_constraints("Supported values: [jpeg, png, tiff]")
+  },
+  { //PNG_LEVEL - PNG Compression Level from 0 to 9.  A higher value means a smaller size.
+    ParameterValue((int)3), //Default to OpenCV default of 3
+    ParameterDescriptor()
+      .set__name("png_level")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+      .set__description("Compression level for PNG format")
+      .set__read_only(false)
+      .set__integer_range(
+        {rcl_interfaces::msg::IntegerRange()
+          .set__from_value(0)
+          .set__to_value(9)
+          .set__step(1)})
+  },
+  { //JPEG_QUALITY - JPEG Quality from 0 to 100 (higher is better quality).
+    ParameterValue((int)95), //Default to OpenCV default of 95.
+    ParameterDescriptor()
+      .set__name("jpeg_quality")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+      .set__description("Image quality for JPEG format")
+      .set__read_only(false)
+      .set__integer_range(
+        {rcl_interfaces::msg::IntegerRange()
+          .set__from_value(1)
+          .set__to_value(100)
+          .set__step(1)})
+  },
+  { //TIFF_RESOLUTION_UNIT - TIFF resolution unit, can be one of "none", "inch", "centimeter".
+    ParameterValue("inch"),
+    ParameterDescriptor()
+      .set__name("tiff.res_unit")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+      .set__description("tiff resolution unit")
+      .set__read_only(false)
+      .set__additional_constraints("Supported values: [none, inch, centimeter]")
+  },
+  { //TIFF_XDPI
+    ParameterValue((int)-1),
+    ParameterDescriptor()
+      .set__name("tiff.xdpi")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+      .set__description("tiff xdpi")
+      .set__read_only(false)
+  },
+  { //TIFF_YDPI
+    ParameterValue((int)-1),
+    ParameterDescriptor()
+      .set__name("tiff.ydpi")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+      .set__description("tiff ydpi")
+      .set__read_only(false)
+  }
+};
+
 void CompressedPublisher::advertiseImpl(
   rclcpp::Node* node,
   const std::string& base_topic,
@@ -65,7 +139,19 @@ void CompressedPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos, options);
 
-  declareParameters(node, base_topic);
+  // Declare Parameters
+  uint ns_len = node->get_effective_namespace().length();
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+
+  using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
+  auto callback = std::bind(&CompressedPublisher::onParameterEvent, this, std::placeholders::_1,
+                            node->get_fully_qualified_name(), param_base_name);
+
+  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node, callback);
+
+  for(const ParameterDefinition &pd : kParameters)
+    declareParameter(param_base_name, pd);
 }
 
 void CompressedPublisher::publish(
@@ -253,7 +339,6 @@ void CompressedPublisher::publish(
       params.emplace_back(res_unit);
 
       // Check input format
-
       if ((bitDepth == 8) || (bitDepth == 16) || (bitDepth == 32))
       {
 
@@ -300,29 +385,11 @@ void CompressedPublisher::publish(
   }
 }
 
-void CompressedPublisher::declareParameters(rclcpp::Node* node, const std::string& base_topic)
-{
-  uint ns_len = node->get_effective_namespace().length();
-  std::string param_base_name = base_topic.substr(ns_len);
-  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-  const std::string transport_name = getTransportName();
-
-  using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
-  auto callback = std::bind(&CompressedPublisher::onParameterEvent, this, std::placeholders::_1,
-                            node->get_fully_qualified_name(), param_base_name);
-
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node, callback);
-
-  for(const ParameterDefinition &pd : kParameters)
-    declareParameter(node, param_base_name, transport_name, pd);
-}
-
-void CompressedPublisher::declareParameter(rclcpp::Node* node,
-                                           const std::string &base_name,
-                                           const std::string &transport_name,
+void CompressedPublisher::declareParameter(const std::string &base_name,
                                            const ParameterDefinition &definition)
 {
   //transport scoped parameter (e.g. image_raw.compressed.format)
+  const std::string transport_name = getTransportName();
   const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
   parameters_.push_back(param_name);
 
@@ -333,18 +400,18 @@ void CompressedPublisher::declareParameter(rclcpp::Node* node,
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
+    param_value = node_->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node->get_parameter(param_name).get_parameter_value();
+    param_value = node_->get_parameter(param_name).get_parameter_value();
   }
 
   // transport scoped parameter as default, otherwise we would overwrite
   try {
-    node->declare_parameter(deprecated_name, param_value, definition.descriptor);
+    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node->get_parameter(deprecated_name).get_parameter_value();
+    node_->get_parameter(deprecated_name).get_parameter_value();
   }
 }
 

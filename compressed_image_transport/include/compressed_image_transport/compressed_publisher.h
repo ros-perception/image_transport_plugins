@@ -33,6 +33,7 @@
 *********************************************************************/
 
 #include <string>
+#include <vector>
 
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
@@ -78,11 +79,7 @@ private:
 
   rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
 
-  void declareParameters(rclcpp::Node* node, const std::string& base_topic);
-
-  void declareParameter(rclcpp::Node* node,
-                        const std::string &base_name,
-                        const std::string &transport_name,
+  void declareParameter(const std::string &base_name,
                         const ParameterDefinition &definition);
 
   void onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name);
