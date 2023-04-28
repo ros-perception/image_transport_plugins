@@ -38,12 +38,39 @@
 #include <rclcpp/logging.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
+#include <rclcpp/parameter_client.hpp>
+#include <rclcpp/parameter_events_filter.hpp>
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
+
+#include "theora_image_transport/compression_common.h"
 
 using namespace std;
 
 namespace theora_image_transport {
+
+enum theoraParameters
+{
+  POST_PROCESSING_LEVEL = 0,
+};
+
+const struct ParameterDefinition kParameters[] =
+{
+  { //POST_PROCESSING_LEVEL - Post-processing level. Higher values can improve the appearance of the decoded images at the cost of more CPU.
+    ParameterValue((int)0),
+    ParameterDescriptor()
+      .set__name("post_processing_level")
+      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+      .set__description("Post-processing level. Higher values can improve the appearance of the decoded images at the cost of more CPU.")
+      .set__read_only(false)
+      .set__integer_range(
+        {rcl_interfaces::msg::IntegerRange()
+          .set__from_value(0)
+          .set__to_value(7)
+          .set__step(1)})
+  }
+};
 
 TheoraSubscriber::TheoraSubscriber()
   : pplevel_(0),
@@ -72,22 +99,39 @@ void TheoraSubscriber::subscribeImpl(
   rmw_qos_profile_t custom_qos,
   rclcpp::SubscriptionOptions options)
 {
+  node_ = node;
   logger_ = node->get_logger();
 
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
   Base::subscribeImpl(node, base_topic, callback, custom_qos, options);
+
+  // Declare Parameters
+  uint ns_len = node->get_effective_namespace().length();
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+
+  using paramCallbackT = std::function<void(ParameterEvent::SharedPtr event)>;
+  auto paramCallback = std::bind(&TheoraSubscriber::onParameterEvent, this, std::placeholders::_1,
+                                 node->get_fully_qualified_name(), param_base_name);
+
+  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<paramCallbackT>(node, paramCallback);
+
+  for(const ParameterDefinition &pd : kParameters)
+    declareParameter(param_base_name, pd);
 }
 
-// TODO: port this check to ROS2 user events
-//void TheoraSubscriber::configCb(Config& config, uint32_t level)
-//{
-//  if (decoding_context_ && pplevel_ != config.post_processing_level) {
-//    pplevel_ = updatePostProcessingLevel(config.post_processing_level);
-//    config.post_processing_level = pplevel_; // In case more than PPLEVEL_MAX
-//  }
-//  else
-//    pplevel_ = config.post_processing_level;
-//}
+void TheoraSubscriber::refreshConfig()
+{
+  int cfg_pplevel = node_->get_parameter(parameters_[POST_PROCESSING_LEVEL]).get_value<int>();
+
+  if (decoding_context_ && pplevel_ != cfg_pplevel) {
+    pplevel_ = updatePostProcessingLevel(cfg_pplevel);
+    // In case more than PPLEVEL_MAX
+    node_->set_parameter(rclcpp::Parameter(parameters_[POST_PROCESSING_LEVEL], pplevel_));
+  }
+  else
+    pplevel_ = cfg_pplevel;
+}
 
 int TheoraSubscriber::updatePostProcessingLevel(int level)
 {
@@ -124,6 +168,8 @@ void TheoraSubscriber::msgToOggPacket(const theora_image_transport::msg::Packet 
 void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr& message,
                                         const Callback& callback)
 {
+  refreshConfig();
+
   /// @todo Break this function into pieces
   ogg_packet oggpacket;
   msgToOggPacket(*message, oggpacket);
@@ -243,6 +289,72 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
     cv_bridge::CvImage(message->header, sensor_msgs::image_encodings::BGR8, bgr).toImageMsg();
   /// @todo Handle RGB8 or MONO8 efficiently
   callback(latest_image_);
+}
+
+void TheoraSubscriber::declareParameter(const std::string &base_name,
+                                       const ParameterDefinition &definition)
+{
+  //transport scoped parameter (e.g. image_raw.compressed.format)
+  const std::string transport_name = getTransportName();
+  const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
+  parameters_.push_back(param_name);
+
+  //deprecated non-scoped parameter name (e.g. image_raw.format)
+  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
+  deprecatedParameters_.push_back(deprecated_name);
+
+  rclcpp::ParameterValue param_value;
+
+  try {
+    param_value = node_->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    param_value = node_->get_parameter(param_name).get_parameter_value();
+  }
+
+  // transport scoped parameter as default, otherwise we would overwrite
+  try {
+    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    node_->get_parameter(deprecated_name).get_parameter_value();
+  }
+}
+
+void TheoraSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name)
+{
+  // filter out events from other nodes
+  if (event->node != full_name)
+    return;
+
+  // filter out new/changed deprecated parameters
+  using EventType = rclcpp::ParameterEventsFilter::EventType;
+
+  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_, {EventType::NEW, EventType::CHANGED});
+
+  const std::string transport = getTransportName();
+
+  // emit warnings for deprecated parameters & sync deprecated parameter value to correct
+  for (auto & it : filter.get_events())
+  {
+    const std::string name = it.second->name;
+
+    size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
+    size_t paramNameIndex = baseNameIndex + base_name.size();
+    //e.g. `color.image_raw.` + `compressed` + `format`
+    std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
+
+    rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
+
+    // do not emit warnings if deprecated value matches
+    if(it.second->value == recommendedValue.get_value_message())
+      continue;
+
+    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
+                                "; use transport qualified name `" << recommendedName << "`");
+
+    node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
+  }
 }
 
 } //namespace theora_image_transport
