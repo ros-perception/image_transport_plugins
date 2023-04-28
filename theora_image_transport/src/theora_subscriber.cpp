@@ -294,12 +294,20 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
 void TheoraSubscriber::declareParameter(const std::string &base_name,
                                        const ParameterDefinition &definition)
 {
+<<<<<<< HEAD
   //transport scoped parameter (e.g. image_raw.theora.post_processing_level)
+=======
+  //transport scoped parameter (e.g. image_raw.compressed.format)
+>>>>>>> b7d409f (reconfigurable transport scoped parameters for theora_image_transport)
   const std::string transport_name = getTransportName();
   const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
   parameters_.push_back(param_name);
 
+<<<<<<< HEAD
   //deprecated non-scoped parameter name (e.g. image_raw.post_processing_level)
+=======
+  //deprecated non-scoped parameter name (e.g. image_raw.format)
+>>>>>>> b7d409f (reconfigurable transport scoped parameters for theora_image_transport)
   const std::string deprecated_name = base_name + "." + definition.descriptor.name;
   deprecatedParameters_.push_back(deprecated_name);
 
@@ -341,7 +349,11 @@ void TheoraSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std::st
 
     size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
     size_t paramNameIndex = baseNameIndex + base_name.size();
+<<<<<<< HEAD
     //e.g. `color.image_raw.` + `theora` + `post_processing_level`
+=======
+    //e.g. `color.image_raw.` + `compressed` + `format`
+>>>>>>> b7d409f (reconfigurable transport scoped parameters for theora_image_transport)
     std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
