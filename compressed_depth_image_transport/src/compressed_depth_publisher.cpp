@@ -141,7 +141,7 @@ void CompressedDepthPublisher::publish(
 void CompressedDepthPublisher::declareParameter(const std::string &base_name,
                                                 const ParameterDefinition &definition)
 {
-  //transport scoped parameter (e.g. image_raw.compressed_depth.png_level)
+  //transport scoped parameter (e.g. image_raw.compressedDepth.png_level)
   const std::string transport_name = getTransportName();
   const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
   parameters_.push_back(param_name);
@@ -188,7 +188,7 @@ void CompressedDepthPublisher::onParameterEvent(ParameterEvent::SharedPtr event,
 
     size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
     size_t paramNameIndex = baseNameIndex + base_name.size();
-    //e.g. `color.image_raw.` + `compressed_depth` + `.png_level`
+    //e.g. `color.image_raw.` + `compressedDepth` + `png_level`
     std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
