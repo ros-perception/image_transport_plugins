@@ -188,7 +188,7 @@ void CompressedDepthPublisher::onParameterEvent(ParameterEvent::SharedPtr event,
 
     size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
     size_t paramNameIndex = baseNameIndex + base_name.size();
-    //e.g. `color.image_raw.` + `compressed` + `format`
+    //e.g. `color.image_raw.` + `compressed_depth` + `.png_level`
     std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
