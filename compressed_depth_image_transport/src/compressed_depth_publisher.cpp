@@ -146,7 +146,7 @@ void CompressedDepthPublisher::declareParameter(const std::string &base_name,
   const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
   parameters_.push_back(param_name);
 
-  //deprecated non-scoped parameter name (e.g. image_raw.format)
+  //deprecated non-scoped parameter name (e.g. image_raw.png_level)
   const std::string deprecated_name = base_name + "." + definition.descriptor.name;
   deprecatedParameters_.push_back(deprecated_name);
 
