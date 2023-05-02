@@ -164,7 +164,6 @@ void CompressedDepthPublisher::declareParameter(const std::string &base_name,
     node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node_->get_parameter(deprecated_name).get_parameter_value();
   }
 }
 
