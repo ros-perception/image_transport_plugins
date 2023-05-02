@@ -197,7 +197,7 @@ void CompressedDepthPublisher::onParameterEvent(ParameterEvent::SharedPtr event,
     if(it.second->value == recommendedValue.get_value_message())
       continue;
 
-    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
+    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated and ambiguous" <<
                                 "; use transport qualified name `" << recommendedName << "`");
 
     node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
