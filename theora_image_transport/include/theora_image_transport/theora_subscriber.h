@@ -32,6 +32,10 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include "theora_image_transport/compression_common.h"
+
+#include <rclcpp/node.hpp>
+
 #include <image_transport/simple_subscriber_plugin.hpp>
 #include <theora_image_transport/msg/packet.hpp>
 
@@ -39,7 +43,12 @@
 #include <theora/theoraenc.h>
 #include <theora/theoradec.h>
 
+#include <string>
+#include <vector>
+
 namespace theora_image_transport {
+
+using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class TheoraSubscriber : public image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>
 {
@@ -63,11 +72,13 @@ protected:
   virtual void internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr &msg,
                                 const Callback& user_cb);
 
+  // Runtime reconfiguration support
+  void refreshConfig();
+
   // Utility functions
   int updatePostProcessingLevel(int level);
   void msgToOggPacket(const theora_image_transport::msg::Packet &msg,
                       ogg_packet &ogg);
-
   int pplevel_; // Post-processing level
   bool received_header_;
   bool received_keyframe_;
@@ -78,6 +89,18 @@ protected:
   sensor_msgs::msg::Image::SharedPtr latest_image_;
 
   rclcpp::Logger logger_;
+  rclcpp::Node * node_;
+
+private:
+  std::vector<std::string> parameters_;
+  std::vector<std::string> deprecatedParameters_;
+
+  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+
+  void declareParameter(const std::string &base_name,
+                        const ParameterDefinition &definition);
+
+  void onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name);
 };
 
 } //namespace theora_image_transport
