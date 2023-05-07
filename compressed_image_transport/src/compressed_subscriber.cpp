@@ -230,7 +230,6 @@ void CompressedSubscriber::declareParameter(const std::string &base_name,
     node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node_->get_parameter(deprecated_name).get_parameter_value();
   }
 }
 
@@ -263,7 +262,7 @@ void CompressedSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std
     if(it.second->value == recommendedValue.get_value_message())
       continue;
 
-    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
+    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated and ambiguous" <<
                                 "; use transport qualified name `" << recommendedName << "`");
 
     node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
