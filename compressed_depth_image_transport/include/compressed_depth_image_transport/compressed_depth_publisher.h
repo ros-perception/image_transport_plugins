@@ -32,15 +32,26 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#include "compressed_depth_image_transport/compression_common.h"
+
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
 
+#include <rclcpp/node.hpp>
+
+#include <string>
+#include <vector>
+
 namespace compressed_depth_image_transport {
 
-class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage>
+using CompressedImage = sensor_msgs::msg::CompressedImage;
+using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
+
+class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
 public:
+  CompressedDepthPublisher(): logger_(rclcpp::get_logger("CompressedDepthPublisher")) {}
   virtual ~CompressedDepthPublisher() {}
 
   virtual std::string getTransportName() const
@@ -57,15 +68,20 @@ protected:
           rclcpp::PublisherOptions options) override final;
 
   void publish(const sensor_msgs::msg::Image& message,
-                       const PublishFn& publish_fn) const override final;
+               const PublishFn& publish_fn) const override final;
 
-  struct Config {
-    int png_level;
-    double depth_max;
-    double depth_quantization;
-  };
+  rclcpp::Logger logger_;
+  rclcpp::Node * node_;
+private:
+  std::vector<std::string> parameters_;
+  std::vector<std::string> deprecatedParameters_;
 
-  Config config_;
+  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+
+  void declareParameter(const std::string &base_name,
+                        const ParameterDefinition &definition);
+
+  void onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name);
 };
 
 } //namespace compressed_depth_image_transport
