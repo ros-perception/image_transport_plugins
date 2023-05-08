@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Allow parameters to be reconfigurable (`#144 <https://github.com/ros-perception/image_transport_plugins/issues/144>`_)
+* Contributors: Bartosz Meglicki, Kenji Brameld
+
 3.0.0 (2023-04-18)
 ------------------
 * Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
