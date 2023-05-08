@@ -2,8 +2,8 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.2.0 (2023-05-08)
+------------------
 * Allow parameters to be reconfigurable (`#144 <https://github.com/ros-perception/image_transport_plugins/issues/144>`_)
 * Contributors: Bartosz Meglicki, Kenji Brameld
 
