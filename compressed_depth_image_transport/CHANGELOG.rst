@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.0 (2023-05-08)
+------------------
 * Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
   * `image.png_level` to `image.compressedDepth.png_level`
   * `image.depth_max` to `image.compressedDepth.depth_max`
