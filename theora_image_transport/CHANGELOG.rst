@@ -2,6 +2,17 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
+  * `image.optimize_for` to `image.theora.optimize_for`
+  * `image.target_bitrate` to `image.theora.target_bitrate`
+  * `image.quality` to `image.theora.quality`
+  * `image.keyframe_frequency` to `image.theora.keyframe_frequency`
+  The deprecated parameters emit a warning if explicitly set, but this warning will be removed in future distros.
+  (`#146 <https://github.com/ros-perception/image_transport_plugins/issues/146>`_)
+* Contributors: Bartosz Meglicki, Kenji Brameld
+
 3.0.0 (2023-04-18)
 ------------------
 * Replace deprecated cv_bridge.h with cv_bridge.hpp (`#118 <https://github.com/ros-perception/image_transport_plugins/issues/118>`_)

@@ -2,6 +2,16 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deprecated the following parameter names in favor of transport scoped ones. The remapping is listed below:
+  * `image.png_level` to `image.compressedDepth.png_level`
+  * `image.depth_max` to `image.compressedDepth.depth_max`
+  * `image.depth_quantization` to `image.compressedDepth.depth_quantization`
+  The deprecated parameters emit a warning if explicitly set, but this warning will be removed in future distros.
+  (`#145 <https://github.com/ros-perception/image_transport_plugins/issues/145>`_)
+* Contributors: Bartosz Meglicki, Kenji Brameld, Marcel Zeilinger
+
 3.0.0 (2023-04-18)
 ------------------
 * Replace deprecated cv_bridge.h with cv_bridge.hpp (`#118 <https://github.com/ros-perception/image_transport_plugins/issues/118>`_)
