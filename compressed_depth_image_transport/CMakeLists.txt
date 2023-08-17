@@ -24,7 +24,7 @@ add_library(
     SHARED
     src/compressed_depth_publisher.cpp
     src/compressed_depth_subscriber.cpp
-    src/manifest.cpp src/codec.cpp
+    src/manifest.cpp src/codec.cpp src/rvl_codec.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
