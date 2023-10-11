@@ -36,6 +36,8 @@
 
 #include <avif/avif.h>
 
+#include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -80,6 +82,7 @@ protected:
 
 private:
   avifDecoder * decoder_;
+  std::mutex mutex;
 };
 
 }  // namespace avif_image_transport

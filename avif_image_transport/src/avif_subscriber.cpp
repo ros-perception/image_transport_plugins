@@ -35,10 +35,8 @@
 
 #include <avif/avif.h>
 
-#include <chrono>
-#include <sstream>
-#include <iostream>
-#include <vector>
+#include <memory>
+#include <mutex>
 
 #include <sensor_msgs/msg/compressed_image.hpp>
 
@@ -79,9 +77,9 @@ void AVIFSubscriber::internalCallback(
   const sensor_msgs::msg::CompressedImage::ConstSharedPtr & msg,
   const Callback & user_cb)
 {
-  avifDecoderSetIOMemory(
-    this->decoder_, &msg->data[0],
-    msg->data.size());
+  // if the reentract callback is configure this mutex is required
+  std::unique_lock<std::mutex> guard(this->mutex);
+
   avifImage * avif_image = avifImageCreateEmpty();
   avifDecoderReadMemory(
     this->decoder_, avif_image, &msg->data[0],
