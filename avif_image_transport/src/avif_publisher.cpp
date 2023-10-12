@@ -42,7 +42,7 @@ namespace avif_image_transport
 enum avifParameters
 {
   AVIF_QUALITY = 0,
-  AVIF_SPEED = 0,
+  AVIF_SPEED = 1,
 };
 
 const struct ParameterDefinition kParameters[] =
