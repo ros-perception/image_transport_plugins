@@ -1,0 +1,19 @@
+<library path="h265_image_transport">
+  <class
+    name="image_transport/h265_pub"
+    type="h265_image_transport::H265Publisher"
+    base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin publishes a H265 image
+    </description>
+  </class>
+
+  <class
+    name="image_transport/h265_sub"
+    type="h265_image_transport::H265Subscriber"
+    base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decompresses a H265 Image.
+    </description>
+  </class>
+</library>
