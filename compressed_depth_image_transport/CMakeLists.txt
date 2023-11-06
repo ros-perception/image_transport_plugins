@@ -24,7 +24,7 @@ add_library(
     SHARED
     src/compressed_depth_publisher.cpp
     src/compressed_depth_subscriber.cpp
-    src/manifest.cpp src/codec.cpp
+    src/manifest.cpp src/codec.cpp src/rvl_codec.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
@@ -49,5 +49,12 @@ install(
 )
 pluginlib_export_plugin_description_file(image_transport
     compressed_depth_plugins.xml)
+
+# Test
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(rvl_codec_test test/rvl_codec_test.cpp)
+  target_link_libraries(rvl_codec_test ${PROJECT_NAME})
+endif()
 
 ament_package()
