@@ -44,7 +44,7 @@ namespace compressed_depth_image_transport
 
 enum compressedDepthParameters
 {
-  COMPRESSION_FORMAT = 0,
+  FORMAT = 0,
   DEPTH_MAX,
   DEPTH_QUANTIZATION,
   PNG_LEVEL
@@ -52,14 +52,14 @@ enum compressedDepthParameters
 
 const struct ParameterDefinition kParameters[] =
 {
-  { //COMPRESSION_FORMAT - The format of compression ("png" or "rvl")
+  { //FORMAT - Compression format to use "png" or "rvl".
     ParameterValue("png"),
     ParameterDescriptor()
-      .set__name("compression_format")
+      .set__name("format")
       .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-      .set__description("Compression format")
+      .set__description("Compression method")
       .set__read_only(false)
-      .set__additional_constraints("Allowed values: [\"png\", \"rvl\"]")
+      .set__additional_constraints("Supported values: [png, rvl]")
   },
   { //DEPTH_MAX - Maximum depth value (meter)
     ParameterValue((double)10.0),
@@ -133,14 +133,14 @@ void CompressedDepthPublisher::publish(
   const PublishFn& publish_fn) const
 {
   // Fresh Configuration
-  std::string cfg_compression_format = node_->get_parameter(parameters_[COMPRESSION_FORMAT]).get_value<std::string>();
+  std::string cfg_format = node_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
   double cfg_depth_max = node_->get_parameter(parameters_[DEPTH_MAX]).get_value<double>();
   double cfg_depth_quantization = node_->get_parameter(parameters_[DEPTH_QUANTIZATION]).get_value<double>();
   int cfg_png_level = node_->get_parameter(parameters_[PNG_LEVEL]).get_value<int64_t>();
 
   sensor_msgs::msg::CompressedImage::SharedPtr compressed_image =
     encodeCompressedDepthImage(message,
-                               cfg_compression_format,
+                               cfg_format,
                                cfg_depth_max,
                                cfg_depth_quantization,
                                cfg_png_level);

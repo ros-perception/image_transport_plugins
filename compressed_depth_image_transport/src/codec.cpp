@@ -73,18 +73,20 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
   // Assign image encoding
   const size_t split_pos = message.format.find(';');
   const std::string image_encoding = message.format.substr(0, split_pos);
-  std::string compression_format;
+  std::string format;
   // Older version of compressed_depth_image_transport supports only png.
   if (split_pos == std::string::npos) {
-    compression_format = "png";
+    format = "png";
   } else {
-    std::string format = message.format.substr(split_pos);
-    if (format.find("compressedDepth png") != std::string::npos) {
-      compression_format = "png";
-    } else if (format.find("compressedDepth rvl") != std::string::npos) {
-      compression_format = "rvl";
-    } else if (format.find("compressedDepth") != std::string::npos && format.find("compressedDepth ") == std::string::npos) {
-      compression_format = "png";
+    std::string format_ending = message.format.substr(split_pos);
+    if (format_ending.find("compressedDepth png") != std::string::npos) {
+      format = "png";
+    } else if (format_ending.find("compressedDepth rvl") != std::string::npos) {
+      format = "rvl";
+    } else if (format_ending.find("compressedDepth") != std::string::npos &&
+      format_ending.find("compressedDepth ") == std::string::npos)
+    {
+      format = "png";
     } else {
       RCLCPP_ERROR(logger, "Unsupported image format: %s", message.format.c_str());
       return sensor_msgs::msg::Image::SharedPtr();
@@ -114,7 +116,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
     if (enc::bitDepth(image_encoding) == 32)
     {
       cv::Mat decompressed;
-      if (compression_format == "png") {
+      if (format == "png") {
         try
         {
           // Decode image data
@@ -125,7 +127,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
           RCLCPP_ERROR(logger, e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
-      } else if (compression_format == "rvl") {
+      } else if (format == "rvl") {
         const unsigned char *buffer = imageData.data();
 
         uint32_t cols, rows;
@@ -188,7 +190,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
     else
     {
       // Decode raw image
-      if (compression_format == "png") {
+      if (format == "png") {
         try
         {
           cv_ptr->image = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
@@ -198,7 +200,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
           RCLCPP_ERROR(logger, e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
-      } else if (compression_format == "rvl") {
+      } else if (format == "rvl") {
         const unsigned char *buffer = imageData.data();
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
@@ -225,7 +227,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
 
 sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   const sensor_msgs::msg::Image& message,
-  const std::string& compression_format,
+  const std::string& format,
   double depth_max,
   double depth_quantization,
   int png_level)
@@ -253,7 +255,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   std::vector<uint8_t> compressedImage;
 
   // Update ros message format header
-  compressed->format += "; compressedDepth " + compression_format;
+  compressed->format += "; compressedDepth " + format;
 
   // Check input format
   params[0] = cv::IMWRITE_PNG_COMPRESSION;
@@ -314,7 +316,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
       compressionConfig.depthParam[1] = depthQuantB;
 
       // Compress quantized disparity image
-      if (compression_format == "png") {
+      if (format == "png") {
         try
         {
           // Compress quantized disparity image
@@ -336,7 +338,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
           RCLCPP_ERROR(logger, e.msg.c_str());
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
-      } else if (compression_format == "rvl") {
+      } else if (format == "rvl") {
         int numPixels = invDepthImg.rows * invDepthImg.cols;
         // In the worst case, RVL compression results in ~1.5x larger data.
         compressedImage.resize(3 * numPixels + 12);
@@ -385,7 +387,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
       }
 
       // Compress raw depth image
-      if (compression_format == "png") {
+      if (format == "png") {
         if (cv::imencode(".png", cv_ptr->image, compressedImage, params))
         {
           float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
@@ -398,7 +400,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
           RCLCPP_ERROR(logger, "cv::imencode (png) failed on input image");
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
-      } else if (compression_format == "rvl") {
+      } else if (format == "rvl") {
         int numPixels = cv_ptr->image.rows * cv_ptr->image.cols;
         // In the worst case, RVL compression results in ~1.5x larger data.
         compressedImage.resize(3 * numPixels + 12);
