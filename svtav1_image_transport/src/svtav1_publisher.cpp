@@ -133,7 +133,7 @@ set_default_svt_configuration(EbSvtAv1EncConfiguration * svt_config, int width, 
   svt_config->stat_report = 0;
   svt_config->high_dynamic_range_input = 0;
   svt_config->encoder_bit_depth = 8;
-  svt_config->encoder_color_format = static_cast<EbColorFormat>(1);
+  svt_config->encoder_color_format = EB_YUV420;
   svt_config->compressed_ten_bit_format = 0;
   svt_config->use_cpu_flags = CPU_FLAGS_ALL;
 
@@ -255,14 +255,16 @@ void SVTAV1Publisher::publish(
   EbSvtIOFormat * input_picture_buffer =
     reinterpret_cast<EbSvtIOFormat *>(this->input_buf->p_buffer);
 
-  cv::Mat ycrcb_planes[3];  // destination array
-  ycrcb_planes[0] = mat_BGR2YUV_I420(cv::Rect(0, 0, cv_image.cols, cv_image.rows));
-  ycrcb_planes[1] = mat_BGR2YUV_I420(cv::Rect(0, cv_image.rows, cv_image.cols, cv_image.rows / 4));
-  ycrcb_planes[2] =
-    mat_BGR2YUV_I420(
-    cv::Rect(
-      0, cv_image.rows + cv_image.rows / 4, cv_image.cols,
-      cv_image.rows / 4));
+  if (ycrcb_planes[0].cols == 0 && ycrcb_planes[0].rows)
+  {
+    ycrcb_planes[0] = mat_BGR2YUV_I420(cv::Rect(0, 0, cv_image.cols, cv_image.rows));
+    ycrcb_planes[1] = mat_BGR2YUV_I420(cv::Rect(0, cv_image.rows, cv_image.cols, cv_image.rows / 4));
+    ycrcb_planes[2] =
+      mat_BGR2YUV_I420(
+      cv::Rect(
+        0, cv_image.rows + cv_image.rows / 4, cv_image.cols,
+        cv_image.rows / 4));
+  }
 
   input_picture_buffer->width = cv_image.cols;
   input_picture_buffer->height = cv_image.rows;
@@ -336,6 +338,8 @@ void SVTAV1Publisher::publish(
     compressed.data[message_size] = (input_buffer->pic_type == EB_AV1_KEY_PICTURE);
     message_size += sizeof(uint8_t);
     memcpy(&compressed.data[message_size], output_buf->p_buffer, output_buf->n_filled_len);
+
+    svt_av1_enc_release_out_buffer(&output_buf);
 
     publish_fn(compressed);
   }

@@ -49,6 +49,8 @@
 #include "EbSvtAv1Enc.h"
 #include "EbSvtAv1Dec.h"
 
+#include <opencv2/core/mat.hpp>
+
 namespace svtav1_image_transport
 {
 using CompressedImage = sensor_msgs::msg::CompressedImage;
@@ -97,6 +99,8 @@ private:
   EbComponentType * svt_decoder;
 
   mutable std::mutex mutex;
+  mutable cv::Mat ycrcb_planes[3];
+
 };
 
 }  // namespace svtav1_image_transport
