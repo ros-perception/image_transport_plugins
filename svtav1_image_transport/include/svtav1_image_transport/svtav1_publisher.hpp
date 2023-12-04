@@ -81,6 +81,8 @@ protected:
   rclcpp::Node * node_;
 
 private:
+  void set_default_svt_configuration(int width, int height) const;
+
   std::vector<std::string> parameters_;
 
   void declareParameter(

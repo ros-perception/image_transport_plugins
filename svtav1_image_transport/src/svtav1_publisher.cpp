@@ -40,18 +40,32 @@
 namespace svtav1_image_transport
 {
 
-// enum hParameters
-// {
-// };
+enum hParameters
+{
+  SVTAV1_ENCMODE = 0,
+};
 
-// const struct ParameterDefinition kParameters[] =
-// {
-// };
+const struct ParameterDefinition kParameters[] =
+{
+  {
+    // ENC mode - SVTAV1 Compression Level from 1 to 13. A lower value means a smaller size.
+    ParameterValue(static_cast<int>(10)),
+    ParameterDescriptor()
+    .set__name("enc_mode")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    .set__description("Encoder mode")
+    .set__read_only(false)
+    .set__integer_range(
+      {rcl_interfaces::msg::IntegerRange()
+        .set__from_value(0)
+        .set__to_value(13)
+        .set__step(1)})
+  },
+};
 
 #define PROP_RC_MODE_CQP 0
 #define PROP_RC_MODE_VBR 1
 
-#define PROP_ENCMODE_DEFAULT                11
 #define PROP_HIERARCHICAL_LEVEL_DEFAULT     4
 #define PROP_P_FRAMES_DEFAULT               0
 #define PROP_PRED_STRUCTURE_DEFAULT         2
@@ -69,81 +83,6 @@ namespace svtav1_image_transport
 #define PROP_CORES_DEFAULT                  10
 #define PROP_SOCKET_DEFAULT                 -1
 
-void
-set_default_svt_configuration(EbSvtAv1EncConfiguration * svt_config, int width, int height)
-{
-  memset(svt_config, 0, sizeof(EbSvtAv1EncConfiguration));
-  svt_config->source_width = width;
-  svt_config->source_height = height;
-  svt_config->intra_period_length = PROP_GOP_SIZE_DEFAULT - 1;
-  svt_config->intra_refresh_type = static_cast<SvtAv1IntraRefreshType>(PROP_INTRA_REFRESH_DEFAULT);
-  svt_config->enc_mode = PROP_ENCMODE_DEFAULT;
-  svt_config->frame_rate = 30;
-  svt_config->frame_rate_denominator = 0;
-  svt_config->frame_rate_numerator = 0;
-  svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
-  svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
-  svt_config->scene_change_detection = PROP_SCD_DEFAULT;
-  svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT;
-  svt_config->target_bit_rate = PROP_BITRATE_DEFAULT;
-  svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
-  svt_config->min_qp_allowed = PROP_QP_MIN_DEFAULT;
-  svt_config->screen_content_mode = 0;
-  svt_config->enable_adaptive_quantization = 0;
-  svt_config->qp = PROP_QP_DEFAULT;
-  svt_config->use_qp_file = 0;
-  svt_config->enable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == 1);
-  svt_config->film_grain_denoise_strength = 0;
-  svt_config->cdef_level = -1;
-  svt_config->enable_restoration_filtering = -1;
-  svt_config->enable_mfmv = -1;
-
-  // HME parameters
-  svt_config->channel_id = 0;
-  svt_config->active_channel_count = 1;
-  svt_config->recon_enabled = 0;
-
-  // thread affinity
-  svt_config->logical_processors = PROP_CORES_DEFAULT;
-  svt_config->target_socket = PROP_SOCKET_DEFAULT;
-  svt_config->pin_threads = 0;
-
-  // tile based encoding
-  svt_config->tile_columns = 0;
-  svt_config->tile_rows = 0;
-  svt_config->restricted_motion_vector = 0;
-
-  // alt-ref
-  svt_config->enable_tf = 1;
-  svt_config->enable_overlays = 0;
-
-  // super resolution
-  svt_config->superres_mode = SUPERRES_NONE;  // SUPERRES_NONE
-  svt_config->superres_denom = 8;
-  svt_config->superres_kf_denom = 8;
-  svt_config->superres_qthres = 43;
-
-  // latency
-
-  // Annex A
-  svt_config->profile = MAIN_PROFILE;
-  svt_config->tier = 0;
-  svt_config->level = 0;
-
-  svt_config->stat_report = 0;
-  svt_config->high_dynamic_range_input = 0;
-  svt_config->encoder_bit_depth = 8;
-  svt_config->encoder_color_format = EB_YUV420;
-  svt_config->compressed_ten_bit_format = 0;
-  svt_config->use_cpu_flags = CPU_FLAGS_ALL;
-
-  // color description
-  svt_config->color_range = 0;
-  svt_config->color_primaries = 2;
-  svt_config->transfer_characteristics = 2;
-  svt_config->matrix_coefficients = 2;
-}
-
 SVTAV1Publisher::SVTAV1Publisher()
 : logger_(rclcpp::get_logger("SVTAV1Publisher"))
 {
@@ -156,6 +95,85 @@ SVTAV1Publisher::~SVTAV1Publisher()
 std::string SVTAV1Publisher::getTransportName() const
 {
   return "svtav1";
+}
+
+void SVTAV1Publisher::set_default_svt_configuration(int width, int height) const
+{
+  int encmode_value = this->node_->get_parameter(parameters_[SVTAV1_ENCMODE]).get_value<int>();
+
+  // Zero-initialize svt_config because svt_av1_enc_init_handle() does not set
+  // many fields of svt_config.
+  // See https://gitlab.com/AOMediaCodec/SVT-AV1/-/issues/1697.
+  memset(this->svt_config, 0, sizeof(EbSvtAv1EncConfiguration));
+  this->svt_config->enc_mode = encmode_value;
+  this->svt_config->source_width = width;
+  this->svt_config->source_height = height;
+  this->svt_config->intra_period_length = PROP_GOP_SIZE_DEFAULT - 1;
+  this->svt_config->intra_refresh_type = static_cast<SvtAv1IntraRefreshType>(PROP_INTRA_REFRESH_DEFAULT);
+  this->svt_config->frame_rate = 30;
+  this->svt_config->frame_rate_denominator = 0;
+  this->svt_config->frame_rate_numerator = 0;
+  this->svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
+  this->svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
+  this->svt_config->scene_change_detection = PROP_SCD_DEFAULT;
+  this->svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT;
+  this->svt_config->target_bit_rate = PROP_BITRATE_DEFAULT;
+  this->svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
+  this->svt_config->min_qp_allowed = PROP_QP_MIN_DEFAULT;
+  this->svt_config->screen_content_mode = 0;
+  this->svt_config->enable_adaptive_quantization = 0;
+  this->svt_config->qp = PROP_QP_DEFAULT;
+  this->svt_config->use_qp_file = 0;
+  this->svt_config->enable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == 1);
+  this->svt_config->film_grain_denoise_strength = 0;
+  this->svt_config->cdef_level = -1;
+  this->svt_config->enable_restoration_filtering = -1;
+  this->svt_config->enable_mfmv = -1;
+
+  // HME parameters
+  this->svt_config->channel_id = 0;
+  this->svt_config->active_channel_count = 1;
+  this->svt_config->recon_enabled = 0;
+
+  // thread affinity
+  this->svt_config->logical_processors = PROP_CORES_DEFAULT;
+  this->svt_config->target_socket = PROP_SOCKET_DEFAULT;
+  this->svt_config->pin_threads = 0;
+
+  // tile based encoding
+  this->svt_config->tile_columns = 0;
+  this->svt_config->tile_rows = 0;
+  this->svt_config->restricted_motion_vector = 0;
+
+  // alt-ref
+  this->svt_config->enable_tf = 1;
+  this->svt_config->enable_overlays = 0;
+
+  // super resolution
+  this->svt_config->superres_mode = SUPERRES_NONE;  // SUPERRES_NONE
+  this->svt_config->superres_denom = 8;
+  this->svt_config->superres_kf_denom = 8;
+  this->svt_config->superres_qthres = 43;
+
+  // latency
+
+  // Annex A
+  this->svt_config->profile = MAIN_PROFILE;
+  this->svt_config->tier = 0;
+  this->svt_config->level = 0;
+
+  this->svt_config->stat_report = 0;
+  this->svt_config->high_dynamic_range_input = 0;
+  this->svt_config->encoder_bit_depth = 8;
+  this->svt_config->encoder_color_format = EB_YUV420;
+  this->svt_config->compressed_ten_bit_format = 0;
+  this->svt_config->use_cpu_flags = CPU_FLAGS_ALL;
+
+  // color description
+  this->svt_config->color_range = 0;
+  this->svt_config->color_primaries = 2;
+  this->svt_config->transfer_characteristics = 2;
+  this->svt_config->matrix_coefficients = 2;
 }
 
 void SVTAV1Publisher::advertiseImpl(
@@ -173,9 +191,9 @@ void SVTAV1Publisher::advertiseImpl(
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
-  // for (const ParameterDefinition & pd : kParameters) {
-  //   declareParameter(param_base_name, pd);
-  // }
+  for (const ParameterDefinition & pd : kParameters) {
+    declareParameter(param_base_name, pd);
+  }
 }
 
 void SVTAV1Publisher::Initialize(int width, int height) const
@@ -188,11 +206,6 @@ void SVTAV1Publisher::Initialize(int width, int height) const
   }
   this->frame_count = 0;
 
-  // Zero-initialize svt_config because svt_av1_enc_init_handle() does not set
-  // many fields of svt_config.
-  // See https://gitlab.com/AOMediaCodec/SVT-AV1/-/issues/1697.
-  memset(this->svt_config, 0, sizeof(EbSvtAv1EncConfiguration));
-
   EbErrorType res =
     svt_av1_enc_init_handle(&this->svt_encoder, NULL, this->svt_config);
   if (res != EB_ErrorNone) {
@@ -202,7 +215,7 @@ void SVTAV1Publisher::Initialize(int width, int height) const
   }
 
   // setting configuration here since svt_av1_enc_init_handle overrides it
-  set_default_svt_configuration(this->svt_config, width, height);
+  this->set_default_svt_configuration(width, height);
 
   res = svt_av1_enc_set_parameter(this->svt_encoder, this->svt_config);
   if (res != EB_ErrorNone) {
