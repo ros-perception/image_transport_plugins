@@ -85,7 +85,7 @@ SVTAV1Subscriber::SVTAV1Subscriber()
   this->svt_decoder_config->stat_report = 0;
 
   /* Multi-thread parameters */
-  this->svt_decoder_config->threads = 6;
+  this->svt_decoder_config->threads = 10;
   this->svt_decoder_config->num_p_frames = 1;
 
   return_error = svt_av1_dec_set_parameter(this->svt_decoder, this->svt_decoder_config);
@@ -179,8 +179,6 @@ void SVTAV1Subscriber::internalCallback(
       reinterpret_cast<uint8_t *>(malloc(size >> 2));
 
     mat_BGR2YUV_I420_decode = cv::Mat(h + h / 2, w, CV_8UC1);
-
-    std::cout << "Initialized decoder!" << std::endl;
   }
 
   output_buf->n_filled_len = msg->data.size() - (3 * sizeof(uint32_t) + sizeof(uint8_t));
@@ -219,13 +217,9 @@ void SVTAV1Subscriber::internalCallback(
     if (svt_av1_dec_get_picture(this->svt_decoder, buffer, &stream_info, &frame_info) !=
       EB_DecNoOutputPicture)
     {
-      mat_BGR2YUV_I420_decode.data = reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->luma;
-
-      const unsigned char * cb = mat_BGR2YUV_I420_decode.data + size;
-      const unsigned char * cr = mat_BGR2YUV_I420_decode.data + size + (size >> 2);
-
-      cb = reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->cb;
-      cr = reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->cr;
+      memcpy(mat_BGR2YUV_I420_decode.data, ((EbSvtIOFormat *)buffer->p_buffer)->luma, size);
+      memcpy(&mat_BGR2YUV_I420_decode.data[w*h], ((EbSvtIOFormat *)buffer->p_buffer)->cb, (size >> 2));
+      memcpy(&mat_BGR2YUV_I420_decode.data[(w*h) + (size >> 2)], ((EbSvtIOFormat *)buffer->p_buffer)->cr, (size >> 2));
 
       cv::Mat rgb;
       cv::cvtColor(mat_BGR2YUV_I420_decode, rgb, cv::COLOR_YUV2RGB_I420);

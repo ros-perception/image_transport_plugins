@@ -49,7 +49,7 @@ const struct ParameterDefinition kParameters[] =
 {
   {
     // ENC mode - SVTAV1 Compression Level from 1 to 13. A lower value means a smaller size.
-    ParameterValue(static_cast<int>(10)),
+    ParameterValue(static_cast<int>(12)),
     ParameterDescriptor()
     .set__name("enc_mode")
     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
@@ -70,11 +70,11 @@ const struct ParameterDefinition kParameters[] =
 #define PROP_P_FRAMES_DEFAULT               0
 #define PROP_PRED_STRUCTURE_DEFAULT         2
 #define PROP_GOP_SIZE_DEFAULT               -1
-#define PROP_INTRA_REFRESH_DEFAULT          2
-#define PROP_QP_DEFAULT                     50
+#define PROP_INTRA_REFRESH_DEFAULT          1
+#define PROP_QP_DEFAULT                     35
 #define PROP_DEBLOCKING_DEFAULT             1
 #define PROP_RC_MODE_DEFAULT                PROP_RC_MODE_CQP
-#define PROP_BITRATE_DEFAULT                700000
+#define PROP_BITRATE_DEFAULT                70000
 #define PROP_QP_MAX_DEFAULT                 63
 #define PROP_QP_MIN_DEFAULT                 0
 #define PROP_LOOKAHEAD_DEFAULT              (unsigned int)-1
@@ -268,16 +268,13 @@ void SVTAV1Publisher::publish(
   EbSvtIOFormat * input_picture_buffer =
     reinterpret_cast<EbSvtIOFormat *>(this->input_buf->p_buffer);
 
-  if (ycrcb_planes[0].cols == 0 && ycrcb_planes[0].rows)
-  {
-    ycrcb_planes[0] = mat_BGR2YUV_I420(cv::Rect(0, 0, cv_image.cols, cv_image.rows));
-    ycrcb_planes[1] = mat_BGR2YUV_I420(cv::Rect(0, cv_image.rows, cv_image.cols, cv_image.rows / 4));
-    ycrcb_planes[2] =
-      mat_BGR2YUV_I420(
-      cv::Rect(
-        0, cv_image.rows + cv_image.rows / 4, cv_image.cols,
-        cv_image.rows / 4));
-  }
+  ycrcb_planes[0] = mat_BGR2YUV_I420(cv::Rect(0, 0, cv_image.cols, cv_image.rows));
+  ycrcb_planes[1] = mat_BGR2YUV_I420(cv::Rect(0, cv_image.rows, cv_image.cols, cv_image.rows / 4));
+  ycrcb_planes[2] =
+    mat_BGR2YUV_I420(
+    cv::Rect(
+      0, cv_image.rows + cv_image.rows / 4, cv_image.cols,
+      cv_image.rows / 4));
 
   input_picture_buffer->width = cv_image.cols;
   input_picture_buffer->height = cv_image.rows;
@@ -353,7 +350,6 @@ void SVTAV1Publisher::publish(
     memcpy(&compressed.data[message_size], output_buf->p_buffer, output_buf->n_filled_len);
 
     svt_av1_enc_release_out_buffer(&output_buf);
-
     publish_fn(compressed);
   }
 }
