@@ -49,7 +49,7 @@ const struct ParameterDefinition kParameters[] =
 {
   {
     // ENC mode - SVTAV1 Compression Level from 1 to 13. A lower value means a smaller size.
-    ParameterValue(static_cast<int>(12)),
+    ParameterValue(static_cast<int>(13)),
     ParameterDescriptor()
     .set__name("enc_mode")
     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
@@ -141,7 +141,7 @@ void SVTAV1Publisher::set_default_svt_configuration(int width, int height) const
   this->svt_config->pin_threads = 0;
 
   // tile based encoding
-  this->svt_config->tile_columns = 0;
+  this->svt_config->tile_columns = 2;
   this->svt_config->tile_rows = 0;
   this->svt_config->restricted_motion_vector = 0;
 

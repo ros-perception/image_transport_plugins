@@ -76,20 +76,19 @@ protected:
     const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
     const Callback & user_cb) override;
 
+private:
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
 
-  EbSvtAv1DecConfiguration * svt_decoder_config{nullptr};
-  EbComponentType * svt_decoder{nullptr};
+  EbSvtAv1DecConfiguration *svt_decoder_config{nullptr};
+  EbComponentType *svt_decoder{nullptr};
   EbBufferHeaderType * output_buf{nullptr};
   mutable std::mutex mutex;
 
   mutable bool key_frame_received{false};
 
-  mutable EbBufferHeaderType * buffer;
+  mutable EbBufferHeaderType *buffer;
   mutable cv::Mat mat_BGR2YUV_I420_decode;
-
-private:
 };
 
 }  // namespace svtav1_image_transport
