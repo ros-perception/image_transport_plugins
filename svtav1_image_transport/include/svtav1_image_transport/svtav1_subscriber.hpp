@@ -37,7 +37,10 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <vector>
+
+#include <svt-av1/EbSvtAv1Dec.h>  // NOLINT
+
+#include <opencv2/core.hpp>
 
 #include <rclcpp/node.hpp>
 #include <rclcpp/subscription_options.hpp>
@@ -46,9 +49,6 @@
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 
-#include <EbSvtAv1Dec.h>
-
-#include <opencv2/core.hpp>
 
 namespace svtav1_image_transport
 {
@@ -80,14 +80,14 @@ private:
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
 
-  EbSvtAv1DecConfiguration *svt_decoder_config{nullptr};
-  EbComponentType *svt_decoder{nullptr};
+  EbSvtAv1DecConfiguration * svt_decoder_config{nullptr};
+  EbComponentType * svt_decoder{nullptr};
   EbBufferHeaderType * output_buf{nullptr};
   mutable std::mutex mutex;
 
   mutable bool key_frame_received{false};
 
-  mutable EbBufferHeaderType *buffer;
+  mutable EbBufferHeaderType * buffer;
   mutable cv::Mat mat_BGR2YUV_I420_decode;
 };
 

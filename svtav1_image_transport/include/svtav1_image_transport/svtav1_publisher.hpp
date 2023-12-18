@@ -33,6 +33,8 @@
 #ifndef SVTAV1_IMAGE_TRANSPORT__SVTAV1_PUBLISHER_HPP_
 #define SVTAV1_IMAGE_TRANSPORT__SVTAV1_PUBLISHER_HPP_
 
+#include <svt-av1/EbSvtAv1Enc.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -45,9 +47,6 @@
 #include <rclcpp/node.hpp>
 
 #include "svtav1_image_transport/svtav1_common.hpp"
-
-#include "EbSvtAv1Enc.h"
-#include "EbSvtAv1Dec.h"
 
 #include <opencv2/core/mat.hpp>
 
@@ -97,12 +96,8 @@ private:
   // int dts_offset;
   mutable EbBufferHeaderType * input_buf{nullptr};
 
-  EbSvtAv1DecConfiguration * svt_decoder_config;
-  EbComponentType * svt_decoder;
-
   mutable std::mutex mutex;
   mutable cv::Mat ycrcb_planes[3];
-
 };
 
 }  // namespace svtav1_image_transport

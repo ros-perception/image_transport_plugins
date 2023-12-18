@@ -11,17 +11,22 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+
 find_package(ament_cmake REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(OpenCV REQUIRED COMPONENTS imgcodecs imgproc videoio)
+find_package(OpenCV REQUIRED COMPONENTS imgcodecs imgproc)
+find_package(SVTENC REQUIRED)
+find_package(SVTDEC REQUIRED)
 
 include_directories(
   include
-  /usr/include/svt-av1/
+  ${SVTENC_INCLUDE_DIR}
+  ${SVTDEC_INCLUDE_DIR}
 )
 
 add_library(
@@ -40,8 +45,8 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-  /usr/lib/x86_64-linux-gnu/libSvtAv1Enc.so
-  /usr/lib/x86_64-linux-gnu/libSvtAv1Dec.so
+  ${SVTDEC_LIBRARY}
+  ${SVTENC_LIBRARY}
 )
 
 install(TARGETS ${PROJECT_NAME}

@@ -217,9 +217,16 @@ void SVTAV1Subscriber::internalCallback(
     if (svt_av1_dec_get_picture(this->svt_decoder, buffer, &stream_info, &frame_info) !=
       EB_DecNoOutputPicture)
     {
-      memcpy(mat_BGR2YUV_I420_decode.data, ((EbSvtIOFormat *)buffer->p_buffer)->luma, size);
-      memcpy(&mat_BGR2YUV_I420_decode.data[w*h], ((EbSvtIOFormat *)buffer->p_buffer)->cb, (size >> 2));
-      memcpy(&mat_BGR2YUV_I420_decode.data[(w*h) + (size >> 2)], ((EbSvtIOFormat *)buffer->p_buffer)->cr, (size >> 2));
+      memcpy(
+        mat_BGR2YUV_I420_decode.data,
+        reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->luma, size);
+      memcpy(
+        &mat_BGR2YUV_I420_decode.data[w * h],
+        reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->cb,
+        (size >> 2));
+      memcpy(
+        &mat_BGR2YUV_I420_decode.data[(w * h) + (size >> 2)],
+        reinterpret_cast<EbSvtIOFormat *>(buffer->p_buffer)->cr, (size >> 2));
 
       cv::Mat rgb;
       cv::cvtColor(mat_BGR2YUV_I420_decode, rgb, cv::COLOR_YUV2RGB_I420);

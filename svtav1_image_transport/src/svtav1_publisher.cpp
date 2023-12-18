@@ -109,7 +109,8 @@ void SVTAV1Publisher::set_default_svt_configuration(int width, int height) const
   this->svt_config->source_width = width;
   this->svt_config->source_height = height;
   this->svt_config->intra_period_length = PROP_GOP_SIZE_DEFAULT - 1;
-  this->svt_config->intra_refresh_type = static_cast<SvtAv1IntraRefreshType>(PROP_INTRA_REFRESH_DEFAULT);
+  this->svt_config->intra_refresh_type =
+    static_cast<SvtAv1IntraRefreshType>(PROP_INTRA_REFRESH_DEFAULT);
   this->svt_config->frame_rate = 30;
   this->svt_config->frame_rate_denominator = 0;
   this->svt_config->frame_rate_numerator = 0;
