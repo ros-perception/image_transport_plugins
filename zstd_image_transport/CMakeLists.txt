@@ -16,6 +16,7 @@ find_package(image_transport REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(ZLIB REQUIRED)
 
 include_directories(include)
 
@@ -27,7 +28,7 @@ add_library(
   src/manifest.cpp
 )
 
-target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} ZLIB::ZLIB)
 
 ament_target_dependencies(${PROJECT_NAME}
   "image_transport"

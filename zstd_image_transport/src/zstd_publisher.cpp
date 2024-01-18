@@ -154,7 +154,7 @@ void ZstdPublisher::declareParameter(
   const std::string & base_name,
   const ParameterDefinition & definition)
 {
-  // transport scoped parameter (e.g. image_raw.compressed.format)
+  // transport scoped parameter (e.g. image_raw.zstd.zstd_level)
   const std::string transport_name = getTransportName();
   const std::string param_name = base_name + "." + transport_name + "." +
     definition.descriptor.name;
