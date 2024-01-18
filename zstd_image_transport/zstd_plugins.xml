@@ -1,0 +1,19 @@
+<library path="zstd_image_transport">
+  <class
+    name="image_transport/zstd_pub"
+    type="zstd_image_transport::ZstdPublisher"
+    base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin publishes a ZstdImage
+    </description>
+  </class>
+
+  <class
+    name="image_transport/zstd_sub"
+    type="zstd_image_transport::ZstdSubscriber"
+    base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decompresses a zstdImage.
+    </description>
+  </class>
+</library>
