@@ -135,6 +135,7 @@ void TheoraPublisher::configCb(Config& config, uint32_t level)
       config.keyframe_frequency = keyframe_frequency_; // In case desired value was unattainable
     }
   }
+  config_ = config;
 }
 
 void TheoraPublisher::connectCallback(const ros::SingleSubscriberPublisher& pub)
@@ -155,6 +156,10 @@ static void cvToTheoraPlane(cv::Mat& mat, th_img_plane& plane)
 
 void TheoraPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
 {
+  if (!config_.enable) {
+    return;
+  }
+
   if (!ensureEncodingContext(message, publish_fn))
     return;
   //return;

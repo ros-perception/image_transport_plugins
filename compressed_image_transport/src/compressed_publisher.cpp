@@ -78,6 +78,10 @@ void CompressedPublisher::configCb(Config& config, uint32_t level)
 
 void CompressedPublisher::publish(const sensor_msgs::Image& message, const PublishFn& publish_fn) const
 {
+  if (!config_.enable) {
+    return;
+  }
+
   // Compressed image message
   sensor_msgs::CompressedImage compressed;
   compressed.header = message.header;
