@@ -26,6 +26,7 @@
   <exec_depend>compressed_depth_image_transport</exec_depend>
   <exec_depend>compressed_image_transport</exec_depend>
   <exec_depend>theora_image_transport</exec_depend>
+  <exec_depend>zstd_image_transport</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
