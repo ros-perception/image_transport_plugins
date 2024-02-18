@@ -1,0 +1,25 @@
+<package format="2">
+  <name>avif_image_transport</name>
+  <version>3.2.0</version>
+  <description>
+    avif_image_transport provides a plugin to image_transport for transparently sending images
+    encoded as avif
+  </description>
+  <maintainer email="ahcorde@gmail.com">Alejandro Hernandez Cordero</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  <author>Alejandro Hernandez Cordero</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>image_transport</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <image_transport plugin="${prefix}/zstd_plugins.xml" />
+  </export>
+</package>
