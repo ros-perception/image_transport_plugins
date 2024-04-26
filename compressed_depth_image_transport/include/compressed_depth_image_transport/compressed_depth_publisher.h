@@ -54,7 +54,7 @@ public:
   CompressedDepthPublisher(): logger_(rclcpp::get_logger("CompressedDepthPublisher")) {}
   virtual ~CompressedDepthPublisher() {}
 
-  virtual std::string getTransportName() const
+  virtual std::string getTransportName() const override
   {
     return "compressedDepth";
   }

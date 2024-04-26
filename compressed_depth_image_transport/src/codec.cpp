@@ -124,7 +124,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
         }
         catch (cv::Exception& e)
         {
-          RCLCPP_ERROR(logger, e.what());
+          RCLCPP_ERROR(logger, "%s", e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
       } else if (format == "rvl") {
@@ -197,7 +197,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
         }
         catch (cv::Exception& e)
         {
-          RCLCPP_ERROR(logger, e.what());
+          RCLCPP_ERROR(logger, "%s", e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
       } else if (format == "rvl") {
@@ -274,7 +274,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (cv_bridge::Exception& e)
     {
-      RCLCPP_ERROR(logger, e.what());
+      RCLCPP_ERROR(logger, "%s", e.what());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
@@ -335,7 +335,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
         }
         catch (cv::Exception& e)
         {
-          RCLCPP_ERROR(logger, e.msg.c_str());
+          RCLCPP_ERROR(logger, "%s", e.msg.c_str());
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
       } else if (format == "rvl") {
@@ -363,7 +363,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
     }
     catch (Exception& e)
     {
-      RCLCPP_ERROR(logger, e.msg.c_str());
+      RCLCPP_ERROR(logger, "%s", e.msg.c_str());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
