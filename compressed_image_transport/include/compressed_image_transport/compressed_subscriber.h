@@ -54,7 +54,7 @@ public:
   CompressedSubscriber(): logger_(rclcpp::get_logger("CompressedSubscriber")) {}
   virtual ~CompressedSubscriber() = default;
 
-  virtual std::string getTransportName() const
+  virtual std::string getTransportName() const override
   {
     return "compressed";
   }
