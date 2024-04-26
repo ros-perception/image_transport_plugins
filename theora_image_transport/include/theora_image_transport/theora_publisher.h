@@ -76,7 +76,7 @@ protected:
 
   // Main publish function
   void publish(const sensor_msgs::msg::Image& message,
-               const PublishFn& publish_fn) const;
+               const PublishFn& publish_fn) const override;
 
   // Runtime reconfiguration support
   void refreshConfig() const;

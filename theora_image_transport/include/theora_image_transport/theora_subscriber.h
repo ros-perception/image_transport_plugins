@@ -56,7 +56,7 @@ public:
   TheoraSubscriber();
   virtual ~TheoraSubscriber();
 
-  virtual std::string getTransportName() const { return "theora"; }
+  virtual std::string getTransportName() const override { return "theora"; }
 
 protected:
   // Overridden to bump queue_size, otherwise we might lose headers
@@ -70,7 +70,7 @@ protected:
   // The function that does the actual decompression and calls a user supplied
   // callback with the resulting image
   virtual void internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr &msg,
-                                const Callback& user_cb);
+                                const Callback& user_cb) override;
 
   // Runtime reconfiguration support
   void refreshConfig();
