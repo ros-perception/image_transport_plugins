@@ -88,8 +88,10 @@ void CompressedSubscriber::subscribeImpl(
 
     // Declare Parameters
     uint ns_len = node->get_effective_namespace().length();
-    std::string param_base_name = base_topic.substr(ns_len);
-    std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+    if (base_topic.length() >= ns_len) {
+      std::string param_base_name = base_topic.substr(ns_len);
+      std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+    }
 
     using paramCallbackT = std::function<void(ParameterEvent::SharedPtr event)>;
     auto paramCallback = std::bind(&CompressedSubscriber::onParameterEvent, this, std::placeholders::_1,
