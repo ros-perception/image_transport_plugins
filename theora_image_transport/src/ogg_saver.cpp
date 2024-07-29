@@ -93,8 +93,8 @@ private:
 
   void writePage(ogg_page & page)
   {
-    fout_.write(static_cast<char *>(page.header), page.header_len);
-    fout_.write(static_cast<char *>(page.body), page.body_len);
+    fout_.write(reinterpret_cast<char *>(page.header), page.header_len);
+    fout_.write(reinterpret_cast<char *>(page.body), page.body_len);
   }
 
   void processMsg(const theora_image_transport::msg::Packet::SharedPtr message)
