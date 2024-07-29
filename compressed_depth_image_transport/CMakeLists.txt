@@ -52,6 +52,10 @@ pluginlib_export_plugin_description_file(image_transport
 
 # Test
 if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_cppcheck_LANGUAGE "c++")
+  ament_lint_auto_find_test_dependencies()
+
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(rvl_codec_test test/rvl_codec_test.cpp)
   target_link_libraries(rvl_codec_test ${PROJECT_NAME})

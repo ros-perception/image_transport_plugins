@@ -7,6 +7,7 @@
   </description>
   <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
+  <license>MIT</license>
 
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Julius Kammerl</author>
@@ -18,6 +19,8 @@
   <depend>image_transport</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

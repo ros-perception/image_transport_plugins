@@ -27,12 +27,35 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <pluginlib/class_list_macros.hpp>
-#include "compressed_image_transport/compressed_publisher.hpp"
-#include "compressed_image_transport/compressed_subscriber.hpp"
+#ifndef COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_SUBSCRIBER_HPP_
+#define COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_SUBSCRIBER_HPP_
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedPublisher,
-  image_transport::PublisherPlugin)
+#include <string>
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedSubscriber,
-  image_transport::SubscriberPlugin)
+#include <rclcpp/node.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
+#include <image_transport/simple_subscriber_plugin.hpp>
+
+namespace compressed_depth_image_transport
+{
+
+class CompressedDepthSubscriber
+  : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
+{
+public:
+  virtual ~CompressedDepthSubscriber() {}
+
+  virtual std::string getTransportName() const
+  {
+    return "compressedDepth";
+  }
+
+protected:
+  virtual void internalCallback(
+    const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
+    const Callback & user_cb);
+};
+
+}  // namespace compressed_depth_image_transport
+#endif  // COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_SUBSCRIBER_HPP_

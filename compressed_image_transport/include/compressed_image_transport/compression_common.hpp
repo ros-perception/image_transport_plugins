@@ -27,12 +27,34 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <pluginlib/class_list_macros.hpp>
-#include "compressed_image_transport/compressed_publisher.hpp"
-#include "compressed_image_transport/compressed_subscriber.hpp"
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedPublisher,
-  image_transport::PublisherPlugin)
+#ifndef COMPRESSED_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_
+#define COMPRESSED_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedSubscriber,
-  image_transport::SubscriberPlugin)
+#include <rclcpp/parameter_value.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
+
+namespace compressed_image_transport
+{
+
+// Compression formats
+enum compressionFormat
+{
+  UNDEFINED = -1,
+  JPEG = 0,
+  PNG = 1,
+  TIFF = 2,
+};
+
+using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
+using ParameterValue = rclcpp::ParameterValue;
+
+struct ParameterDefinition
+{
+  const ParameterValue defaultValue;
+  const ParameterDescriptor descriptor;
+};
+
+}  // namespace compressed_image_transport
+
+#endif  // COMPRESSED_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_

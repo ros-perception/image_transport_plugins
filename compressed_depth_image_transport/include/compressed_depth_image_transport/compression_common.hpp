@@ -27,12 +27,40 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <pluginlib/class_list_macros.hpp>
-#include "compressed_image_transport/compressed_publisher.hpp"
-#include "compressed_image_transport/compressed_subscriber.hpp"
+#ifndef COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_
+#define COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedPublisher,
-  image_transport::PublisherPlugin)
+#include <rclcpp/parameter_value.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
 
-PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedSubscriber,
-  image_transport::SubscriberPlugin)
+namespace compressed_depth_image_transport
+{
+
+// Compression formats
+enum compressionFormat
+{
+  UNDEFINED = -1,
+  INV_DEPTH
+};
+
+// Compression configuration
+struct ConfigHeader
+{
+  // compression format
+  compressionFormat format;
+  // quantization parameters (used in depth image compression)
+  float depthParam[2];
+};
+
+using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
+using ParameterValue = rclcpp::ParameterValue;
+
+struct ParameterDefinition
+{
+  const ParameterValue defaultValue;
+  const ParameterDescriptor descriptor;
+};
+
+}  // namespace compressed_depth_image_transport
+
+#endif  // COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSION_COMMON_HPP_
