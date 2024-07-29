@@ -1,38 +1,36 @@
-/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2012, Willow Garage, Inc.
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+// Copyright (c) 2012, Willow Garage, Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the copyright holder nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
-#include "theora_image_transport/theora_subscriber.h"
+#include "theora_image_transport/theora_subscriber.hpp"
+
+#include <string>
+#include <vector>
 
 #include <cv_bridge/cv_bridge.hpp>
 #include <rclcpp/logging.hpp>
@@ -42,13 +40,11 @@
 #include <rclcpp/parameter_events_filter.hpp>
 
 #include <opencv2/imgproc/imgproc.hpp>
-#include <vector>
 
-#include "theora_image_transport/compression_common.h"
+#include "theora_image_transport/compression_common.hpp"
 
-using namespace std;
-
-namespace theora_image_transport {
+namespace theora_image_transport
+{
 
 enum theoraParameters
 {
@@ -57,28 +53,32 @@ enum theoraParameters
 
 const struct ParameterDefinition kParameters[] =
 {
-  { //POST_PROCESSING_LEVEL - Post-processing level. Higher values can improve the appearance of the decoded images at the cost of more CPU.
-    ParameterValue((int)0),
+  {
+  // POST_PROCESSING_LEVEL - Post-processing level.
+  // Higher values can improve the appearance of the decoded images at the cost of more CPU.
+    ParameterValue(static_cast<int>(0)),
     ParameterDescriptor()
-      .set__name("post_processing_level")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Post-processing level. Higher values can improve the appearance of the decoded images at the cost of more CPU.")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(0)
-          .set__to_value(7)
-          .set__step(1)})
+    .set__name("post_processing_level")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    .set__description(
+        "Post-processing level. Higher values can improve the appearance of the decoded "
+        "images at the cost of more CPU.")
+    .set__read_only(false)
+    .set__integer_range(
+      {rcl_interfaces::msg::IntegerRange()
+        .set__from_value(0)
+        .set__to_value(7)
+        .set__step(1)})
   }
 };
 
 TheoraSubscriber::TheoraSubscriber()
-  : pplevel_(0),
-    received_header_(false),
-    received_keyframe_(false),
-    decoding_context_(NULL),
-    setup_info_(NULL),
-    logger_(rclcpp::get_logger("TheoraSubscriber"))
+: pplevel_(0),
+  received_header_(false),
+  received_keyframe_(false),
+  decoding_context_(NULL),
+  setup_info_(NULL),
+  logger_(rclcpp::get_logger("TheoraSubscriber"))
 {
   th_info_init(&header_info_);
   th_comment_init(&header_comment_);
@@ -86,7 +86,7 @@ TheoraSubscriber::TheoraSubscriber()
 
 TheoraSubscriber::~TheoraSubscriber()
 {
-  if (decoding_context_) th_decode_free(decoding_context_);
+  if (decoding_context_) {th_decode_free(decoding_context_);}
   th_setup_free(setup_info_);
   th_info_clear(&header_info_);
   th_comment_clear(&header_comment_);
@@ -94,7 +94,7 @@ TheoraSubscriber::~TheoraSubscriber()
 
 void TheoraSubscriber::subscribeImpl(
   rclcpp::Node * node,
-  const std::string &base_topic,
+  const std::string & base_topic,
   const Callback & callback,
   rmw_qos_profile_t custom_qos,
   rclcpp::SubscriptionOptions options)
@@ -114,10 +114,12 @@ void TheoraSubscriber::subscribeImpl(
   auto paramCallback = std::bind(&TheoraSubscriber::onParameterEvent, this, std::placeholders::_1,
                                  node->get_fully_qualified_name(), param_base_name);
 
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<paramCallbackT>(node, paramCallback);
+  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<paramCallbackT>(node,
+      paramCallback);
 
-  for(const ParameterDefinition &pd : kParameters)
+  for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
+  }
 }
 
 void TheoraSubscriber::refreshConfig()
@@ -128,9 +130,9 @@ void TheoraSubscriber::refreshConfig()
     pplevel_ = updatePostProcessingLevel(cfg_pplevel);
     // In case more than PPLEVEL_MAX
     node_->set_parameter(rclcpp::Parameter(parameters_[POST_PROCESSING_LEVEL], pplevel_));
-  }
-  else
+  } else {
     pplevel_ = cfg_pplevel;
+  }
 }
 
 int TheoraSubscriber::updatePostProcessingLevel(int level)
@@ -140,40 +142,44 @@ int TheoraSubscriber::updatePostProcessingLevel(int level)
   if (err) {
     RCLCPP_WARN(logger_, "Failed to get maximum post-processing level, error code %d", err);
   } else if (level > pplevel_max) {
-    RCLCPP_WARN(logger_, "Post-processing level %d is above the maximum, clamping to %d", level, pplevel_max);
+    RCLCPP_WARN(logger_, "Post-processing level %d is above the maximum, clamping to %d", level,
+        pplevel_max);
     level = pplevel_max;
   }
 
   err = th_decode_ctl(decoding_context_, TH_DECCTL_SET_PPLEVEL, &level, sizeof(int));
   if (err) {
     RCLCPP_ERROR(logger_, "Failed to set post-processing level, error code %d", err);
-    return pplevel_; // old value
+    return pplevel_;  // old value
   }
   return level;
 }
 
-//When using this caller is responsible for deleting oggpacket.packet!!
-void TheoraSubscriber::msgToOggPacket(const theora_image_transport::msg::Packet &msg,
-                                      ogg_packet &ogg)
+// When using this caller is responsible for deleting oggpacket.packet!!
+void TheoraSubscriber::msgToOggPacket(
+  const theora_image_transport::msg::Packet & msg,
+  ogg_packet & ogg)
 {
-  ogg.bytes      = msg.data.size();
-  ogg.b_o_s      = msg.b_o_s;
-  ogg.e_o_s      = msg.e_o_s;
+  ogg.bytes = msg.data.size();
+  ogg.b_o_s = msg.b_o_s;
+  ogg.e_o_s = msg.e_o_s;
   ogg.granulepos = msg.granulepos;
-  ogg.packetno   = msg.packetno;
+  ogg.packetno = msg.packetno;
   ogg.packet = new unsigned char[ogg.bytes];
   memcpy(ogg.packet, &msg.data[0], ogg.bytes);
 }
 
-void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packet::ConstSharedPtr& message,
-                                        const Callback& callback)
+void TheoraSubscriber::internalCallback(
+  const theora_image_transport::msg::Packet::ConstSharedPtr & message,
+  const Callback & callback)
 {
   refreshConfig();
 
   /// @todo Break this function into pieces
   ogg_packet oggpacket;
   msgToOggPacket(*message, oggpacket);
-  std::unique_ptr<unsigned char[]> packet_guard(oggpacket.packet); // Make sure packet memory gets deleted
+  // Make sure packet memory gets deleted
+  std::unique_ptr<unsigned char[]> packet_guard(oggpacket.packet);
 
   // Beginning of logical stream flag means we're getting new headers
   if (oggpacket.b_o_s == 1) {
@@ -206,7 +212,7 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
         }
         received_header_ = true;
         pplevel_ = updatePostProcessingLevel(pplevel_);
-        break; // Continue on the video decoding
+        break;  // Continue on the video decoding
       case TH_EFAULT:
         RCLCPP_WARN(logger_, "[theora] EFAULT when processing header packet");
         return;
@@ -214,29 +220,34 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
         RCLCPP_WARN(logger_, "[theora] Bad header packet");
         return;
       case TH_EVERSION:
-        RCLCPP_WARN(logger_, "[theora] Header packet not decodable with this version of libtheora");
+        RCLCPP_WARN(logger_, "[theora] Header packet not decodable with this version "
+          "of libtheora");
         return;
       case TH_ENOTFORMAT:
         RCLCPP_WARN(logger_, "[theora] Packet was not a Theora header");
         return;
       default:
         // If rval > 0, we successfully received a header packet.
-        if (rval < 0)
-          RCLCPP_WARN(logger_, "[theora] Error code %d when processing header packet", rval);
+        if (rval < 0) {
+          RCLCPP_WARN(logger_, "[theora] Error code %d when processing header packet",
+            rval);
+        }
         return;
     }
   }
 
-  // Wait for a keyframe if we haven't received one yet - delta frames are useless to us in that case
+  // Wait for a keyframe if we haven't received one yet - delta frames are useless to
+  // us in that case
   received_keyframe_ = received_keyframe_ || (th_packet_iskeyframe(&oggpacket) == 1);
-  if (!received_keyframe_)
+  if (!received_keyframe_) {
     return;
+  }
 
   // We have a video packet we can handle, let's decode it
   int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
   switch (rval) {
     case 0:
-      break; // Yay, we got a frame. Carry on below.
+      break;  // Yay, we got a frame. Carry on below.
     case TH_DUPFRAME:
       // Video data hasn't changed, so we update the timestamp and reuse the last received frame.
       RCLCPP_DEBUG(logger_, "[theora] Got a duplicate frame");
@@ -252,7 +263,9 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
       RCLCPP_WARN(logger_, "[theora] Packet does not contain encoded video data");
       return;
     case TH_EIMPL:
-      RCLCPP_WARN(logger_, "[theora] The video data uses bitstream features not supported by this version of libtheora");
+      RCLCPP_WARN(logger_,
+        "[theora] The video data uses bitstream features not supported by this version of "
+        "libtheora");
       return;
     default:
       RCLCPP_WARN(logger_, "[theora] Error code %d when decoding video packet", rval);
@@ -264,7 +277,8 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
   th_decode_ycbcr_out(decoding_context_, ycbcr_buffer);
 
   // Wrap YCbCr channel data into OpenCV format
-  th_img_plane &y_plane = ycbcr_buffer[0], &cb_plane = ycbcr_buffer[1], &cr_plane = ycbcr_buffer[2];
+  th_img_plane & y_plane = ycbcr_buffer[0], & cb_plane = ycbcr_buffer[1],
+  & cr_plane = ycbcr_buffer[2];
   cv::Mat y(y_plane.height, y_plane.width, CV_8UC1, y_plane.data, y_plane.stride);
   cv::Mat cb_sub(cb_plane.height, cb_plane.width, CV_8UC1, cb_plane.data, cb_plane.stride);
   cv::Mat cr_sub(cr_plane.height, cr_plane.width, CV_8UC1, cr_plane.data, cr_plane.stride);
@@ -291,22 +305,25 @@ void TheoraSubscriber::internalCallback(const theora_image_transport::msg::Packe
   callback(latest_image_);
 }
 
-void TheoraSubscriber::declareParameter(const std::string &base_name,
-                                       const ParameterDefinition &definition)
+void TheoraSubscriber::declareParameter(
+  const std::string & base_name,
+  const ParameterDefinition & definition)
 {
-  //transport scoped parameter (e.g. image_raw.theora.post_processing_level)
+  // transport scoped parameter (e.g. image_raw.theora.post_processing_level)
   const std::string transport_name = getTransportName();
-  const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
+  const std::string param_name = base_name + "." + transport_name + "." +
+    definition.descriptor.name;
   parameters_.push_back(param_name);
 
-  //deprecated non-scoped parameter name (e.g. image_raw.post_processing_level)
+  // deprecated non-scoped parameter name (e.g. image_raw.post_processing_level)
   const std::string deprecated_name = base_name + "." + definition.descriptor.name;
   deprecatedParameters_.push_back(deprecated_name);
 
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
+    param_value = node_->declare_parameter(param_name, definition.defaultValue,
+        definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_->get_parameter(param_name).get_parameter_value();
@@ -321,34 +338,40 @@ void TheoraSubscriber::declareParameter(const std::string &base_name,
   }
 }
 
-void TheoraSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name)
+void TheoraSubscriber::onParameterEvent(
+  ParameterEvent::SharedPtr event, std::string full_name,
+  std::string base_name)
 {
   // filter out events from other nodes
-  if (event->node != full_name)
+  if (event->node != full_name) {
     return;
+  }
 
   // filter out new/changed deprecated parameters
   using EventType = rclcpp::ParameterEventsFilter::EventType;
 
-  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_, {EventType::NEW, EventType::CHANGED});
+  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_,
+    {EventType::NEW, EventType::CHANGED});
 
   const std::string transport = getTransportName();
 
   // emit warnings for deprecated parameters & sync deprecated parameter value to correct
-  for (auto & it : filter.get_events())
-  {
+  for (auto & it : filter.get_events()) {
     const std::string name = it.second->name;
 
-    size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
+    // name was generated from base_name, has to succeed
+    size_t baseNameIndex = name.find(base_name);
     size_t paramNameIndex = baseNameIndex + base_name.size();
-    //e.g. `color.image_raw.` + `theora` + `post_processing_level`
-    std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
+    // e.g. `color.image_raw.` + `theora` + `post_processing_level`
+    std::string recommendedName = name.substr(0,
+        paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
 
     // do not emit warnings if deprecated value matches
-    if(it.second->value == recommendedValue.get_value_message())
+    if(it.second->value == recommendedValue.get_value_message()) {
       continue;
+    }
 
     RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
                                 "; use transport qualified name `" << recommendedName << "`");
@@ -357,4 +380,4 @@ void TheoraSubscriber::onParameterEvent(ParameterEvent::SharedPtr event, std::st
   }
 }
 
-} //namespace theora_image_transport
+}  // namespace theora_image_transport

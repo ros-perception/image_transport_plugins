@@ -1,38 +1,37 @@
-/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2012, Willow Garage, Inc.
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+// Copyright (c) 2012, Willow Garage, Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the copyright holder nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
-#include "theora_image_transport/theora_publisher.h"
+#include "theora_image_transport/theora_publisher.hpp"
+
+#include <cstdio>
+#include <string>
+#include <vector>
 
 #include <rclcpp/logging.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -41,15 +40,12 @@
 #include <rclcpp/parameter_client.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
 
-#include <cstdio> //for memcpy
-#include <vector>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "theora_image_transport/compression_common.h"
+#include "theora_image_transport/compression_common.hpp"
 
-using namespace std;
-
-namespace theora_image_transport {
+namespace theora_image_transport
+{
 
 enum theoraParameters
 {
@@ -67,57 +63,57 @@ enum optimizeForTarget : bool
 
 const struct ParameterDefinition kParameters[] =
 {
-  { //OPTIMIZE_FOR - Try to achieve either 'target_bitrate' (0) or 'quality' (1)
-    ParameterValue(true), //Default to quality
+  {  // OPTIMIZE_FOR - Try to achieve either 'target_bitrate' (0) or 'quality' (1)
+    ParameterValue(true),  // Default to quality
     ParameterDescriptor()
-      .set__name("optimize_for")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
-      .set__description("Try to achieve either 'target_bitrate' (0) or 'quality' (1)")
-      .set__read_only(false)
+    .set__name("optimize_for")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
+    .set__description("Try to achieve either 'target_bitrate' (0) or 'quality' (1)")
+    .set__read_only(false)
   },
-  { //TARGET_BITRATE - Target encoding bitrate, bits per second
-    ParameterValue((int)800000),
+  {  // TARGET_BITRATE - Target encoding bitrate, bits per second
+    ParameterValue(static_cast<int>(800000)),
     ParameterDescriptor()
-      .set__name("target_bitrate")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Target encoding bitrate, bits per second")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(0)
-          .set__to_value(99200000)
-          .set__step(1)})
+    .set__name("target_bitrate")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    .set__description("Target encoding bitrate, bits per second")
+    .set__read_only(false)
+    .set__integer_range(
+      {rcl_interfaces::msg::IntegerRange()
+        .set__from_value(0)
+        .set__to_value(99200000)
+        .set__step(1)})
   },
-  { //QUALITY - Encoding quality
-    ParameterValue((int)31),
+  {  // QUALITY - Encoding quality
+    ParameterValue(static_cast<int>(31)),
     ParameterDescriptor()
-      .set__name("quality")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Encoding quality")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(0)
-          .set__to_value(63)
-          .set__step(1)})
+    .set__name("quality")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    .set__description("Encoding quality")
+    .set__read_only(false)
+    .set__integer_range(
+      {rcl_interfaces::msg::IntegerRange()
+        .set__from_value(0)
+        .set__to_value(63)
+        .set__step(1)})
   },
-  { //KEYFRAME_FREQUENCY - Maximum distance between key frames
-    ParameterValue((int)64),
+  {  // KEYFRAME_FREQUENCY - Maximum distance between key frames
+    ParameterValue(static_cast<int>(64)),
     ParameterDescriptor()
-      .set__name("keyframe_frequency")
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-      .set__description("Maximum distance between key frames")
-      .set__read_only(false)
-      .set__integer_range(
-        {rcl_interfaces::msg::IntegerRange()
-          .set__from_value(1)
-          .set__to_value(64)
-          .set__step(1)})
+    .set__name("keyframe_frequency")
+    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    .set__description("Maximum distance between key frames")
+    .set__read_only(false)
+    .set__integer_range(
+      {rcl_interfaces::msg::IntegerRange()
+        .set__from_value(1)
+        .set__to_value(64)
+        .set__step(1)})
   },
 };
 
-TheoraPublisher::TheoraPublisher():
-  logger_(rclcpp::get_logger("TheoraPublisher"))
+TheoraPublisher::TheoraPublisher()
+:logger_(rclcpp::get_logger("TheoraPublisher"))
 {
   refreshConfigNeeded = false;
 
@@ -127,12 +123,13 @@ TheoraPublisher::TheoraPublisher():
   encoder_setup_.pic_x = 0;
   encoder_setup_.pic_y = 0;
   encoder_setup_.colorspace = TH_CS_UNSPECIFIED;
-  encoder_setup_.pixel_fmt = TH_PF_420; // See bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
+  // See bottom of http://www.theora.org/doc/libtheora-1.1beta1/codec_8h.html
+  encoder_setup_.pixel_fmt = TH_PF_420;
   encoder_setup_.aspect_numerator = 1;
   encoder_setup_.aspect_denominator = 1;
-  encoder_setup_.fps_numerator = 1; // don't know the frame rate ahead of time
+  encoder_setup_.fps_numerator = 1;  // don't know the frame rate ahead of time
   encoder_setup_.fps_denominator = 1;
-  encoder_setup_.keyframe_granule_shift = 6; // A good default for streaming applications
+  encoder_setup_.keyframe_granule_shift = 6;  // A good default for streaming applications
   // Note: target_bitrate and quality set to correct values in refreshConfig
   encoder_setup_.target_bitrate = -1;
   encoder_setup_.quality = -1;
@@ -145,7 +142,7 @@ TheoraPublisher::~TheoraPublisher()
 
 void TheoraPublisher::advertiseImpl(
   rclcpp::Node *node,
-  const std::string &base_topic,
+  const std::string & base_topic,
   rmw_qos_profile_t custom_qos,
   rclcpp::PublisherOptions options)
 {
@@ -164,30 +161,34 @@ void TheoraPublisher::advertiseImpl(
   auto callback = std::bind(&TheoraPublisher::onParameterEvent, this, std::placeholders::_1,
                             node->get_fully_qualified_name(), param_base_name);
 
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node, callback);
+  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node,
+      callback);
 
-  for(const ParameterDefinition &pd : kParameters)
+  for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
+  }
 
-  //we need to trigger initial configuration loading like ROS1 setCallback does
+  // we need to trigger initial configuration loading like ROS1 setCallback does
   refreshConfigNeeded = true;
   refreshConfig();
 }
 
-static void cvToTheoraPlane(cv::Mat& mat, th_img_plane& plane)
+static void cvToTheoraPlane(cv::Mat & mat, th_img_plane & plane)
 {
-  plane.width  = mat.cols;
+  plane.width = mat.cols;
   plane.height = mat.rows;
   plane.stride = mat.step;
-  plane.data   = mat.data;
+  plane.data = mat.data;
 }
 
-void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
-                              const PublishFn& publish_fn) const
+void TheoraPublisher::publish(
+  const sensor_msgs::msg::Image & message,
+  const PublishFn & publish_fn) const
 {
-  if (!ensureEncodingContext(message, publish_fn))
+  if (!ensureEncodingContext(message, publish_fn)) {
     return;
-  //return;
+  }
+  // return;
   /// @todo fromImage is deprecated
   /// @todo Optimized gray-scale path, rgb8
   /// @todo fromImage can throw cv::Exception on bayer encoded images
@@ -195,18 +196,13 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   refreshConfig();
 
   cv_bridge::CvImageConstPtr cv_image_ptr;
-  try
-  {
+  try {
     // conversion necessary
     cv_image_ptr = cv_bridge::toCvCopy(message, sensor_msgs::image_encodings::BGR8);
-  }
-  catch (cv_bridge::Exception& e)
-  {
+  } catch (cv_bridge::Exception & e) {
     RCLCPP_ERROR(logger_, "cv_bridge exception: '%s'", e.what());
     return;
-  }
-  catch (cv::Exception& e)
-  {
+  } catch (cv::Exception & e) {
     RCLCPP_ERROR(logger_, "OpenCV exception: '%s'", e.what());
     return;
   }
@@ -222,8 +218,7 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
   int frame_width = encoder_setup_.frame_width, frame_height = encoder_setup_.frame_height;
   if (frame_width == bgr.cols && frame_height == bgr.rows) {
     bgr_padded = bgr;
-  }
-  else {
+  } else {
     bgr_padded = cv::Mat::zeros(frame_height, frame_width, bgr.type());
     cv::Mat pic_roi = bgr_padded(cv::Rect(0, 0, bgr.cols, bgr.rows));
     bgr.copyTo(pic_roi);
@@ -244,7 +239,7 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
 
   // Construct Theora image buffer
   th_ycbcr_buffer ycbcr_buffer;
-  cvToTheoraPlane(y,  ycbcr_buffer[0]);
+  cvToTheoraPlane(y, ycbcr_buffer[0]);
   cvToTheoraPlane(cb, ycbcr_buffer[1]);
   cvToTheoraPlane(cr, ycbcr_buffer[2]);
 
@@ -266,30 +261,36 @@ void TheoraPublisher::publish(const sensor_msgs::msg::Image& message,
     oggPacketToMsg(message.header, oggpacket, output);
     publish_fn(output);
   }
-  if (rval == TH_EFAULT)
+  if (rval == TH_EFAULT) {
     RCLCPP_ERROR(logger_, "[theora] EFAULT in retrieving encoded video data packets");
+  }
 }
 
 void TheoraPublisher::refreshConfig() const
 {
-  //we need guard to prevent !TH_ENCCTL_SET_BITRATE path resetting context every time
-  //the flag is set on init and on config change event, refresh happens on publish
-  if(!refreshConfigNeeded)
+  // we need guard to prevent !TH_ENCCTL_SET_BITRATE path resetting context every time
+  // the flag is set on init and on config change event, refresh happens on publish
+  if(!refreshConfigNeeded) {
     return;
+  }
   refreshConfigNeeded = false;
 
   // Fresh Configuration
-  optimizeForTarget cfg_optimize_for = (optimizeForTarget)node_->get_parameter(parameters_[OPTIMIZE_FOR]).get_value<bool>();
+  optimizeForTarget cfg_optimize_for =
+    (optimizeForTarget)node_->get_parameter(parameters_[OPTIMIZE_FOR]).get_value<bool>();
   int cfg_bitrate = node_->get_parameter(parameters_[TARGET_BITRATE]).get_value<int>();
   int cfg_quality = node_->get_parameter(parameters_[QUALITY]).get_value<int>();
-  int cfg_keyframe_frequency = node_->get_parameter(parameters_[KEYFRAME_FREQUENCY]).get_value<int>();
+  int cfg_keyframe_frequency =
+    node_->get_parameter(parameters_[KEYFRAME_FREQUENCY]).get_value<int>();
 
-  long bitrate = 0;
-  if (cfg_optimize_for == OPTIMIZE_BITRATE)
+  long bitrate = 0;  // NOLINT
+  if (cfg_optimize_for == OPTIMIZE_BITRATE) {
     bitrate = cfg_bitrate;
+  }
   bool update_bitrate = bitrate && encoder_setup_.target_bitrate != bitrate;
-  bool update_quality = !bitrate && ((encoder_setup_.quality != cfg_quality) || encoder_setup_.target_bitrate > 0);
-  //store configured quality and bitrate ONLY if optimizing for it, otherwise zero-out bitrate
+  bool update_quality = !bitrate &&
+    ((encoder_setup_.quality != cfg_quality) || encoder_setup_.target_bitrate > 0);
+  // store configured quality and bitrate ONLY if optimizing for it, otherwise zero-out bitrate
   encoder_setup_.quality = cfg_quality;
   encoder_setup_.target_bitrate = bitrate;
   keyframe_frequency_ = cfg_keyframe_frequency;
@@ -299,9 +300,10 @@ void TheoraPublisher::refreshConfig() const
     // libtheora 1.1 lets us change quality or bitrate on the fly, 1.0 does not.
 #ifdef TH_ENCCTL_SET_BITRATE
     if (update_bitrate) {
-      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_BITRATE, &bitrate, sizeof(long));
-      if (err)
+      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_BITRATE, &bitrate, sizeof(long));  // NOLINT
+      if (err) {
         RCLCPP_ERROR(logger_, "Failed to update bitrate dynamically");
+      }
     }
 #else
     err |= update_bitrate;
@@ -309,11 +311,13 @@ void TheoraPublisher::refreshConfig() const
 
 #ifdef TH_ENCCTL_SET_QUALITY
     if (update_quality) {
-      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_QUALITY, &cfg_quality, sizeof(int));
+      err = th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_QUALITY, &cfg_quality,
+          sizeof(int));
       // In 1.1 above call will fail if a bitrate has previously been set. That restriction may
       // be relaxed in a future version. Complain on other failures.
-      if (err && err != TH_EINVAL)
+      if (err && err != TH_EINVAL) {
         RCLCPP_ERROR(logger_, "Failed to update quality dynamically");
+      }
     }
 #else
     err |= update_quality;
@@ -322,28 +326,32 @@ void TheoraPublisher::refreshConfig() const
     // If unable to change parameters dynamically, just create a new encoding context.
     if (err) {
       encoding_context_.reset();
-    }
-    // Otherwise, do the easy updates and keep going!
-    else {
+    } else {  // Otherwise, do the easy updates and keep going!
       updateKeyframeFrequency();
-      if(cfg_keyframe_frequency != (int)keyframe_frequency_) // In case desired value was unattainable
-        node_->set_parameter(rclcpp::Parameter(parameters_[KEYFRAME_FREQUENCY], (int)keyframe_frequency_));
+      // In case desired value was unattainable
+      if(cfg_keyframe_frequency != static_cast<int>(keyframe_frequency_)) {
+        node_->set_parameter(rclcpp::Parameter(parameters_[KEYFRAME_FREQUENCY],
+          static_cast<int>(keyframe_frequency_)));
+      }
     }
   }
 }
 
-void freeContext(th_enc_ctx* context)
+void freeContext(th_enc_ctx * context)
 {
-  if (context) th_encode_free(context);
+  if (context) {th_encode_free(context);}
 }
 
-bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::msg::Image& image,
-                                            const PublishFn& publish_fn) const
+bool TheoraPublisher::ensureEncodingContext(
+  const sensor_msgs::msg::Image & image,
+  const PublishFn & publish_fn) const
 {
   /// @todo Check if encoding has changed
   if (encoding_context_ && encoder_setup_.pic_width == image.width &&
-      encoder_setup_.pic_height == image.height)
+    encoder_setup_.pic_height == image.height)
+  {
     return true;
+  }
 
   // Theora has a divisible-by-sixteen restriction for the encoded frame size, so
   // scale the picture size up to the nearest multiple of 16 and calculate offsets.
@@ -379,15 +387,16 @@ bool TheoraPublisher::ensureEncodingContext(const sensor_msgs::msg::Image& image
   return true;
 }
 
-void TheoraPublisher::oggPacketToMsg(const std_msgs::msg::Header& header,
-                                     const ogg_packet &oggpacket,
-                                     theora_image_transport::msg::Packet &msg) const
+void TheoraPublisher::oggPacketToMsg(
+  const std_msgs::msg::Header & header,
+  const ogg_packet & oggpacket,
+  theora_image_transport::msg::Packet & msg) const
 {
-  msg.header     = header;
-  msg.b_o_s      = oggpacket.b_o_s;
-  msg.e_o_s      = oggpacket.e_o_s;
+  msg.header = header;
+  msg.b_o_s = oggpacket.b_o_s;
+  msg.e_o_s = oggpacket.e_o_s;
   msg.granulepos = oggpacket.granulepos;
-  msg.packetno   = oggpacket.packetno;
+  msg.packetno = oggpacket.packetno;
   msg.data.resize(oggpacket.bytes);
   memcpy(&msg.data[0], oggpacket.packet, oggpacket.bytes);
 }
@@ -397,28 +406,34 @@ void TheoraPublisher::updateKeyframeFrequency() const
   ogg_uint32_t desired_frequency = keyframe_frequency_;
   if (th_encode_ctl(encoding_context_.get(), TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
                     &keyframe_frequency_, sizeof(ogg_uint32_t)))
+  {
     RCLCPP_ERROR(logger_, "Failed to change keyframe frequency");
-  if (keyframe_frequency_ != desired_frequency)
+  }
+  if (keyframe_frequency_ != desired_frequency) {
     RCLCPP_WARN(logger_, "Couldn't set keyframe frequency to %d, actually set to %d",
                       desired_frequency, keyframe_frequency_);
+  }
 }
 
-void TheoraPublisher::declareParameter(const std::string &base_name,
-                                       const ParameterDefinition &definition)
+void TheoraPublisher::declareParameter(
+  const std::string & base_name,
+  const ParameterDefinition & definition)
 {
-  //transport scoped parameter (e.g. image_raw.theora.quality)
+  // transport scoped parameter (e.g. image_raw.theora.quality)
   const std::string transport_name = getTransportName();
-  const std::string param_name = base_name + "." + transport_name + "." + definition.descriptor.name;
+  const std::string param_name = base_name + "." + transport_name + "." +
+    definition.descriptor.name;
   parameters_.push_back(param_name);
 
-  //deprecated non-scoped parameter name (e.g. image_raw.quality)
+  // deprecated non-scoped parameter name (e.g. image_raw.quality)
   const std::string deprecated_name = base_name + "." + definition.descriptor.name;
   deprecatedParameters_.push_back(deprecated_name);
 
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
+    param_value = node_->declare_parameter(param_name, definition.defaultValue,
+        definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_->get_parameter(param_name).get_parameter_value();
@@ -433,34 +448,40 @@ void TheoraPublisher::declareParameter(const std::string &base_name,
   }
 }
 
-void TheoraPublisher::onParameterEvent(ParameterEvent::SharedPtr event, std::string full_name, std::string base_name)
+void TheoraPublisher::onParameterEvent(
+  ParameterEvent::SharedPtr event, std::string full_name,
+  std::string base_name)
 {
   // filter out events from other nodes
-  if (event->node != full_name)
+  if (event->node != full_name) {
     return;
+  }
 
   // filter out new/changed deprecated parameters
   using EventType = rclcpp::ParameterEventsFilter::EventType;
 
-  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_, {EventType::NEW, EventType::CHANGED});
+  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_,
+    {EventType::NEW, EventType::CHANGED});
 
   const std::string transport = getTransportName();
 
   // emit warnings for deprecated parameters & sync deprecated parameter value to correct
-  for (auto & it : filter.get_events())
-  {
+  for (auto & it : filter.get_events()) {
     const std::string name = it.second->name;
 
-    size_t baseNameIndex = name.find(base_name); //name was generated from base_name, has to succeed
+    // name was generated from base_name, has to succeed
+    size_t baseNameIndex = name.find(base_name);
     size_t paramNameIndex = baseNameIndex + base_name.size();
-    //e.g. `color.image_raw.` + `theora` + `quality`
-    std::string recommendedName = name.substr(0, paramNameIndex + 1) + transport + name.substr(paramNameIndex);
+    // e.g. `color.image_raw.` + `theora` + `quality`
+    std::string recommendedName = name.substr(0,
+        paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
 
     // do not emit warnings if deprecated value matches
-    if(it.second->value == recommendedValue.get_value_message())
+    if(it.second->value == recommendedValue.get_value_message()) {
       continue;
+    }
 
     RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
                                 "; use transport qualified name `" << recommendedName << "`");
@@ -468,9 +489,9 @@ void TheoraPublisher::onParameterEvent(ParameterEvent::SharedPtr event, std::str
     node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
   }
 
-  //if any of the non-deprecated parameters changed mark to refresh config
+  // if any of the non-deprecated parameters changed mark to refresh config
   rclcpp::ParameterEventsFilter filterChanged(event, parameters_, {EventType::CHANGED});
   refreshConfigNeeded = filterChanged.get_events().size() > 0;
 }
 
-} //namespace theora_image_transport
+}  // namespace theora_image_transport

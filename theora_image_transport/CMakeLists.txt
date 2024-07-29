@@ -32,7 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Packet.msg"
   DEPENDENCIES
     std_msgs
-   ADD_LINTER_TESTS
+  ADD_LINTER_TESTS
 )
 
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
@@ -115,6 +115,12 @@ install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_cppcheck_LANGUAGE "c++")
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 pluginlib_export_plugin_description_file(image_transport theora_plugins.xml)
 
