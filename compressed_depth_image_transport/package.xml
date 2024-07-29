@@ -7,6 +7,7 @@
   </description>
   <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
+  <license>MIT</license>
 
   <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
   <author>Julius Kammerl</author>

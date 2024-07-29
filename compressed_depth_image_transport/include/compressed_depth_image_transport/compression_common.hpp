@@ -39,7 +39,8 @@ namespace compressed_depth_image_transport
 // Compression formats
 enum compressionFormat
 {
-  UNDEFINED = -1, INV_DEPTH
+  UNDEFINED = -1,
+  INV_DEPTH
 };
 
 // Compression configuration
