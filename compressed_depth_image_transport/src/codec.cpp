@@ -1,67 +1,55 @@
-/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2012 Willow Garage.
-*  Copyright (c) 2016 Google, Inc.
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+// Copyright (c) 2012, Willow Garage, Inc.
+// Copyright (c) 2016, Google, Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the copyright holder nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 #include <string>
 #include <vector>
 
-#include "cv_bridge/cv_bridge.hpp"
+#include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include "rclcpp/clock.hpp"
-#include "rclcpp/logging.hpp"
+#include <rclcpp/clock.hpp>
+#include <rclcpp/logging.hpp>
 
-#include "compressed_depth_image_transport/codec.h"
-#include "compressed_depth_image_transport/compression_common.h"
-#include "compressed_depth_image_transport/rvl_codec.h"
-
-// If OpenCV3
-#ifndef CV_VERSION_EPOCH
-#include <opencv2/imgcodecs.hpp>
-#endif
+#include "compressed_depth_image_transport/codec.hpp"
+#include "compressed_depth_image_transport/compression_common.hpp"
+#include "compressed_depth_image_transport/rvl_codec.hpp"
 
 namespace enc = sensor_msgs::image_encodings;
-using namespace cv;
 
 // Encoding and decoding of compressed depth images.
 namespace compressed_depth_image_transport
 {
 
 sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
-  const sensor_msgs::msg::CompressedImage& message)
+  const sensor_msgs::msg::CompressedImage & message)
 {
-
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 
   auto logger = rclcpp::get_logger("compressed_depth_image_transport");
@@ -83,7 +71,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       format = "png";
     } else if (format_ending.find("compressedDepth rvl") != std::string::npos) {
       format = "rvl";
-    } else if (format_ending.find("compressedDepth") != std::string::npos &&
+    } else if (format_ending.find("compressedDepth") != std::string::npos &&  // NOLINT
       format_ending.find("compressedDepth ") == std::string::npos)
     {
       format = "png";
@@ -96,15 +84,14 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
   cv_ptr->encoding = image_encoding;
 
   // Decode message data
-  if (message.data.size() > sizeof(ConfigHeader))
-  {
-
+  if (message.data.size() > sizeof(ConfigHeader)) {
     // Read compression type from stream
     ConfigHeader compressionConfig;
     memcpy(&compressionConfig, &message.data[0], sizeof(compressionConfig));
 
     // Get compressed image data
-    const std::vector<uint8_t> imageData(message.data.begin() + sizeof(compressionConfig), message.data.end());
+    const std::vector<uint8_t> imageData(message.data.begin() + sizeof(compressionConfig),
+      message.data.end());
 
     // Depth map decoding
     float depthQuantA, depthQuantB;
@@ -113,17 +100,13 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
     depthQuantA = compressionConfig.depthParam[0];
     depthQuantB = compressionConfig.depthParam[1];
 
-    if (enc::bitDepth(image_encoding) == 32)
-    {
+    if (enc::bitDepth(image_encoding) == 32) {
       cv::Mat decompressed;
       if (format == "png") {
-        try
-        {
+        try {
           // Decode image data
           decompressed = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
-        }
-        catch (cv::Exception& e)
-        {
+        } catch (cv::Exception & e) {
           RCLCPP_ERROR(logger, "%s", e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
@@ -133,26 +116,30 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
         memcpy(&rows, &buffer[4], 4);
-        if (rows == 0 || cols == 0)
-        {
-          RCLCPP_ERROR_THROTTLE(logger, clock, 1.0, "Received malformed RVL-encoded image. Size %ix%i contains zero.", cols, rows);
+        if (rows == 0 || cols == 0) {
+          RCLCPP_ERROR_THROTTLE(logger, clock, 1.0,
+              "Received malformed RVL-encoded image. Size %ix%i contains zero.", cols, rows);
           return sensor_msgs::msg::Image::SharedPtr();
         }
 
-        // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check whether the output image would
-        // not be more than 10x larger than the compressed one. If it is, we probably received corrupted data.
-        // The condition should be "numPixels * 2 > compressed.size() * 10" (because each pixel is 2 bytes), but to prevent
+        // Sanity check - the best compression ratio is 4x; we leave some buffer, so we check
+        // whether the output image would not be more than 10x larger than the compressed one.
+        // If it is, we probably received corrupted data.
+        // The condition should be "numPixels * 2 > compressed.size() * 10"
+        // (because each pixel is 2 bytes), but to prevent
         // overflow, we have canceled out the *2 from both sides of the inequality.
         const auto numPixels = static_cast<uint64_t>(rows) * cols;
-        if (numPixels > std::numeric_limits<int>::max() || numPixels > static_cast<uint64_t>(imageData.size()) * 5)
+        if (numPixels > std::numeric_limits<int>::max() ||
+          numPixels > static_cast<uint64_t>(imageData.size()) * 5)
         {
-          RCLCPP_ERROR_THROTTLE(logger, clock, 1.0, "Received malformed RVL-encoded image. It reports size %ux%u.", cols, rows);
+          RCLCPP_ERROR_THROTTLE(logger, clock, 1.0,
+              "Received malformed RVL-encoded image. It reports size %ux%u.", cols, rows);
           return sensor_msgs::msg::Image::SharedPtr();
         }
 
-        decompressed = Mat(rows, cols, CV_16UC1);
+        decompressed = cv::Mat(rows, cols, CV_16UC1);
         RvlCodec rvl;
-        rvl.DecompressRVL(&buffer[8], decompressed.ptr<unsigned short>(), cols * rows);
+        rvl.DecompressRVL(&buffer[8], decompressed.ptr<uint16_t>(), cols * rows);
       } else {
         return sensor_msgs::msg::Image::SharedPtr();
       }
@@ -160,25 +147,22 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       size_t rows = decompressed.rows;
       size_t cols = decompressed.cols;
 
-      if ((rows > 0) && (cols > 0))
-      {
-        cv_ptr->image = Mat(rows, cols, CV_32FC1);
+      if ((rows > 0) && (cols > 0)) {
+        cv_ptr->image = cv::Mat(rows, cols, CV_32FC1);
 
         // Depth conversion
-        MatIterator_<float> itDepthImg = cv_ptr->image.begin<float>(),
-                            itDepthImg_end = cv_ptr->image.end<float>();
-        MatConstIterator_<unsigned short> itInvDepthImg = decompressed.begin<unsigned short>(),
-                                          itInvDepthImg_end = decompressed.end<unsigned short>();
+        cv::MatIterator_<float> itDepthImg = cv_ptr->image.begin<float>(),
+          itDepthImg_end = cv_ptr->image.end<float>();
+        cv::MatConstIterator_<uint16_t> itInvDepthImg = decompressed.begin<uint16_t>(),
+          itInvDepthImg_end = decompressed.end<uint16_t>();
 
-        for (; (itDepthImg != itDepthImg_end) && (itInvDepthImg != itInvDepthImg_end); ++itDepthImg, ++itInvDepthImg)
+        for (; (itDepthImg != itDepthImg_end) && (itInvDepthImg != itInvDepthImg_end);
+          ++itDepthImg, ++itInvDepthImg)
         {
           // check for NaN & max depth
-          if (*itInvDepthImg)
-          {
-            *itDepthImg = depthQuantA / ((float)*itInvDepthImg - depthQuantB);
-          }
-          else
-          {
+          if (*itInvDepthImg) {
+            *itDepthImg = depthQuantA / static_cast<float>(*itInvDepthImg - depthQuantB);
+          } else {
             *itDepthImg = std::numeric_limits<float>::quiet_NaN();
           }
         }
@@ -186,17 +170,12 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
         // Publish message to user callback
         return cv_ptr->toImageMsg();
       }
-    }
-    else
-    {
+    } else {
       // Decode raw image
       if (format == "png") {
-        try
-        {
+        try {
           cv_ptr->image = cv::imdecode(imageData, cv::IMREAD_UNCHANGED);
-        }
-        catch (cv::Exception& e)
-        {
+        } catch (cv::Exception & e) {
           RCLCPP_ERROR(logger, "%s", e.what());
           return sensor_msgs::msg::Image::SharedPtr();
         }
@@ -205,9 +184,9 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
         uint32_t cols, rows;
         memcpy(&cols, &buffer[0], 4);
         memcpy(&rows, &buffer[4], 4);
-        cv_ptr->image = Mat(rows, cols, CV_16UC1);
+        cv_ptr->image = cv::Mat(rows, cols, CV_16UC1);
         RvlCodec rvl;
-        rvl.DecompressRVL(&buffer[8], cv_ptr->image.ptr<unsigned short>(), cols * rows);
+        rvl.DecompressRVL(&buffer[8], cv_ptr->image.ptr<uint16_t>(), cols * rows);
       } else {
         return sensor_msgs::msg::Image::SharedPtr();
       }
@@ -215,8 +194,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
       size_t rows = cv_ptr->image.rows;
       size_t cols = cv_ptr->image.cols;
 
-      if ((rows > 0) && (cols > 0))
-      {
+      if ((rows > 0) && (cols > 0)) {
         // Publish message to user callback
         return cv_ptr->toImageMsg();
       }
@@ -226,8 +204,8 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
 }
 
 sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
-  const sensor_msgs::msg::Image& message,
-  const std::string& format,
+  const sensor_msgs::msg::Image & message,
+  const std::string & format,
   double depth_max,
   double depth_quantization,
   int png_level)
@@ -261,52 +239,45 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   params[0] = cv::IMWRITE_PNG_COMPRESSION;
   params[1] = png_level;
 
-  if ((bitDepth == 32) && (numChannels == 1))
-  {
+  if ((bitDepth == 32) && (numChannels == 1)) {
     float depthZ0 = depth_quantization;
     float depthMax = depth_max;
 
     // OpenCV-ROS bridge
     cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
+    try {
       cv_ptr = cv_bridge::toCvCopy(message);
-    }
-    catch (cv_bridge::Exception& e)
-    {
+    } catch (cv_bridge::Exception & e) {
       RCLCPP_ERROR(logger, "%s", e.what());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
-    const Mat& depthImg = cv_ptr->image;
+    const cv::Mat & depthImg = cv_ptr->image;
     size_t rows = depthImg.rows;
     size_t cols = depthImg.cols;
 
-    if ((rows > 0) && (cols > 0))
-    {
+    if ((rows > 0) && (cols > 0)) {
       // Allocate matrix for inverse depth (disparity) coding
-      Mat invDepthImg(rows, cols, CV_16UC1);
+      cv::Mat invDepthImg(rows, cols, CV_16UC1);
 
       // Inverse depth quantization parameters
       float depthQuantA = depthZ0 * (depthZ0 + 1.0f);
       float depthQuantB = 1.0f - depthQuantA / depthMax;
 
       // Matrix iterators
-      MatConstIterator_<float> itDepthImg = depthImg.begin<float>(),
-                               itDepthImg_end = depthImg.end<float>();
-      MatIterator_<unsigned short> itInvDepthImg = invDepthImg.begin<unsigned short>(),
-                                   itInvDepthImg_end = invDepthImg.end<unsigned short>();
+      cv::MatConstIterator_<float> itDepthImg = depthImg.begin<float>(),
+        itDepthImg_end = depthImg.end<float>();
+      cv::MatIterator_<uint16_t> itInvDepthImg = invDepthImg.begin<uint16_t>(),
+        itInvDepthImg_end = invDepthImg.end<uint16_t>();
 
       // Quantization
-      for (; (itDepthImg != itDepthImg_end) && (itInvDepthImg != itInvDepthImg_end); ++itDepthImg, ++itInvDepthImg)
+      for (; (itDepthImg != itDepthImg_end) && (itInvDepthImg != itInvDepthImg_end);
+        ++itDepthImg, ++itInvDepthImg)
       {
         // check for NaN & max depth
-        if (*itDepthImg < depthMax)
-        {
+        if (*itDepthImg < depthMax) {
           *itInvDepthImg = depthQuantA / *itDepthImg + depthQuantB;
-        }
-        else
-        {
+        } else {
           *itInvDepthImg = 0;
         }
       }
@@ -317,24 +288,19 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
 
       // Compress quantized disparity image
       if (format == "png") {
-        try
-        {
+        try {
           // Compress quantized disparity image
-          if (cv::imencode(".png", invDepthImg, compressedImage, params))
-          {
-            float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
-                / (float)compressedImage.size();
+          if (cv::imencode(".png", invDepthImg, compressedImage, params)) {
+            float cRatio = static_cast<float>(cv_ptr->image.rows * cv_ptr->image.cols *
+              cv_ptr->image.elemSize() / compressedImage.size());
             RCLCPP_DEBUG(logger,
-                         "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
-          }
-          else
-          {
+                         "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)",
+                cRatio, compressedImage.size());
+          } else {
             RCLCPP_ERROR(logger, "cv::imencode (png) failed on input image");
             return sensor_msgs::msg::CompressedImage::SharedPtr();
           }
-        }
-        catch (cv::Exception& e)
-        {
+        } catch (cv::Exception & e) {
           RCLCPP_ERROR(logger, "%s", e.msg.c_str());
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
@@ -347,56 +313,48 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
         memcpy(&compressedImage[0], &cols, 4);
         memcpy(&compressedImage[4], &rows, 4);
         RvlCodec rvl;
-        int compressedSize = rvl.CompressRVL(invDepthImg.ptr<unsigned short>(), &compressedImage[8], numPixels);
+        int compressedSize = rvl.CompressRVL(invDepthImg.ptr<uint16_t>(), &compressedImage[8],
+            numPixels);
         compressedImage.resize(8 + compressedSize);
       }
     }
-  }
-  // Raw depth map compression
-  else if ((bitDepth == 16) && (numChannels == 1))
-  {
+  } else if ((bitDepth == 16) && (numChannels == 1)) {  // Raw depth map compression
     // OpenCV-ROS bridge
     cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
+    try {
       cv_ptr = cv_bridge::toCvCopy(message);
-    }
-    catch (Exception& e)
-    {
+    } catch (cv::Exception & e) {
       RCLCPP_ERROR(logger, "%s", e.msg.c_str());
       return sensor_msgs::msg::CompressedImage::SharedPtr();
     }
 
-    const Mat& depthImg = cv_ptr->image;
+    const cv::Mat & depthImg = cv_ptr->image;
     size_t rows = depthImg.rows;
     size_t cols = depthImg.cols;
 
-    if ((rows > 0) && (cols > 0))
-    {
-      unsigned short depthMaxUShort = static_cast<unsigned short>(depth_max * 1000.0f);
+    if ((rows > 0) && (cols > 0)) {
+      uint16_t depthMaxUShort = static_cast<uint16_t>(depth_max * 1000.0f);
 
       // Matrix iterators
-      MatIterator_<unsigned short> itDepthImg = cv_ptr->image.begin<unsigned short>(),
-                                    itDepthImg_end = cv_ptr->image.end<unsigned short>();
+      cv::MatIterator_<uint16_t> itDepthImg = cv_ptr->image.begin<uint16_t>(),
+        itDepthImg_end = cv_ptr->image.end<uint16_t>();
 
       // Max depth filter
-      for (; itDepthImg != itDepthImg_end; ++itDepthImg)
-      {
-        if (*itDepthImg > depthMaxUShort)
+      for (; itDepthImg != itDepthImg_end; ++itDepthImg) {
+        if (*itDepthImg > depthMaxUShort) {
           *itDepthImg = 0;
+        }
       }
 
       // Compress raw depth image
       if (format == "png") {
-        if (cv::imencode(".png", cv_ptr->image, compressedImage, params))
-        {
-          float cRatio = (float)(cv_ptr->image.rows * cv_ptr->image.cols * cv_ptr->image.elemSize())
-              / (float)compressedImage.size();
+        if (cv::imencode(".png", cv_ptr->image, compressedImage, params)) {
+          float cRatio = static_cast<float>(cv_ptr->image.rows * cv_ptr->image.cols *
+            cv_ptr->image.elemSize() / compressedImage.size());
           RCLCPP_DEBUG(logger,
-            "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio, compressedImage.size());
-        }
-        else
-        {
+            "Compressed Depth Image Transport - Compression: 1:%.2f (%lu bytes)", cRatio,
+              compressedImage.size());
+        } else {
           RCLCPP_ERROR(logger, "cv::imencode (png) failed on input image");
           return sensor_msgs::msg::CompressedImage::SharedPtr();
         }
@@ -409,20 +367,20 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
         memcpy(&compressedImage[0], &cols, 4);
         memcpy(&compressedImage[4], &rows, 4);
         RvlCodec rvl;
-        int compressedSize = rvl.CompressRVL(cv_ptr->image.ptr<unsigned short>(), &compressedImage[8], numPixels);
+        int compressedSize = rvl.CompressRVL(cv_ptr->image.ptr<uint16_t>(),
+            &compressedImage[8], numPixels);
         compressedImage.resize(8 + compressedSize);
       }
     }
-  }
-  else
-  {
+  } else {
     RCLCPP_ERROR(logger,
-      "Compressed Depth Image Transport - Compression requires single-channel 32bit-floating point or 16bit raw depth images (input format is: %s).", message.encoding.c_str());
+      "Compressed Depth Image Transport - Compression requires single-channel 32bit-floating "
+      " point or 16bit raw depth images (input format is: %s).",
+        message.encoding.c_str());
     return sensor_msgs::msg::CompressedImage::SharedPtr();
   }
 
-  if (compressedImage.size() > 0)
-  {
+  if (compressedImage.size() > 0) {
     // Add configuration to binary output
     compressed->data.resize(sizeof(ConfigHeader));
     memcpy(&compressed->data[0], &compressionConfig, sizeof(ConfigHeader));

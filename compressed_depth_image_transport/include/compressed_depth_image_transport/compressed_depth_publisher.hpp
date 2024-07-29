@@ -27,22 +27,68 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "compressed_depth_image_transport/compressed_depth_subscriber.hpp"
+#ifndef COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_PUBLISHER_HPP_
+#define COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_PUBLISHER_HPP_
 
-#include "compressed_depth_image_transport/codec.hpp"
+#include <string>
+#include <vector>
+
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
+#include <image_transport/simple_publisher_plugin.hpp>
+
+#include <rclcpp/node.hpp>
+
 #include "compressed_depth_image_transport/compression_common.hpp"
 
 namespace compressed_depth_image_transport
 {
 
-void CompressedDepthSubscriber::internalCallback(
-  const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
-  const Callback & user_cb)
+using CompressedImage = sensor_msgs::msg::CompressedImage;
+using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
+
+class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
-  auto image = decodeCompressedDepthImage(*message);
-  if (image) {
-    user_cb(image);
+public:
+  CompressedDepthPublisher()
+  : logger_(rclcpp::get_logger("CompressedDepthPublisher")) {}
+  ~CompressedDepthPublisher() {}
+
+  std::string getTransportName() const override
+  {
+    return "compressedDepth";
   }
-}
+
+protected:
+  // Overridden to set up reconfigure server
+  void advertiseImpl(
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    rmw_qos_profile_t custom_qos,
+    rclcpp::PublisherOptions options) final;
+
+  void publish(
+    const sensor_msgs::msg::Image & message,
+    const PublishFn & publish_fn) const final;
+
+  rclcpp::Logger logger_;
+  rclcpp::Node * node_;
+
+private:
+  std::vector<std::string> parameters_;
+  std::vector<std::string> deprecatedParameters_;
+
+  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+
+  void declareParameter(
+    const std::string & base_name,
+    const ParameterDefinition & definition);
+
+  void onParameterEvent(
+    ParameterEvent::SharedPtr event, std::string full_name,
+    std::string base_name);
+};
 
 }  // namespace compressed_depth_image_transport
+
+#endif  // COMPRESSED_DEPTH_IMAGE_TRANSPORT__COMPRESSED_DEPTH_PUBLISHER_HPP_
