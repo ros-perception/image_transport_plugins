@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.2 (2024-07-31)
+------------------
+* Added common linters to compressed_image_transport (`#167 <https://github.com/ros-perception/image_transport_plugins/issues/167>`_)
+* Contributors: Alejandro Hernández Cordero
+
 4.0.1 (2024-07-22)
 ------------------
 * Removed warning (`#164 <https://github.com/ros-perception/image_transport_plugins/issues/164>`_)
