@@ -254,7 +254,11 @@ void CompressedPublisher::publish(
           std::stringstream targetFormat;
           if (enc::isColor(message.encoding)) {
           // convert color images to RGB domain
-            targetFormat << "bgr" << bitDepth;
+            targetFormat << "bgr";
+            if (enc::hasAlpha(message.encoding)) {
+              targetFormat << "a";
+            }
+            targetFormat << bitDepth;
             compressed.format += targetFormat.str();
           }
 
