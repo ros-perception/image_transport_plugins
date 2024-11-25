@@ -2,6 +2,9 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2024-11-25)
+------------------
+
 5.0.0 (2024-07-31)
 ------------------
 * Added common linters to theora_image_transport (`#169 <https://github.com/ros-perception/image_transport_plugins/issues/169>`_)

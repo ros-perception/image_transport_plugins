@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2024-11-25)
+------------------
+* inlcude alpha channel in PNG compression (`#171 <https://github.com/ros-perception/image_transport_plugins/issues/171>`_)
+* Contributors: Aleksander Szymański
+
 5.0.0 (2024-07-31)
 ------------------
 * Added common linters to compressed_image_transport (`#167 <https://github.com/ros-perception/image_transport_plugins/issues/167>`_)

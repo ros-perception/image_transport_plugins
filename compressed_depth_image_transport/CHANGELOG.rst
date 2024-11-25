@@ -2,6 +2,9 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2024-11-25)
+------------------
+
 5.0.0 (2024-07-31)
 ------------------
 * Added common linters to compressed depth image transport (`#168 <https://github.com/ros-perception/image_transport_plugins/issues/168>`_)
