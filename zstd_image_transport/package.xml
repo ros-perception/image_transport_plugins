@@ -1,6 +1,6 @@
 <package format="2">
   <name>zstd_image_transport</name>
-  <version>4.0.2</version>
+  <version>4.0.3</version>
   <description>
     zstd_image_transport provides a plugin to image_transport for transparently sending images
     encoded as zstd blobs
