@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.2 (2025-02-10)
+------------------
+* [ADD] flag for jpeg compression of bayer format (`#98 <https://github.com/ros-perception/image_transport_plugins/issues/98>`_)
+* Contributors: wodtko
+
 5.0.1 (2024-11-25)
 ------------------
 * inlcude alpha channel in PNG compression (`#171 <https://github.com/ros-perception/image_transport_plugins/issues/171>`_)
