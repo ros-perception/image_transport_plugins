@@ -2,6 +2,9 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.5.3 (2025-02-10)
+------------------
+
 2.5.2 (2024-07-22)
 ------------------
 * Update config param to use correct config value. Use default png level of 3. (`#165 <https://github.com/ros-perception/image_transport_plugins/issues/165>`_)
