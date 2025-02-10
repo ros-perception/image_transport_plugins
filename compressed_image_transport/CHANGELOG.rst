@@ -2,6 +2,9 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.4 (2025-02-10)
+------------------
+
 4.0.3 (2024-11-25)
 ------------------
 * inlcude alpha channel in PNG compression (`#171 <https://github.com/ros-perception/image_transport_plugins/issues/171>`_) (`#173 <https://github.com/ros-perception/image_transport_plugins/issues/173>`_)
