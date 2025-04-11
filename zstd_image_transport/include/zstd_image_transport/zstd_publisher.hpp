@@ -39,6 +39,7 @@
 
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
+#include <image_transport/node_interfaces.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
 
 #include <rclcpp/node.hpp>
@@ -67,12 +68,18 @@ protected:
     rmw_qos_profile_t custom_qos,
     rclcpp::PublisherOptions options) override;
 
+  void advertiseImpl(
+    image_transport::RequiredInterfaces node_interfaces,
+    const std::string & base_topic,
+    rmw_qos_profile_t custom_qos,
+    rclcpp::PublisherOptions options) override;
+
   void publish(
     const sensor_msgs::msg::Image & message,
     const PublishFn & publish_fn) const override;
 
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
   std::vector<std::string> parameters_;

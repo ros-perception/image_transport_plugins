@@ -108,22 +108,33 @@ void CompressedDepthPublisher::advertiseImpl(
   rmw_qos_profile_t custom_qos,
   rclcpp::PublisherOptions options)
 {
-  node_ = node;
+  advertiseImpl(image_transport::RequiredInterfaces(*node), base_topic, custom_qos, options);
+}
 
+void CompressedDepthPublisher::advertiseImpl(
+  image_transport::RequiredInterfaces node_interfaces,
+  const std::string & base_topic,
+  rmw_qos_profile_t custom_qos,
+  rclcpp::PublisherOptions options)
+{
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos, options);
+  Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   // Declare Parameters
-  uint ns_len = node->get_effective_namespace().length();
+  unsigned int ns_len = std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
   auto callback = std::bind(&CompressedDepthPublisher::onParameterEvent, this,
-      std::placeholders::_1, node->get_fully_qualified_name(), param_base_name);
+      std::placeholders::_1,
+      node_interfaces.get_node_base_interface()->get_fully_qualified_name(),
+      param_base_name);
 
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node,
-      callback);
+  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(
+    node_interfaces.get_node_topics_interface(),
+    callback);
 
   for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
@@ -135,11 +146,11 @@ void CompressedDepthPublisher::publish(
   const PublishFn & publish_fn) const
 {
   // Fresh Configuration
-  std::string cfg_format = node_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
-  double cfg_depth_max = node_->get_parameter(parameters_[DEPTH_MAX]).get_value<double>();
+  std::string cfg_format = node_param_interface_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
+  double cfg_depth_max = node_param_interface_->get_parameter(parameters_[DEPTH_MAX]).get_value<double>();
   double cfg_depth_quantization =
-    node_->get_parameter(parameters_[DEPTH_QUANTIZATION]).get_value<double>();
-  int cfg_png_level = node_->get_parameter(parameters_[PNG_LEVEL]).get_value<int64_t>();
+    node_param_interface_->get_parameter(parameters_[DEPTH_QUANTIZATION]).get_value<double>();
+  int cfg_png_level = node_param_interface_->get_parameter(parameters_[PNG_LEVEL]).get_value<int64_t>();
 
   sensor_msgs::msg::CompressedImage::SharedPtr compressed_image =
     encodeCompressedDepthImage(message,
@@ -169,16 +180,19 @@ void CompressedDepthPublisher::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
-        definition.descriptor);
+    param_value = node_param_interface_->declare_parameter(
+      param_name,
+      definition.defaultValue,
+      definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 
   // transport scoped parameter as default, otherwise we would overwrite
   try {
-    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
+    node_param_interface_->declare_parameter(
+      deprecated_name, param_value, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
   }
@@ -212,7 +226,7 @@ void CompressedDepthPublisher::onParameterEvent(
     std::string recommendedName = name.substr(0,
         paramNameIndex + 1) + transport + name.substr(paramNameIndex);
 
-    rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
+    rclcpp::Parameter recommendedValue = node_param_interface_->get_parameter(recommendedName);
 
     // do not emit warnings if deprecated value matches
     if(it.second->value == recommendedValue.get_value_message()) {
@@ -222,7 +236,9 @@ void CompressedDepthPublisher::onParameterEvent(
     RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated and ambiguous" <<
                                 "; use transport qualified name `" << recommendedName << "`");
 
-    node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
+    std::vector<rclcpp::Parameter> parameters;
+    parameters.push_back(rclcpp::Parameter(recommendedName, it.second->value));
+    node_param_interface_->set_parameters(parameters);
   }
 }
 }  // namespace compressed_depth_image_transport

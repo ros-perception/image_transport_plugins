@@ -78,12 +78,20 @@ void ZstdPublisher::advertiseImpl(
   rmw_qos_profile_t custom_qos,
   rclcpp::PublisherOptions options)
 {
-  node_ = node;
-  typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos, options);
+  advertiseImpl(image_transport::RequiredInterfaces(*node), base_topic, custom_qos, options);
+}
 
-  // Declare Parameters
-  unsigned int ns_len = node->get_effective_namespace().length();
+void ZstdPublisher::advertiseImpl(
+  image_transport::RequiredInterfaces node_interfaces,
+  const std::string & base_topic,
+  rmw_qos_profile_t custom_qos,
+  rclcpp::PublisherOptions options)
+{
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
+  Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
+
+  unsigned int ns_len = std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
@@ -97,7 +105,9 @@ void ZstdPublisher::publish(
   const PublishFn & publish_fn) const
 {
   // Fresh Configuration
-  int cfg_zstd_level = node_->get_parameter(parameters_[ZSTD_LEVEL]).get_value<int64_t>();
+  int cfg_zstd_level =
+    node_param_interface_->get_parameter(
+      parameters_[ZSTD_LEVEL]).as_int();
 
   zlib::Comp comp(static_cast<zlib::Comp::Level>(cfg_zstd_level), true);
   auto g_compressed_data =
@@ -163,12 +173,12 @@ void ZstdPublisher::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(
+    param_value = node_param_interface_->declare_parameter(
       param_name, definition.defaultValue,
       definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 }
 }  // namespace zstd_image_transport
