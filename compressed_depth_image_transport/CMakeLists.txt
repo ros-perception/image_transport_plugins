@@ -27,14 +27,13 @@ add_library(
     src/manifest.cpp src/codec.cpp src/rvl_codec.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-
-ament_target_dependencies(${PROJECT_NAME}
-  "image_transport"
-  "cv_bridge"
-  "rclcpp"
-  "pluginlib"
-  "sensor_msgs"
+target_link_libraries(${PROJECT_NAME}
+  ${OpenCV_LIBRARIES}
+  image_transport::image_transport
+  cv_bridge::cv_bridge
+  rclcpp::rclcpp
+  pluginlib::pluginlib
+  ${sensor_msgs_TARGETS}
 )
 
 install(TARGETS ${PROJECT_NAME}
