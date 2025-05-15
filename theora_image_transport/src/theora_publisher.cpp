@@ -425,10 +425,6 @@ void TheoraPublisher::declareParameter(
     definition.descriptor.name;
   parameters_.push_back(param_name);
 
-  // deprecated non-scoped parameter name (e.g. image_raw.quality)
-  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
-  deprecatedParameters_.push_back(deprecated_name);
-
   rclcpp::ParameterValue param_value;
 
   try {
@@ -438,19 +434,11 @@ void TheoraPublisher::declareParameter(
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_->get_parameter(param_name).get_parameter_value();
   }
-
-  // transport scoped parameter as default, otherwise we would overwrite
-  try {
-    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node_->get_parameter(deprecated_name).get_parameter_value();
-  }
 }
 
 void TheoraPublisher::onParameterEvent(
   ParameterEvent::SharedPtr event, std::string full_name,
-  std::string base_name)
+  std::string /*base_name*/)
 {
   // filter out events from other nodes
   if (event->node != full_name) {
@@ -459,35 +447,6 @@ void TheoraPublisher::onParameterEvent(
 
   // filter out new/changed deprecated parameters
   using EventType = rclcpp::ParameterEventsFilter::EventType;
-
-  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_,
-    {EventType::NEW, EventType::CHANGED});
-
-  const std::string transport = getTransportName();
-
-  // emit warnings for deprecated parameters & sync deprecated parameter value to correct
-  for (auto & it : filter.get_events()) {
-    const std::string name = it.second->name;
-
-    // name was generated from base_name, has to succeed
-    size_t baseNameIndex = name.find(base_name);
-    size_t paramNameIndex = baseNameIndex + base_name.size();
-    // e.g. `color.image_raw.` + `theora` + `quality`
-    std::string recommendedName = name.substr(0,
-        paramNameIndex + 1) + transport + name.substr(paramNameIndex);
-
-    rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
-
-    // do not emit warnings if deprecated value matches
-    if(it.second->value == recommendedValue.get_value_message()) {
-      continue;
-    }
-
-    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
-                                "; use transport qualified name `" << recommendedName << "`");
-
-    node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
-  }
 
   // if any of the non-deprecated parameters changed mark to refresh config
   rclcpp::ParameterEventsFilter filterChanged(event, parameters_, {EventType::CHANGED});
