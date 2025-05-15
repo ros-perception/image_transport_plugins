@@ -159,7 +159,7 @@ void CompressedPublisher::advertiseImpl(
 
 void CompressedPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   // Fresh Configuration
   std::string cfg_format = node_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
@@ -245,7 +245,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publish_fn(compressed);
+          publisher->publish(compressed);
         } else {
           RCLCPP_ERROR(logger_,
             "Compressed Image Transport - JPEG compression requires 8/16-bit color format "
@@ -302,7 +302,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publish_fn(compressed);
+          publisher->publish(compressed);
         } else {
           RCUTILS_LOG_ERROR(
           "Compressed Image Transport - PNG compression requires 8/16-bit "
@@ -363,7 +363,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publish_fn(compressed);
+          publisher->publish(compressed);
         } else {
           RCUTILS_LOG_ERROR(
           "Compressed Image Transport - TIFF compression requires 8/16/32-bit encoded color format "

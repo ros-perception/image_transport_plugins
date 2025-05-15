@@ -183,9 +183,9 @@ static void cvToTheoraPlane(cv::Mat & mat, th_img_plane & plane)
 
 void TheoraPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
-  if (!ensureEncodingContext(message, publish_fn)) {
+  if (!ensureEncodingContext(message, publisher)) {
     return;
   }
   // return;
@@ -259,7 +259,7 @@ void TheoraPublisher::publish(
   theora_image_transport::msg::Packet output;
   while ((rval = th_encode_packetout(encoding_context_.get(), 0, &oggpacket)) > 0) {
     oggPacketToMsg(message.header, oggpacket, output);
-    publish_fn(output);
+    publisher->publish(output);
   }
   if (rval == TH_EFAULT) {
     RCLCPP_ERROR(logger_, "[theora] EFAULT in retrieving encoded video data packets");
@@ -344,7 +344,7 @@ void freeContext(th_enc_ctx * context)
 
 bool TheoraPublisher::ensureEncodingContext(
   const sensor_msgs::msg::Image & image,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   /// @todo Check if encoding has changed
   if (encoding_context_ && encoder_setup_.pic_width == image.width &&
@@ -382,7 +382,7 @@ bool TheoraPublisher::ensureEncodingContext(
   while (th_encode_flushheader(encoding_context_.get(), &comment, &oggpacket) > 0) {
     stream_header_.push_back(theora_image_transport::msg::Packet());
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
-    publish_fn(stream_header_.back());
+    publisher->publish(stream_header_.back());
   }
   return true;
 }
