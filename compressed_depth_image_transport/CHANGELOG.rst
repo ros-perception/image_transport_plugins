@@ -2,6 +2,11 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.3 (2025-05-21)
+------------------
+* Use target_link_libraries instead of ament_target_dependencies (`#179 <https://github.com/ros-perception/image_transport_plugins/issues/179>`_)
+* Contributors: Alejandro Hernández Cordero
+
 5.0.2 (2025-02-10)
 ------------------
 
