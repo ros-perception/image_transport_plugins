@@ -146,10 +146,13 @@ void CompressedPublisher::advertiseImpl(
   std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
-  // Add pre set parameter callback to handle deprecated parameters
-  pre_set_parameter_callback_handle_ =
-    node->add_pre_set_parameters_callback(std::bind(&CompressedPublisher::preSetParametersCallback,
-      this, std::placeholders::_1, param_base_name));
+  if (ns_len > 1) {
+    // Add pre set parameter callback to handle deprecated parameters
+    pre_set_parameter_callback_handle_ =
+      node->add_pre_set_parameters_callback(std::bind(
+        &CompressedPublisher::preSetParametersCallback, this, std::placeholders::_1,
+        param_base_name));
+  }
 
   for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
