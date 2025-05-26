@@ -115,7 +115,8 @@ void CompressedDepthPublisher::advertiseImpl(
 
   // Declare Parameters
   uint ns_len = node->get_effective_namespace().length();
-  std::string param_base_name = base_topic.substr(ns_len);
+  uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
+  std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
