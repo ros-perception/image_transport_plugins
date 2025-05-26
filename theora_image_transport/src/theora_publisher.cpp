@@ -427,8 +427,8 @@ void TheoraPublisher::declareParameter(
   parameters_.push_back(param_name);
 
   // deprecated non-scoped parameter name (e.g. image_raw.quality)
-  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
-  deprecatedParameters_.push_back(deprecated_name);
+  const std::string deprecated_non_scoped_name = base_name + "." + definition.descriptor.name;
+  deprecatedParameters_.push_back(deprecated_non_scoped_name);
 
   rclcpp::ParameterValue param_value;
 
@@ -442,10 +442,33 @@ void TheoraPublisher::declareParameter(
 
   // transport scoped parameter as default, otherwise we would overwrite
   try {
-    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
+    node_->declare_parameter(deprecated_non_scoped_name, param_value, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node_->get_parameter(deprecated_name).get_parameter_value();
+  }
+
+  if (node_->get_effective_namespace().length() > 1) {
+    // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
+    const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
+      definition.descriptor.name;
+    deprecatedParameters_.push_back(deprecated_dot_name);
+
+    // deprecated non-scoped parameters starting with the dot character (e.g. .image_raw.format)
+    const std::string deprecated_non_scoped_dot_name = "." + base_name + "." +
+      definition.descriptor.name;
+    deprecatedParameters_.push_back(deprecated_non_scoped_dot_name);
+
+    try {
+      node_->declare_parameter(deprecated_dot_name, param_value, definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
+
+    try {
+      node_->declare_parameter(deprecated_non_scoped_dot_name, param_value, definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
   }
 }
 
@@ -473,9 +496,14 @@ void TheoraPublisher::onParameterEvent(
     // name was generated from base_name, has to succeed
     size_t baseNameIndex = name.find(base_name);
     size_t paramNameIndex = baseNameIndex + base_name.size();
-    // e.g. `color.image_raw.` + `theora` + `quality`
-    std::string recommendedName = name.substr(0,
-        paramNameIndex + 1) + transport + name.substr(paramNameIndex);
+
+    // Check if scoped parameter name
+    if (name.substr(paramNameIndex + 1, transport.size()) == transport) {
+      paramNameIndex += transport.size() + 1;
+    }
+
+    std::string recommendedName = base_name + "." + transport + "." +
+      name.substr(paramNameIndex + 1);
 
     rclcpp::Parameter recommendedValue = node_->get_parameter(recommendedName);
 
@@ -484,8 +512,9 @@ void TheoraPublisher::onParameterEvent(
       continue;
     }
 
-    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
-                                "; use transport qualified name `" << recommendedName << "`");
+    RCLCPP_WARN_STREAM(logger_,
+        "parameter `" << name << "` is deprecated; use canonical transport qualified name `" <<
+        recommendedName << "`");
 
     node_->set_parameter(rclcpp::Parameter(recommendedName, it.second->value));
   }
