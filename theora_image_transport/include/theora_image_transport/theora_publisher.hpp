@@ -112,8 +112,8 @@ private:
 
   rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
     pre_set_parameter_callback_handle_;
-
-  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr
+    post_set_parameter_callback_handle_;
 
   void declareParameter(
     const std::string & base_name,
@@ -122,9 +122,8 @@ private:
   void preSetParametersCallback(
     std::vector<rclcpp::Parameter> & parameters, std::string base_name);
 
-  void onParameterEvent(
-    ParameterEvent::SharedPtr event, std::string full_name,
-    std::string base_name);
+  void postSetParametersCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
 };
 
 }  // namespace theora_image_transport

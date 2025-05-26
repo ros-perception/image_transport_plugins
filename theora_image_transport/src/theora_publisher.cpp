@@ -37,9 +37,6 @@
 #include <sensor_msgs/image_encodings.hpp>
 #include <std_msgs/msg/header.hpp>
 
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
-
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "theora_image_transport/compression_common.hpp"
@@ -163,12 +160,10 @@ void TheoraPublisher::advertiseImpl(
     node->add_pre_set_parameters_callback(std::bind(&TheoraPublisher::preSetParametersCallback,
       this, std::placeholders::_1, param_base_name));
 
-  using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
-  auto callback = std::bind(&TheoraPublisher::onParameterEvent, this, std::placeholders::_1,
-                            node->get_fully_qualified_name(), param_base_name);
-
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node,
-      callback);
+  // Add post set parameter callback to handle configuration changes
+  post_set_parameter_callback_handle_ =
+    node->add_post_set_parameters_callback(
+      std::bind(&TheoraPublisher::postSetParametersCallback, this, std::placeholders::_1));
 
   for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
@@ -491,21 +486,16 @@ void TheoraPublisher::preSetParametersCallback(
   }
 }
 
-void TheoraPublisher::onParameterEvent(
-  ParameterEvent::SharedPtr event, std::string full_name,
-  std::string /*base_name*/)
+void TheoraPublisher::postSetParametersCallback(
+  const std::vector<rclcpp::Parameter> & parameters)
 {
-  // filter out events from other nodes
-  if (event->node != full_name) {
-    return;
+  for (auto & param : parameters) {
+    // Check if parameter is from this transport
+    if (std::find(parameters_.begin(), parameters_.end(), param.get_name()) != parameters_.end()) {
+      refreshConfigNeeded = true;
+      break;
+    }
   }
-
-  // filter out new/changed deprecated parameters
-  using EventType = rclcpp::ParameterEventsFilter::EventType;
-
-  // if any of the non-deprecated parameters changed mark to refresh config
-  rclcpp::ParameterEventsFilter filterChanged(event, parameters_, {EventType::CHANGED});
-  refreshConfigNeeded = filterChanged.get_events().size() > 0;
 }
 
 }  // namespace theora_image_transport
