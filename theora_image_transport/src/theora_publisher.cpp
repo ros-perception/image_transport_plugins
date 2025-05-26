@@ -158,6 +158,11 @@ void TheoraPublisher::advertiseImpl(
   std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
+  // Add pre set parameter callback to handle deprecated parameters
+  pre_set_parameter_callback_handle_ =
+    node->add_pre_set_parameters_callback(std::bind(&TheoraPublisher::preSetParametersCallback,
+      this, std::placeholders::_1, param_base_name));
+
   using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
   auto callback = std::bind(&TheoraPublisher::onParameterEvent, this, std::placeholders::_1,
                             node->get_fully_qualified_name(), param_base_name);
@@ -434,6 +439,55 @@ void TheoraPublisher::declareParameter(
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_->get_parameter(param_name).get_parameter_value();
+  }
+
+  if (node_->get_effective_namespace().length() > 1) {
+    // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
+    const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
+      definition.descriptor.name;
+    deprecated_parameters_.insert(deprecated_dot_name);
+
+    try {
+      node_->declare_parameter(deprecated_dot_name, param_value, definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
+  }
+}
+
+void TheoraPublisher::preSetParametersCallback(
+  std::vector<rclcpp::Parameter> & parameters, std::string base_name)
+{
+  for (auto & param : parameters) {
+    // Check if parameter is deprecated
+    if (deprecated_parameters_.find(param.get_name()) != deprecated_parameters_.end()) {
+      // name was generated from base_name, has to succeed
+      size_t base_name_index = param.get_name().find(base_name);
+      size_t param_name_index = base_name_index + base_name.size();
+
+      // Check if scoped parameter name
+      if (param.get_name().substr(param_name_index + 1, getTransportName().size()) ==
+        getTransportName())
+      {
+        param_name_index += getTransportName().size() + 1;
+      }
+
+      std::string recommended_name = base_name + "." + getTransportName() + "." +
+        param.get_name().substr(param_name_index + 1);
+
+      rclcpp::Parameter recommended_value = node_->get_parameter(recommended_name);
+
+      // do not emit warnings if deprecated value matches
+      if (param.get_value_message() == recommended_value.get_value_message()) {
+        continue;
+      }
+
+      RCLCPP_WARN_STREAM(logger_,
+          "parameter `" << param.get_name() << "` is deprecated; use canonical name: `" <<
+          recommended_name << "`");
+
+      parameters.push_back(rclcpp::Parameter(recommended_name, param.get_parameter_value()));
+    }
   }
 }
 

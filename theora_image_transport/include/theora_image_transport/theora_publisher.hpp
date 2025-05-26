@@ -37,6 +37,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <rclcpp/node.hpp>
 
@@ -107,13 +108,19 @@ protected:
 
 private:
   std::vector<std::string> parameters_;
-  std::vector<std::string> deprecatedParameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
+
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
 
   rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
+
+  void preSetParametersCallback(
+    std::vector<rclcpp::Parameter> & parameters, std::string base_name);
 
   void onParameterEvent(
     ParameterEvent::SharedPtr event, std::string full_name,
