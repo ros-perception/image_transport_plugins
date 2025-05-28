@@ -65,13 +65,6 @@ public:
 
 protected:
   void subscribeImpl(
-    rclcpp::Node *,
-    const std::string & base_topic,
-    const Callback & callback,
-    rmw_qos_profile_t custom_qos,
-    rclcpp::SubscriptionOptions options) override;
-
-  void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
     const Callback & callback,

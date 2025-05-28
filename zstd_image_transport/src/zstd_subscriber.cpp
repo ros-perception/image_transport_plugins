@@ -58,16 +58,6 @@ std::string ZstdSubscriber::getTransportName() const
 }
 
 void ZstdSubscriber::subscribeImpl(
-  rclcpp::Node * node,
-  const std::string & base_topic,
-  const Callback & callback,
-  rmw_qos_profile_t custom_qos,
-  rclcpp::SubscriptionOptions options)
-{
-  subscribeImpl(image_transport::RequiredInterfaces(*node), base_topic, callback, custom_qos, options);
-}
-
-void ZstdSubscriber::subscribeImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   const Callback & callback,

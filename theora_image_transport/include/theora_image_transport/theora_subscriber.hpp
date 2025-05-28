@@ -60,14 +60,6 @@ public:
   std::string getTransportName() const override {return "theora";}
 
 protected:
-  // Overridden to bump queue_size, otherwise we might lose headers
-  void subscribeImpl(
-    rclcpp::Node * node,
-    const std::string & base_topic,
-    const Callback & callback,
-    rmw_qos_profile_t custom_qos,
-    rclcpp::SubscriptionOptions options) override;
-
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
