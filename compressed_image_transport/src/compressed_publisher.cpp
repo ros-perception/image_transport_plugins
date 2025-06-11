@@ -150,8 +150,7 @@ void CompressedPublisher::advertiseImpl(
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
       node->add_pre_set_parameters_callback(std::bind(
-        &CompressedPublisher::preSetParametersCallback, this, std::placeholders::_1,
-        param_base_name));
+        &CompressedPublisher::preSetParametersCallback, this, std::placeholders::_1));
   }
 
   for(const ParameterDefinition & pd : kParameters) {
@@ -415,39 +414,30 @@ void CompressedPublisher::declareParameter(
   }
 }
 
-void CompressedPublisher::preSetParametersCallback(
-  std::vector<rclcpp::Parameter> & parameters, std::string base_name)
+void CompressedPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters)
 {
+  std::vector<rclcpp::Parameter> new_parameters;
+
   for (auto & param : parameters) {
-    // Check if parameter is deprecated
-    if (deprecated_parameters_.find(param.get_name()) != deprecated_parameters_.end()) {
-      // name was generated from base_name, has to succeed
-      size_t base_name_index = param.get_name().find(base_name);
-      size_t param_name_index = base_name_index + base_name.size();
+    const auto & param_name = param.get_name();
 
-      // Check if scoped parameter name
-      if (param.get_name().substr(param_name_index + 1, getTransportName().size()) ==
-        getTransportName())
-      {
-        param_name_index += getTransportName().size() + 1;
-      }
-
-      std::string recommended_name = base_name + "." + getTransportName() + "." +
-        param.get_name().substr(param_name_index + 1);
-
-      rclcpp::Parameter recommended_value = node_->get_parameter(recommended_name);
-
-      // do not emit warnings if deprecated value matches
-      if (param.get_value_message() == recommended_value.get_value_message()) {
-        continue;
-      }
-
+    // Check if this is a deprecated dot-prefixed parameter for our transport
+    if (deprecated_parameters_.find(param_name) != deprecated_parameters_.end()) {
+      auto non_dot_prefixed_name = param_name.substr(1);
       RCLCPP_WARN_STREAM(logger_,
-          "parameter `" << param.get_name() << "` is deprecated; use canonical name: `" <<
-          recommended_name << "`");
+            "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<
+            non_dot_prefixed_name << "` instead");
+      new_parameters.push_back(
+          rclcpp::Parameter(non_dot_prefixed_name, param.get_parameter_value()));
+    }
 
-      parameters.push_back(rclcpp::Parameter(recommended_name, param.get_parameter_value()));
+    // Check if this is a normal parameter for our transport
+    if (std::find(parameters_.begin(), parameters_.end(), param_name) != parameters_.end()) {
+      // Also update the dot-prefixed parameter
+      new_parameters.emplace_back("." + param_name, param.get_parameter_value());
     }
   }
+
+  parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 }  // namespace compressed_image_transport

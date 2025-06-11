@@ -119,8 +119,7 @@ private:
     const std::string & base_name,
     const ParameterDefinition & definition);
 
-  void preSetParametersCallback(
-    std::vector<rclcpp::Parameter> & parameters, std::string base_name);
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
 
   void postSetParametersCallback(
     const std::vector<rclcpp::Parameter> & parameters);
