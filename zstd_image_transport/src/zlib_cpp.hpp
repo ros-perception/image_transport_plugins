@@ -35,6 +35,7 @@
 
 #include <zlib.h>
 
+#include <cstdint>
 #include <list>
 #include <memory>
 #include <tuple>
