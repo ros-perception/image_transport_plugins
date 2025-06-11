@@ -400,6 +400,7 @@ void CompressedPublisher::declareParameter(
     param_value = node_->get_parameter(param_name).get_parameter_value();
   }
 
+  // TODO(anyone): Remove deprecated parameters after Lyrical release
   if (node_->get_effective_namespace().length() > 1) {
     // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
     const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
