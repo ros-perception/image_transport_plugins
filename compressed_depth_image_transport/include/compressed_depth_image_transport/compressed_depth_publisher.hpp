@@ -32,6 +32,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
@@ -76,10 +77,16 @@ protected:
 
 private:
   std::vector<std::string> parameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
+
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
+
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
 };
 
 }  // namespace compressed_depth_image_transport

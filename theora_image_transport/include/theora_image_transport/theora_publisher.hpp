@@ -37,6 +37,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <rclcpp/node.hpp>
 
@@ -107,17 +108,21 @@ protected:
 
 private:
   std::vector<std::string> parameters_;
-  std::vector<std::string> deprecatedParameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
 
-  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr
+    post_set_parameter_callback_handle_;
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
 
-  void onParameterEvent(
-    ParameterEvent::SharedPtr event, std::string full_name,
-    std::string base_name);
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
+
+  void postSetParametersCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
 };
 
 }  // namespace theora_image_transport
