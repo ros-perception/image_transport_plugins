@@ -64,7 +64,7 @@ protected:
     rclcpp::Node * node,
     const std::string & base_topic,
     const Callback & callback,
-    rmw_qos_profile_t custom_qos,
+    rclcpp::QoS custom_qos,
     rclcpp::SubscriptionOptions options) override;
 
   // The function that does the actual decompression and calls a user supplied
