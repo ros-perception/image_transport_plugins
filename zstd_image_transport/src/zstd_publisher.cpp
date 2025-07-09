@@ -94,7 +94,7 @@ void ZstdPublisher::advertiseImpl(
 
 void ZstdPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   // Fresh Configuration
   int cfg_zstd_level = node_->get_parameter(parameters_[ZSTD_LEVEL]).get_value<int64_t>();
@@ -147,7 +147,7 @@ void ZstdPublisher::publish(
   // Compressed image message
   compressed.header = message.header;
   compressed.format = "zstd";
-  publish_fn(compressed);
+  publisher->publish(compressed);
 }
 
 void ZstdPublisher::declareParameter(
