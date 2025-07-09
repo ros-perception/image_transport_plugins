@@ -2,6 +2,12 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.1.0 (2025-07-09)
+------------------
+* Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_) (`#197 <https://github.com/ros-perception/image_transport_plugins/issues/197>`_)
+* Adding the include of cstdint (`#189 <https://github.com/ros-perception/image_transport_plugins/issues/189>`_) (`#196 <https://github.com/ros-perception/image_transport_plugins/issues/196>`_)
+* Contributors: mergify[bot]
+
 5.0.3 (2025-05-21)
 ------------------
 * Use target_link_libraries instead of ament_target_dependencies (`#179 <https://github.com/ros-perception/image_transport_plugins/issues/179>`_)
