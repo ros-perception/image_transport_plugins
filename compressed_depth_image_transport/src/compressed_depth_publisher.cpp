@@ -132,7 +132,7 @@ void CompressedDepthPublisher::advertiseImpl(
 
 void CompressedDepthPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   // Fresh Configuration
   std::string cfg_format = node_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
@@ -148,7 +148,7 @@ void CompressedDepthPublisher::publish(
                                cfg_depth_quantization,
                                cfg_png_level);
   if (compressed_image) {
-    publish_fn(*compressed_image);
+    publisher->publish(*compressed_image);
   }
 }
 
