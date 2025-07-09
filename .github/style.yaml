@@ -1,0 +1,24 @@
+name: style
+on:
+  pull_request:
+  push:
+    branches: [ rolling ]
+defaults:
+  run:
+    shell: bash
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ['rolling']
+    container:
+      image: ros:${{ matrix.distro }}-ros-base
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v4
+    - name: uncrustify
+      run: /ros_entrypoint.sh ament_uncrustify compressed_depth_image_transport/ compressed_image_transport/ theora_image_transport/ zstd_image_transport/ image_transport_plugins/
+    - name: cpplint
+      run: /ros_entrypoint.sh ament_cpplint compressed_depth_image_transport/ compressed_image_transport/ theora_image_transport/ zstd_image_transport/ image_transport_plugins/
