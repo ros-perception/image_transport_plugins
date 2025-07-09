@@ -69,7 +69,7 @@ protected:
 
   void publish(
     const sensor_msgs::msg::Image & message,
-    const PublishFn & publish_fn) const final;
+    const PublisherT & publisher) const final;
 
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
