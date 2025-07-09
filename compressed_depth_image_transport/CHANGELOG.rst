@@ -2,6 +2,19 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.0 (2025-07-09)
+------------------
+* Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_)
+* Merge pull request `#188 <https://github.com/ros-perception/image_transport_plugins/issues/188>`_ from bjsowa/fix/canonical-param-names
+* Add TODO comments about deprecated parameters
+* Simplify pre set parameter callback for compressedDepth transport
+* Don't add pre set parameter callback when not needed
+* Add deprecated dot parameters for compressedDepth transport
+* Fix inconsistent transport param names
+* Removed deprecated params (`#183 <https://github.com/ros-perception/image_transport_plugins/issues/183>`_)
+* Removed deprecated headers (`#184 <https://github.com/ros-perception/image_transport_plugins/issues/184>`_)
+* Contributors: Alejandro Hernández Cordero, Błażej Sowa, Kenji Brameld
+
 5.0.3 (2025-05-21)
 ------------------
 * Use target_link_libraries instead of ament_target_dependencies (`#179 <https://github.com/ros-perception/image_transport_plugins/issues/179>`_)
