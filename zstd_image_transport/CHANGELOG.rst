@@ -2,6 +2,12 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.5 (2025-07-09)
+------------------
+* Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_) (`#194 <https://github.com/ros-perception/image_transport_plugins/issues/194>`_)
+* Adding the include of cstdint (`#189 <https://github.com/ros-perception/image_transport_plugins/issues/189>`_) (`#190 <https://github.com/ros-perception/image_transport_plugins/issues/190>`_)
+* Contributors: mergify[bot]
+
 4.0.4 (2025-02-10)
 ------------------
 * Use standard C++ type unsigned int in place of uint (`#174 <https://github.com/ros-perception/image_transport_plugins/issues/174>`_) (`#175 <https://github.com/ros-perception/image_transport_plugins/issues/175>`_)
