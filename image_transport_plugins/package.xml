@@ -4,7 +4,7 @@
   <!-- TODO: Make this a metapackage, see
        https://github.com/ros2/ros2/issues/408 -->
   <name>image_transport_plugins</name>
-  <version>5.0.3</version>
+  <version>6.0.0</version>
     <description>
     A set of plugins for publishing and subscribing to sensor_msgs/Image topics
     in representations other than raw pixel data. For example, for viewing a
