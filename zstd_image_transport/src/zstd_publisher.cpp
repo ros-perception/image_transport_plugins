@@ -75,16 +75,26 @@ std::string ZstdPublisher::getTransportName() const
 void ZstdPublisher::advertiseImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
-  rmw_qos_profile_t custom_qos,
+  rclcpp::QoS custom_qos,
   rclcpp::PublisherOptions options)
 {
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  node_base_interface_ = node_interfaces.get_node_base_interface();
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
-  unsigned int ns_len = std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+
+  if (ns_len > 1) {
+    // Add pre set parameter callback to handle deprecated parameters
+    pre_set_parameter_callback_handle_ =
+      node_param_interface_->add_pre_set_parameters_callback(std::bind(
+        &ZstdPublisher::preSetParametersCallback,
+        this, std::placeholders::_1));
+  }
 
   for (const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
@@ -93,7 +103,7 @@ void ZstdPublisher::advertiseImpl(
 
 void ZstdPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   // Fresh Configuration
   int cfg_zstd_level =
@@ -148,7 +158,7 @@ void ZstdPublisher::publish(
   // Compressed image message
   compressed.header = message.header;
   compressed.format = "zstd";
-  publish_fn(compressed);
+  publisher->publish(compressed);
 }
 
 void ZstdPublisher::declareParameter(
@@ -171,5 +181,47 @@ void ZstdPublisher::declareParameter(
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
+
+  // TODO(anyone): Remove deprecated parameters after Lyrical release
+  if (std::string(node_base_interface_->get_namespace()).length() > 1) {
+    // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
+    const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
+      definition.descriptor.name;
+    deprecated_parameters_.insert(deprecated_dot_name);
+
+    try {
+      node_param_interface_->declare_parameter(deprecated_dot_name, param_value,
+          definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
+  }
+}
+
+void ZstdPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters)
+{
+  std::vector<rclcpp::Parameter> new_parameters;
+
+  for (auto & param : parameters) {
+    const auto & param_name = param.get_name();
+
+    // Check if this is a deprecated dot-prefixed parameter for our transport
+    if (deprecated_parameters_.find(param_name) != deprecated_parameters_.end()) {
+      auto non_dot_prefixed_name = param_name.substr(1);
+      RCLCPP_WARN_STREAM(logger_,
+            "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<
+            non_dot_prefixed_name << "` instead");
+      new_parameters.push_back(
+          rclcpp::Parameter(non_dot_prefixed_name, param.get_parameter_value()));
+    }
+
+    // Check if this is a normal parameter for our transport
+    if (std::find(parameters_.begin(), parameters_.end(), param_name) != parameters_.end()) {
+      // Also update the dot-prefixed parameter
+      new_parameters.emplace_back("." + param_name, param.get_parameter_value());
+    }
+  }
+
+  parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 }  // namespace zstd_image_transport

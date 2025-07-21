@@ -37,9 +37,6 @@
 #include <sensor_msgs/image_encodings.hpp>
 #include <std_msgs/msg/header.hpp>
 
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
-
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "theora_image_transport/compression_common.hpp"
@@ -143,28 +140,34 @@ TheoraPublisher::~TheoraPublisher()
 void TheoraPublisher::advertiseImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
-  rmw_qos_profile_t custom_qos,
+  rclcpp::QoS custom_qos,
   rclcpp::PublisherOptions options)
 {
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  node_base_interface_ = node_interfaces.get_node_base_interface();
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
   Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   // Declare Parameters
-  unsigned int ns_len = std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
-  using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
-  auto callback = std::bind(&TheoraPublisher::onParameterEvent, this, std::placeholders::_1,
-    node_interfaces.get_node_base_interface()->get_fully_qualified_name(),
-    param_base_name);
+  if (ns_len > 1) {
+    // Add pre set parameter callback to handle deprecated parameters
+    pre_set_parameter_callback_handle_ =
+      node_param_interface_->add_pre_set_parameters_callback(
+        std::bind(&TheoraPublisher::preSetParametersCallback,
+          this, std::placeholders::_1));
+  }
 
-  parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(
-    node_interfaces.get_node_topics_interface(),
-    callback);
+  // Add post set parameter callback to handle configuration changes
+  post_set_parameter_callback_handle_ =
+    node_param_interface_->add_post_set_parameters_callback(
+      std::bind(&TheoraPublisher::postSetParametersCallback, this, std::placeholders::_1));
 
   for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
@@ -185,9 +188,9 @@ static void cvToTheoraPlane(cv::Mat & mat, th_img_plane & plane)
 
 void TheoraPublisher::publish(
   const sensor_msgs::msg::Image & message,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
-  if (!ensureEncodingContext(message, publish_fn)) {
+  if (!ensureEncodingContext(message, publisher)) {
     return;
   }
   // return;
@@ -261,7 +264,7 @@ void TheoraPublisher::publish(
   theora_image_transport::msg::Packet output;
   while ((rval = th_encode_packetout(encoding_context_.get(), 0, &oggpacket)) > 0) {
     oggPacketToMsg(message.header, oggpacket, output);
-    publish_fn(output);
+    publisher->publish(output);
   }
   if (rval == TH_EFAULT) {
     RCLCPP_ERROR(logger_, "[theora] EFAULT in retrieving encoded video data packets");
@@ -279,8 +282,10 @@ void TheoraPublisher::refreshConfig() const
 
   // Fresh Configuration
   optimizeForTarget cfg_optimize_for =
-    (optimizeForTarget)node_param_interface_->get_parameter(parameters_[OPTIMIZE_FOR]).get_value<bool>();
-  int cfg_bitrate = node_param_interface_->get_parameter(parameters_[TARGET_BITRATE]).get_value<int>();
+    (optimizeForTarget)node_param_interface_->get_parameter(
+      parameters_[OPTIMIZE_FOR]).get_value<bool>();
+  int cfg_bitrate =
+    node_param_interface_->get_parameter(parameters_[TARGET_BITRATE]).get_value<int>();
   int cfg_quality = node_param_interface_->get_parameter(parameters_[QUALITY]).get_value<int>();
   int cfg_keyframe_frequency =
     node_param_interface_->get_parameter(parameters_[KEYFRAME_FREQUENCY]).get_value<int>();
@@ -349,7 +354,7 @@ void freeContext(th_enc_ctx * context)
 
 bool TheoraPublisher::ensureEncodingContext(
   const sensor_msgs::msg::Image & image,
-  const PublishFn & publish_fn) const
+  const PublisherT & publisher) const
 {
   /// @todo Check if encoding has changed
   if (encoding_context_ && encoder_setup_.pic_width == image.width &&
@@ -387,7 +392,7 @@ bool TheoraPublisher::ensureEncodingContext(
   while (th_encode_flushheader(encoding_context_.get(), &comment, &oggpacket) > 0) {
     stream_header_.push_back(theora_image_transport::msg::Packet());
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
-    publish_fn(stream_header_.back());
+    publisher->publish(stream_header_.back());
   }
   return true;
 }
@@ -430,10 +435,6 @@ void TheoraPublisher::declareParameter(
     definition.descriptor.name;
   parameters_.push_back(param_name);
 
-  // deprecated non-scoped parameter name (e.g. image_raw.quality)
-  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
-  deprecatedParameters_.push_back(deprecated_name);
-
   rclcpp::ParameterValue param_value;
 
   try {
@@ -444,61 +445,59 @@ void TheoraPublisher::declareParameter(
     param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 
-  // transport scoped parameter as default, otherwise we would overwrite
-  try {
-    node_param_interface_->declare_parameter(deprecated_name, param_value, definition.descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    node_param_interface_->get_parameter(deprecated_name).get_parameter_value();
+  // TODO(anyone): Remove deprecated parameters after Lyrical release
+  if (std::string(node_base_interface_->get_namespace()).length() > 1) {
+    // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
+    const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
+      definition.descriptor.name;
+    deprecated_parameters_.insert(deprecated_dot_name);
+
+    try {
+      node_param_interface_->declare_parameter(deprecated_dot_name, param_value,
+          definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
   }
 }
 
-void TheoraPublisher::onParameterEvent(
-  ParameterEvent::SharedPtr event, std::string full_name,
-  std::string base_name)
+void TheoraPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters)
 {
-  // filter out events from other nodes
-  if (event->node != full_name) {
-    return;
-  }
+  std::vector<rclcpp::Parameter> new_parameters;
 
-  // filter out new/changed deprecated parameters
-  using EventType = rclcpp::ParameterEventsFilter::EventType;
+  for (auto & param : parameters) {
+    const auto & param_name = param.get_name();
 
-  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_,
-    {EventType::NEW, EventType::CHANGED});
-
-  const std::string transport = getTransportName();
-
-  // emit warnings for deprecated parameters & sync deprecated parameter value to correct
-  for (auto & it : filter.get_events()) {
-    const std::string name = it.second->name;
-
-    // name was generated from base_name, has to succeed
-    size_t baseNameIndex = name.find(base_name);
-    size_t paramNameIndex = baseNameIndex + base_name.size();
-    // e.g. `color.image_raw.` + `theora` + `quality`
-    std::string recommendedName = name.substr(0,
-        paramNameIndex + 1) + transport + name.substr(paramNameIndex);
-
-    rclcpp::Parameter recommendedValue = node_param_interface_->get_parameter(recommendedName);
-
-    // do not emit warnings if deprecated value matches
-    if(it.second->value == recommendedValue.get_value_message()) {
-      continue;
+    // Check if this is a deprecated dot-prefixed parameter for our transport
+    if (deprecated_parameters_.find(param_name) != deprecated_parameters_.end()) {
+      auto non_dot_prefixed_name = param_name.substr(1);
+      RCLCPP_WARN_STREAM(logger_,
+            "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<
+            non_dot_prefixed_name << "` instead");
+      new_parameters.push_back(
+          rclcpp::Parameter(non_dot_prefixed_name, param.get_parameter_value()));
     }
 
-    RCLCPP_WARN_STREAM(logger_, "parameter `" << name << "` is deprecated" <<
-                                "; use transport qualified name `" << recommendedName << "`");
-
-    std::vector<rclcpp::Parameter> parameters;
-    parameters.push_back(rclcpp::Parameter(recommendedName, it.second->value));
-    node_param_interface_->set_parameters(parameters);
+    // Check if this is a normal parameter for our transport
+    if (std::find(parameters_.begin(), parameters_.end(), param_name) != parameters_.end()) {
+      // Also update the dot-prefixed parameter
+      new_parameters.emplace_back("." + param_name, param.get_parameter_value());
+    }
   }
 
-  // if any of the non-deprecated parameters changed mark to refresh config
-  rclcpp::ParameterEventsFilter filterChanged(event, parameters_, {EventType::CHANGED});
-  refreshConfigNeeded = filterChanged.get_events().size() > 0;
+  parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
+}
+
+void TheoraPublisher::postSetParametersCallback(
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  for (auto & param : parameters) {
+    // Check if parameter is from this transport
+    if (std::find(parameters_.begin(), parameters_.end(), param.get_name()) != parameters_.end()) {
+      refreshConfigNeeded = true;
+      break;
+    }
+  }
 }
 
 }  // namespace theora_image_transport

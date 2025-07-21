@@ -2,6 +2,23 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.0 (2025-07-09)
+------------------
+* Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_)
+* Merge pull request `#188 <https://github.com/ros-perception/image_transport_plugins/issues/188>`_ from bjsowa/fix/canonical-param-names
+* Add TODO comments about deprecated parameters
+* Simplify pre set parameter callback for other transports
+* Adding the include of cstdint (`#189 <https://github.com/ros-perception/image_transport_plugins/issues/189>`_)
+* Don't add pre set parameter callback when not needed
+* Add deprecated dot parameters for zstd transport
+* Fix inconsistent transport param names
+* Contributors: Alejandro Hernández Cordero, Błażej Sowa, Jan Vermaete, Kenji Brameld
+
+5.0.3 (2025-05-21)
+------------------
+* Use target_link_libraries instead of ament_target_dependencies (`#179 <https://github.com/ros-perception/image_transport_plugins/issues/179>`_)
+* Contributors: Alejandro Hernández Cordero
+
 5.0.2 (2025-02-10)
 ------------------
 * Use standard C++ type unsigned int in place of uint (`#174 <https://github.com/ros-perception/image_transport_plugins/issues/174>`_)

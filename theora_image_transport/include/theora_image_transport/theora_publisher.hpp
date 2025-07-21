@@ -37,6 +37,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <rclcpp/node.hpp>
 
@@ -70,7 +71,7 @@ protected:
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
-    rmw_qos_profile_t custom_qos,
+    rclcpp::QoS custom_qos,
     rclcpp::PublisherOptions options) override;
 
   // TODO(anyone): Callback to send header packets to new clients
@@ -79,7 +80,7 @@ protected:
   // Main publish function
   void publish(
     const sensor_msgs::msg::Image & message,
-    const PublishFn & publish_fn) const override;
+    const PublisherT & publisher) const override;
 
   // Runtime reconfiguration support
   void refreshConfig() const;
@@ -88,7 +89,7 @@ protected:
   // Utility functions
   bool ensureEncodingContext(
     const sensor_msgs::msg::Image & image,
-    const PublishFn & publish_fn) const;
+    const PublisherT & publisher) const;
   void oggPacketToMsg(
     const std_msgs::msg::Header & header,
     const ogg_packet & oggpacket,
@@ -105,20 +106,25 @@ protected:
 
   rclcpp::Logger logger_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:
   std::vector<std::string> parameters_;
-  std::vector<std::string> deprecatedParameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
 
-  rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr
+    post_set_parameter_callback_handle_;
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
 
-  void onParameterEvent(
-    ParameterEvent::SharedPtr event, std::string full_name,
-    std::string base_name);
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
+
+  void postSetParametersCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
 };
 
 }  // namespace theora_image_transport

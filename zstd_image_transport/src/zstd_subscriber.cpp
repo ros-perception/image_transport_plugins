@@ -61,7 +61,7 @@ void ZstdSubscriber::subscribeImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   const Callback & callback,
-  rmw_qos_profile_t custom_qos,
+  rclcpp::QoS custom_qos,
   rclcpp::SubscriptionOptions options)
 {
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
