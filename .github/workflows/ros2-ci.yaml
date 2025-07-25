@@ -1,24 +1,16 @@
-name: ROS2 CI
+name: CI
 
 on: [push, pull_request]
 
 jobs:
-  point_cloud_transport_ci:
-    name: image_transport_plugins_transport CI
-    runs-on: ubuntu-latest
+  industrial_ci:
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - docker-image: "ubuntu:24.04"
-            ros-distro: "rolling"
-    container:
-      image: ${{ matrix.docker-image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build and Test
-        run: .github/workflows/build-and-test.sh
         env:
-          DOCKER_IMAGE: ${{ matrix.docker-image }}
-          ROS_DISTRO: ${{ matrix.ros-distro }}
+          - {ROS_DISTRO: rolling, ROS_REPO: testing}
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
