@@ -66,7 +66,7 @@ protected:
     rclcpp::Node * node,
     const std::string & base_topic,
     rclcpp::QoS custom_qos,
-    rclcpp::PublisherOptions options) override final;
+    rclcpp::PublisherOptions options) final;
 
   void publish(
     const sensor_msgs::msg::Image & message,
