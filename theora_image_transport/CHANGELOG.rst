@@ -2,6 +2,11 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2025-07-15)
+------------------
+* Replace rmw_qos_profile_t with rclcpp::QoS (`#193 <https://github.com/ros-perception/image_transport_plugins/issues/193>`_)
+* Contributors: Alejandro Hernández Cordero
+
 6.0.0 (2025-07-09)
 ------------------
 * Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_)
