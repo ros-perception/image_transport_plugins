@@ -17,6 +17,11 @@
 
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>libopencv-dev</depend>
+  <depend>pluginlib</depend>
+  <depend>rcl_interfaces</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
