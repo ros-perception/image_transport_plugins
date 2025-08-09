@@ -45,7 +45,7 @@ Currently provided are:
 
 - [compressed_depth_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_depth_image_transport)
 
-- [compressed_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_depth_image_transport)
+- [compressed_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_image_transport)
 
 - [zstd_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/zstd_image_transport) - A libraory using ZSTD to compress the pointclouds.
 
