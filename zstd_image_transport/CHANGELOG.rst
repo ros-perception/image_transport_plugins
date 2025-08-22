@@ -2,6 +2,12 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2025-08-22)
+------------------
+* Support lifecycle (`#180 <https://github.com/ros-perception/image_transport_plugins/issues/180>`_)
+* Fix linter warning (`#201 <https://github.com/ros-perception/image_transport_plugins/issues/201>`_)
+* Contributors: Alejandro Hernández Cordero, Patrick Roncagliolo
+
 6.1.0 (2025-07-15)
 ------------------
 * Replace rmw_qos_profile_t with rclcpp::QoS (`#193 <https://github.com/ros-perception/image_transport_plugins/issues/193>`_)
