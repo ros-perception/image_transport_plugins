@@ -138,33 +138,35 @@ TheoraPublisher::~TheoraPublisher()
 }
 
 void TheoraPublisher::advertiseImpl(
-  rclcpp::Node *node,
+  image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   rclcpp::QoS custom_qos,
   rclcpp::PublisherOptions options)
 {
-  node_ = node;
-  logger_ = node->get_logger();
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  node_base_interface_ = node_interfaces.get_node_base_interface();
+  logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
   typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos, options);
+  Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   // Declare Parameters
-  uint ns_len = node->get_effective_namespace().length();
-  uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
-  std::string param_base_name = base_topic.substr(ns_prefix_len);
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
+  std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   if (ns_len > 1) {
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
-      node->add_pre_set_parameters_callback(std::bind(&TheoraPublisher::preSetParametersCallback,
-        this, std::placeholders::_1));
+      node_param_interface_->add_pre_set_parameters_callback(
+        std::bind(&TheoraPublisher::preSetParametersCallback,
+          this, std::placeholders::_1));
   }
 
   // Add post set parameter callback to handle configuration changes
   post_set_parameter_callback_handle_ =
-    node->add_post_set_parameters_callback(
+    node_param_interface_->add_post_set_parameters_callback(
       std::bind(&TheoraPublisher::postSetParametersCallback, this, std::placeholders::_1));
 
   for(const ParameterDefinition & pd : kParameters) {
@@ -280,11 +282,13 @@ void TheoraPublisher::refreshConfig() const
 
   // Fresh Configuration
   optimizeForTarget cfg_optimize_for =
-    (optimizeForTarget)node_->get_parameter(parameters_[OPTIMIZE_FOR]).get_value<bool>();
-  int cfg_bitrate = node_->get_parameter(parameters_[TARGET_BITRATE]).get_value<int>();
-  int cfg_quality = node_->get_parameter(parameters_[QUALITY]).get_value<int>();
+    (optimizeForTarget)node_param_interface_->get_parameter(
+      parameters_[OPTIMIZE_FOR]).get_value<bool>();
+  int cfg_bitrate =
+    node_param_interface_->get_parameter(parameters_[TARGET_BITRATE]).get_value<int>();
+  int cfg_quality = node_param_interface_->get_parameter(parameters_[QUALITY]).get_value<int>();
   int cfg_keyframe_frequency =
-    node_->get_parameter(parameters_[KEYFRAME_FREQUENCY]).get_value<int>();
+    node_param_interface_->get_parameter(parameters_[KEYFRAME_FREQUENCY]).get_value<int>();
 
   long bitrate = 0;  // NOLINT
   if (cfg_optimize_for == OPTIMIZE_BITRATE) {
@@ -333,8 +337,11 @@ void TheoraPublisher::refreshConfig() const
       updateKeyframeFrequency();
       // In case desired value was unattainable
       if(cfg_keyframe_frequency != static_cast<int>(keyframe_frequency_)) {
-        node_->set_parameter(rclcpp::Parameter(parameters_[KEYFRAME_FREQUENCY],
-          static_cast<int>(keyframe_frequency_)));
+        std::vector<rclcpp::Parameter> parameters;
+        parameters.push_back(
+          rclcpp::Parameter(parameters_[KEYFRAME_FREQUENCY],
+            static_cast<int>(keyframe_frequency_)));
+        node_param_interface_->set_parameters(parameters);
       }
     }
   }
@@ -431,22 +438,23 @@ void TheoraPublisher::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
+    param_value = node_param_interface_->declare_parameter(param_name, definition.defaultValue,
         definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 
   // TODO(anyone): Remove deprecated parameters after Lyrical release
-  if (node_->get_effective_namespace().length() > 1) {
+  if (std::string(node_base_interface_->get_namespace()).length() > 1) {
     // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
     const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
       definition.descriptor.name;
     deprecated_parameters_.insert(deprecated_dot_name);
 
     try {
-      node_->declare_parameter(deprecated_dot_name, param_value, definition.descriptor);
+      node_param_interface_->declare_parameter(deprecated_dot_name, param_value,
+          definition.descriptor);
     } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
       RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     }

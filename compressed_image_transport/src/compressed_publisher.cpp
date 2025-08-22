@@ -131,25 +131,26 @@ const struct ParameterDefinition kParameters[] =
 };
 
 void CompressedPublisher::advertiseImpl(
-  rclcpp::Node * node,
+  image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   rclcpp::QoS custom_qos,
   rclcpp::PublisherOptions options)
 {
-  node_ = node;
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  node_base_interface_ = node_interfaces.get_node_base_interface();
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
-  Base::advertiseImpl(node, base_topic, custom_qos, options);
+  Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   // Declare Parameters
-  uint ns_len = node->get_effective_namespace().length();
-  uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
-  std::string param_base_name = base_topic.substr(ns_prefix_len);
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
+  std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   if (ns_len > 1) {
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
-      node->add_pre_set_parameters_callback(std::bind(
+      node_param_interface_->add_pre_set_parameters_callback(std::bind(
         &CompressedPublisher::preSetParametersCallback, this, std::placeholders::_1));
   }
 
@@ -163,15 +164,21 @@ void CompressedPublisher::publish(
   const PublisherT & publisher) const
 {
   // Fresh Configuration
-  std::string cfg_format = node_->get_parameter(parameters_[FORMAT]).get_value<std::string>();
-  int cfg_png_level = node_->get_parameter(parameters_[PNG_LEVEL]).get_value<int64_t>();
-  int cfg_jpeg_quality = node_->get_parameter(parameters_[JPEG_QUALITY]).get_value<int64_t>();
+  std::string cfg_format = node_param_interface_->get_parameter(
+    parameters_[FORMAT]).get_value<std::string>();
+  int cfg_png_level = node_param_interface_->get_parameter(
+    parameters_[PNG_LEVEL]).get_value<int64_t>();
+  int cfg_jpeg_quality = node_param_interface_->get_parameter(
+    parameters_[JPEG_QUALITY]).get_value<int64_t>();
   bool cfg_jpeg_compress_bayer =
-    node_->get_parameter(parameters_[JPEG_COMPRESS_BAYER]).get_value<bool>();
+    node_param_interface_->get_parameter(parameters_[JPEG_COMPRESS_BAYER]).get_value<bool>();
   std::string cfg_tiff_res_unit =
-    node_->get_parameter(parameters_[TIFF_RESOLUTION_UNIT]).get_value<std::string>();
-  int cfg_tiff_xdpi = node_->get_parameter(parameters_[TIFF_XDPI]).get_value<int64_t>();
-  int cfg_tiff_ydpi = node_->get_parameter(parameters_[TIFF_YDPI]).get_value<int64_t>();
+    node_param_interface_->get_parameter(
+      parameters_[TIFF_RESOLUTION_UNIT]).get_value<std::string>();
+  int cfg_tiff_xdpi = node_param_interface_->get_parameter(
+    parameters_[TIFF_XDPI]).get_value<int64_t>();
+  int cfg_tiff_ydpi = node_param_interface_->get_parameter(
+    parameters_[TIFF_YDPI]).get_value<int64_t>();
 
   // Compressed image message
   sensor_msgs::msg::CompressedImage compressed;
@@ -393,22 +400,24 @@ void CompressedPublisher::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
-        definition.descriptor);
+    param_value = node_param_interface_->declare_parameter(
+      param_name, definition.defaultValue,
+      definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 
   // TODO(anyone): Remove deprecated parameters after Lyrical release
-  if (node_->get_effective_namespace().length() > 1) {
+  if (std::string(node_base_interface_->get_namespace()).length() > 1) {
     // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.format)
     const std::string deprecated_dot_name = "." + base_name + "." + transport_name + "." +
       definition.descriptor.name;
     deprecated_parameters_.insert(deprecated_dot_name);
 
     try {
-      node_->declare_parameter(deprecated_dot_name, param_value, definition.descriptor);
+      node_param_interface_->declare_parameter(deprecated_dot_name, param_value,
+          definition.descriptor);
     } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
       RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     }

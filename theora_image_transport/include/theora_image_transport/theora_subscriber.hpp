@@ -39,6 +39,7 @@
 
 #include <rclcpp/node.hpp>
 
+#include <image_transport/node_interfaces.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 #include <theora_image_transport/msg/packet.hpp>
 
@@ -59,9 +60,8 @@ public:
   std::string getTransportName() const override {return "theora";}
 
 protected:
-  // Overridden to bump queue_size, otherwise we might lose headers
   void subscribeImpl(
-    rclcpp::Node * node,
+    image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
     const Callback & callback,
     rclcpp::QoS custom_qos,
@@ -91,7 +91,7 @@ protected:
   sensor_msgs::msg::Image::SharedPtr latest_image_;
 
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
   std::vector<std::string> parameters_;

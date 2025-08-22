@@ -36,6 +36,7 @@
 
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
+#include <image_transport/node_interfaces.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
 
 #include <rclcpp/node.hpp>
@@ -63,9 +64,8 @@ public:
   }
 
 protected:
-  // Overridden to set up reconfigure server
   void advertiseImpl(
-    rclcpp::Node * node,
+    image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
     rclcpp::QoS custom_qos,
     rclcpp::PublisherOptions options) override;
@@ -75,7 +75,8 @@ protected:
     const PublisherT & publisher) const override;
 
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:
   std::vector<std::string> parameters_;

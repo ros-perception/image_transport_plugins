@@ -68,19 +68,20 @@ const struct ParameterDefinition kParameters[] =
 };
 
 void CompressedSubscriber::subscribeImpl(
-  rclcpp::Node * node,
+  image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   const Callback & callback,
   rclcpp::QoS custom_qos,
   rclcpp::SubscriptionOptions options)
 {
-  node_ = node;
-  logger_ = node->get_logger();
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  logger_ = node_interfaces.get_node_logging_interface()->get_logger();
   typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
-  Base::subscribeImpl(node, base_topic, callback, custom_qos, options);
+  Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 
   // Declare Parameters
-  uint ns_len = node->get_effective_namespace().length();
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
@@ -179,7 +180,8 @@ void CompressedSubscriber::internalCallback(
 
 int CompressedSubscriber::imdecodeFlagFromConfig()
 {
-  std::string mode = node_->get_parameter(parameters_[MODE]).get_value<std::string>();
+  std::string mode =
+    node_param_interface_->get_parameter(parameters_[MODE]).get_value<std::string>();
 
   if (mode == "unchanged") {
     return cv::IMREAD_UNCHANGED;
@@ -207,11 +209,11 @@ void CompressedSubscriber::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
+    param_value = node_param_interface_->declare_parameter(param_name, definition.defaultValue,
         definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 }
 

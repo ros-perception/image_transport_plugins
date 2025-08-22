@@ -93,20 +93,21 @@ TheoraSubscriber::~TheoraSubscriber()
 }
 
 void TheoraSubscriber::subscribeImpl(
-  rclcpp::Node * node,
+  image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,
   const Callback & callback,
   rclcpp::QoS custom_qos,
   rclcpp::SubscriptionOptions options)
 {
-  node_ = node;
-  logger_ = node->get_logger();
+  node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
   typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
-  Base::subscribeImpl(node, base_topic, callback, custom_qos, options);
+  Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 
   // Declare Parameters
-  uint ns_len = node->get_effective_namespace().length();
+  unsigned int ns_len =
+    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
@@ -117,12 +118,17 @@ void TheoraSubscriber::subscribeImpl(
 
 void TheoraSubscriber::refreshConfig()
 {
-  int cfg_pplevel = node_->get_parameter(parameters_[POST_PROCESSING_LEVEL]).get_value<int>();
+  int cfg_pplevel =
+    node_param_interface_->get_parameter(parameters_[POST_PROCESSING_LEVEL]).get_value<int>();
 
   if (decoding_context_ && pplevel_ != cfg_pplevel) {
     pplevel_ = updatePostProcessingLevel(cfg_pplevel);
     // In case more than PPLEVEL_MAX
-    node_->set_parameter(rclcpp::Parameter(parameters_[POST_PROCESSING_LEVEL], pplevel_));
+    std::vector<rclcpp::Parameter> parameters;
+    parameters.push_back(
+      rclcpp::Parameter(parameters_[POST_PROCESSING_LEVEL],
+        pplevel_));
+    node_param_interface_->set_parameters(parameters);
   } else {
     pplevel_ = cfg_pplevel;
   }
@@ -311,11 +317,11 @@ void TheoraSubscriber::declareParameter(
   rclcpp::ParameterValue param_value;
 
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
+    param_value = node_param_interface_->declare_parameter(param_name, definition.defaultValue,
         definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
+    param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
 }
 

@@ -38,6 +38,7 @@
 
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
+#include <image_transport/node_interfaces.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 
 #include "compressed_image_transport/compression_common.hpp"
@@ -64,7 +65,7 @@ public:
 
 protected:
   void subscribeImpl(
-    rclcpp::Node *,
+    image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
     const Callback & callback,
     rclcpp::QoS custom_qos,
@@ -75,7 +76,7 @@ protected:
     const Callback & user_cb) override;
 
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
   std::vector<std::string> parameters_;
