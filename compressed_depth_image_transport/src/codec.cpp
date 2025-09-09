@@ -219,7 +219,6 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
 
   // Compression settings
   std::vector<int> params;
-  params.resize(3, 0);
 
   // Bit depth of image encoding
   int bitDepth = enc::bitDepth(message.encoding);
@@ -236,6 +235,7 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   compressed->format += "; compressedDepth " + format;
 
   // Check input format
+  params.reserve(2);
   params[0] = cv::IMWRITE_PNG_COMPRESSION;
   params[1] = png_level;
 
