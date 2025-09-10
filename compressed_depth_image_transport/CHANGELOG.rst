@@ -2,6 +2,13 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.5.4 (2025-09-10)
+------------------
+* Fix passing parameters to cv::imencode for OpenCV 4.7 (`#207 <https://github.com/ros-perception/image_transport_plugins/issues/207>`_) (`#210 <https://github.com/ros-perception/image_transport_plugins/issues/210>`_)
+  (cherry picked from commit 3d192bff0b770cd9b0a202fd4c858254c1cc726f)
+  Co-authored-by: Jafar Uruç <jafar.uruc@gmail.com>
+* Contributors: mergify[bot]
+
 2.5.3 (2025-02-10)
 ------------------
 
