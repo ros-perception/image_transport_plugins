@@ -2,6 +2,9 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.1 (2025-09-10)
+------------------
+
 6.2.0 (2025-08-22)
 ------------------
 * Support lifecycle (`#180 <https://github.com/ros-perception/image_transport_plugins/issues/180>`_)
