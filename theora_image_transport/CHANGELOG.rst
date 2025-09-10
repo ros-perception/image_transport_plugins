@@ -2,6 +2,9 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.6 (2025-09-10)
+------------------
+
 4.0.5 (2025-07-09)
 ------------------
 * Use non deprecated method (`#182 <https://github.com/ros-perception/image_transport_plugins/issues/182>`_) (`#194 <https://github.com/ros-perception/image_transport_plugins/issues/194>`_)
