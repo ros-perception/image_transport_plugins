@@ -46,6 +46,7 @@ add_library(
   SHARED
   src/compressed_depth_publisher.cpp
   src/compressed_depth_subscriber.cpp
+  src/manifest.cpp
 )
 
 target_include_directories(
