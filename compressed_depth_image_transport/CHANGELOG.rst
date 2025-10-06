@@ -2,6 +2,11 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix unable to load compressedDepth plugin (`#211 <https://github.com/ros-perception/image_transport_plugins/issues/211>`_)
+* Contributors: mini-1235
+
 6.2.1 (2025-09-10)
 ------------------
 * Fix passing parameters to cv::imencode for OpenCV 4.7 (`#207 <https://github.com/ros-perception/image_transport_plugins/issues/207>`_)
