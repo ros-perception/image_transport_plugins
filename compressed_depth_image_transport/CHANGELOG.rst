@@ -2,8 +2,8 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.2.2 (2025-10-06)
+------------------
 * Fix unable to load compressedDepth plugin (`#211 <https://github.com/ros-perception/image_transport_plugins/issues/211>`_)
 * Contributors: mini-1235
 
