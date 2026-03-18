@@ -1,0 +1,19 @@
+<library path="zlib_image_transport">
+  <class
+    name="image_transport/zlib_pub"
+    type="zlib_image_transport::ZlibPublisher"
+    base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin publishes an image compressed with zlib (deflate).
+    </description>
+  </class>
+
+  <class
+    name="image_transport/zlib_sub"
+    type="zlib_image_transport::ZlibSubscriber"
+    base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decompresses a zlib-compressed image.
+    </description>
+  </class>
+</library>
