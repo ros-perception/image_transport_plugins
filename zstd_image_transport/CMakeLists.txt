@@ -16,20 +16,20 @@ find_package(image_transport REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(ZLIB REQUIRED)
+find_package(zstd REQUIRED)
 
 include_directories(include)
 
 add_library(
   ${PROJECT_NAME} SHARED
-  src/zlib_cpp.cpp
+  src/zstd_wrapper.cpp
   src/zstd_publisher.cpp
   src/zstd_subscriber.cpp
   src/manifest.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
-  ZLIB::ZLIB
+  zstd::libzstd_shared
   image_transport::image_transport
   rclcpp::rclcpp
   pluginlib::pluginlib
