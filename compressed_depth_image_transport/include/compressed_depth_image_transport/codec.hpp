@@ -48,7 +48,7 @@ sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
   const sensor_msgs::msg::CompressedImage & compressed_image);
 
 // Compress a depth image. Returns a null pointer on bad input.
-sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
+sensor_msgs::msg::CompressedImage::UniquePtr encodeCompressedDepthImage(
   const sensor_msgs::msg::Image & message,
   const std::string & format = "png",
   double depth_max = 10.0,

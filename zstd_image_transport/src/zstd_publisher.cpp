@@ -108,46 +108,46 @@ void ZstdPublisher::publish(
     total_size += data->size;
   }
 
-  sensor_msgs::msg::CompressedImage compressed;
+  auto compressed = std::make_unique<sensor_msgs::msg::CompressedImage>();
 
   int metadata = 4 + 4 + 1 + 4 + 4 + message.encoding.size();
 
-  compressed.data.resize(total_size + metadata);
+  compressed->data.resize(total_size + metadata);
 
   size_t index = metadata;
   for (const auto & data : g_compressed_data) {
-    memcpy(&compressed.data[index], data->ptr, data->size);
+    memcpy(&compressed->data[index], data->ptr, data->size);
     index += data->size;
   }
 
-  compressed.data[0] = static_cast<uint8_t>(message.height & 0xFF);
-  compressed.data[1] = static_cast<uint8_t>(message.height >> 8) & 0xFF;
-  compressed.data[2] = static_cast<uint8_t>(message.height >> 16) & 0xFF;
-  compressed.data[3] = static_cast<uint8_t>(message.height >> 24) & 0xFF;
+  compressed->data[0] = static_cast<uint8_t>(message.height & 0xFF);
+  compressed->data[1] = static_cast<uint8_t>(message.height >> 8) & 0xFF;
+  compressed->data[2] = static_cast<uint8_t>(message.height >> 16) & 0xFF;
+  compressed->data[3] = static_cast<uint8_t>(message.height >> 24) & 0xFF;
 
-  compressed.data[4] = static_cast<uint8_t>(message.width & 0xFF);
-  compressed.data[5] = static_cast<uint8_t>(message.width >> 8) & 0xFF;
-  compressed.data[6] = static_cast<uint8_t>(message.width >> 16) & 0xFF;
-  compressed.data[7] = static_cast<uint8_t>(message.width >> 24) & 0xFF;
+  compressed->data[4] = static_cast<uint8_t>(message.width & 0xFF);
+  compressed->data[5] = static_cast<uint8_t>(message.width >> 8) & 0xFF;
+  compressed->data[6] = static_cast<uint8_t>(message.width >> 16) & 0xFF;
+  compressed->data[7] = static_cast<uint8_t>(message.width >> 24) & 0xFF;
 
-  compressed.data[8] = message.is_bigendian;
+  compressed->data[8] = message.is_bigendian;
 
-  compressed.data[9] = static_cast<uint8_t>(message.step & 0xFF);
-  compressed.data[10] = static_cast<uint8_t>(message.step >> 8) & 0xFF;
-  compressed.data[11] = static_cast<uint8_t>(message.step >> 16) & 0xFF;
-  compressed.data[12] = static_cast<uint8_t>(message.step >> 24) & 0xFF;
+  compressed->data[9] = static_cast<uint8_t>(message.step & 0xFF);
+  compressed->data[10] = static_cast<uint8_t>(message.step >> 8) & 0xFF;
+  compressed->data[11] = static_cast<uint8_t>(message.step >> 16) & 0xFF;
+  compressed->data[12] = static_cast<uint8_t>(message.step >> 24) & 0xFF;
 
-  compressed.data[13] = static_cast<uint8_t>(message.encoding.size() & 0xFF);
-  compressed.data[14] = static_cast<uint8_t>(message.encoding.size() >> 8) & 0xFF;
-  compressed.data[15] = static_cast<uint8_t>(message.encoding.size() >> 16) & 0xFF;
-  compressed.data[16] = static_cast<uint8_t>(message.encoding.size() >> 24) & 0xFF;
+  compressed->data[13] = static_cast<uint8_t>(message.encoding.size() & 0xFF);
+  compressed->data[14] = static_cast<uint8_t>(message.encoding.size() >> 8) & 0xFF;
+  compressed->data[15] = static_cast<uint8_t>(message.encoding.size() >> 16) & 0xFF;
+  compressed->data[16] = static_cast<uint8_t>(message.encoding.size() >> 24) & 0xFF;
 
-  memcpy(&compressed.data[17], &message.encoding[0], message.encoding.size());
+  memcpy(&compressed->data[17], &message.encoding[0], message.encoding.size());
 
   // Compressed image message
-  compressed.header = message.header;
-  compressed.format = "zstd";
-  publisher->publish(compressed);
+  compressed->header = message.header;
+  compressed->format = "zstd";
+  publisher->publish(std::move(compressed));
 }
 
 void ZstdPublisher::declareParameter(
