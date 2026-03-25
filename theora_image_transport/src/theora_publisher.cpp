@@ -394,7 +394,6 @@ bool TheoraPublisher::ensureEncodingContext(
     stream_header_.push_back(theora_image_transport::msg::Packet());
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
     auto msg = std::make_unique<theora_image_transport::msg::Packet>(stream_header_.back());
-    RCLCPP_INFO(logger_, "[THEORA] Image compressed at address: %p", msg.get());
     publisher->publish(std::move(msg));
   }
   return true;
