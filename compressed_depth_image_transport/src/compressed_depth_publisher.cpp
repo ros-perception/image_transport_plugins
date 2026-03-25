@@ -145,14 +145,14 @@ void CompressedDepthPublisher::publish(
   int cfg_png_level = node_param_interface_->get_parameter(
     parameters_[PNG_LEVEL]).get_value<int64_t>();
 
-  sensor_msgs::msg::CompressedImage::SharedPtr compressed_image =
+  auto compressed_image =
     encodeCompressedDepthImage(message,
                                cfg_format,
                                cfg_depth_max,
                                cfg_depth_quantization,
                                cfg_png_level);
   if (compressed_image) {
-    publisher->publish(*compressed_image);
+    publisher->publish(std::move(compressed_image));
   }
 }
 
