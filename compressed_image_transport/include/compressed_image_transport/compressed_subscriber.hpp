@@ -58,11 +58,6 @@ public:
   }
   virtual ~CompressedSubscriber() = default;
 
-  std::string getTransportName() const override
-  {
-    return "compressed";
-  }
-
 protected:
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,

@@ -64,11 +64,6 @@ ZstdPublisher::ZstdPublisher()
 {
 }
 
-std::string ZstdPublisher::getTransportName() const
-{
-  return "zstd";
-}
-
 void ZstdPublisher::advertiseImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,

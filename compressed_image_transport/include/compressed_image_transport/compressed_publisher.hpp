@@ -58,11 +58,6 @@ public:
   }
   ~CompressedPublisher() override = default;
 
-  std::string getTransportName() const override
-  {
-    return "compressed";
-  }
-
 protected:
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,

@@ -57,8 +57,6 @@ public:
   TheoraSubscriber();
   virtual ~TheoraSubscriber();
 
-  std::string getTransportName() const override {return "theora";}
-
 protected:
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,

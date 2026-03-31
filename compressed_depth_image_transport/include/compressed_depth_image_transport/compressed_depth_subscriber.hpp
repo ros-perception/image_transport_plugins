@@ -46,11 +46,6 @@ class CompressedDepthSubscriber
 public:
   virtual ~CompressedDepthSubscriber() {}
 
-  virtual std::string getTransportName() const
-  {
-    return "compressedDepth";
-  }
-
 protected:
   virtual void internalCallback(
     const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
