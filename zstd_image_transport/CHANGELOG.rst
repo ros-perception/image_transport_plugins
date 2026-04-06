@@ -2,6 +2,13 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.3 (2026-04-06)
+------------------
+* Update API (`#217 <https://github.com/ros-perception/image_transport_plugins/issues/217>`_)
+* Publish with uniqueptr for efficiency (`#216 <https://github.com/ros-perception/image_transport_plugins/issues/216>`_)
+* Cleanup bsd 3 clause license usage (`#212 <https://github.com/ros-perception/image_transport_plugins/issues/212>`_)
+* Contributors: Alejandro Hernández Cordero, Maurice Alexander Purnawan
+
 6.2.2 (2025-10-06)
 ------------------
 
