@@ -1,4 +1,6 @@
 <library path="compressed_depth_image_transport">
+  <transport_name>compressedDepth</transport_name>
+  <message_type>sensor_msgs/msg/CompressedImage</message_type>
   <class
     name="image_transport/compressedDepth_pub"
     type="compressed_depth_image_transport::CompressedDepthPublisher"

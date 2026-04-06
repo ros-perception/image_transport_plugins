@@ -56,8 +56,6 @@ public:
   ZstdPublisher();
   ~ZstdPublisher() override = default;
 
-  std::string getTransportName() const override;
-
 protected:
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,

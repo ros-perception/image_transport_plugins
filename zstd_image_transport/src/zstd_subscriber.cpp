@@ -49,11 +49,6 @@ ZstdSubscriber::ZstdSubscriber()
 {
 }
 
-std::string ZstdSubscriber::getTransportName() const
-{
-  return "zstd";
-}
-
 void ZstdSubscriber::subscribeImpl(
   image_transport::RequiredInterfaces node_interfaces,
   const std::string & base_topic,

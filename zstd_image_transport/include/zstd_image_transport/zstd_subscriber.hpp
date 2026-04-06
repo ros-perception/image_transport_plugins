@@ -56,8 +56,6 @@ public:
   ZstdSubscriber();
   virtual ~ZstdSubscriber() = default;
 
-  std::string getTransportName() const override;
-
 protected:
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,

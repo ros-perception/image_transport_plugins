@@ -56,11 +56,6 @@ public:
   : logger_(rclcpp::get_logger("CompressedDepthPublisher")) {}
   ~CompressedDepthPublisher() {}
 
-  std::string getTransportName() const override
-  {
-    return "compressedDepth";
-  }
-
 protected:
   // Overridden to set up reconfigure server
   void advertiseImpl(

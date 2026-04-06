@@ -64,9 +64,6 @@ public:
   TheoraPublisher();
   ~TheoraPublisher() override;
 
-  // Return the system unique string representing the theora transport type
-  std::string getTransportName() const override {return "theora";}
-
 protected:
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,
