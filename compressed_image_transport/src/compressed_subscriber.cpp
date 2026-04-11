@@ -103,7 +103,8 @@ void CompressedSubscriber::internalCallback(
 
   // Decode color/mono image
   try {
-    cv_ptr->image = cv::imdecode(cv::Mat(message->data), cfg_imdecode_flag);
+    const auto & compressed_data = static_cast<const std::vector<unsigned char> &>(message->data);
+    cv_ptr->image = cv::imdecode(compressed_data, cfg_imdecode_flag);
 
     // Assign image encoding string
     const size_t split_pos = message->format.find(';');
