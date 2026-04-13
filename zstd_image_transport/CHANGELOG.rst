@@ -2,6 +2,9 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.4 (2026-04-13)
+------------------
+
 6.2.3 (2026-04-06)
 ------------------
 * Update API (`#217 <https://github.com/ros-perception/image_transport_plugins/issues/217>`_)
