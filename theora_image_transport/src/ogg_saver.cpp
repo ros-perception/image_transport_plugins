@@ -97,7 +97,7 @@ private:
     fout_.write(reinterpret_cast<char *>(page.body), page.body_len);
   }
 
-  void processMsg(const theora_image_transport::msg::Packet::SharedPtr message)
+  void processMsg(theora_image_transport::msg::Packet::ConstSharedPtr message)
   {
     /// @todo Make sure we don't write a video packet first
     /// @todo Handle duplicate headers
