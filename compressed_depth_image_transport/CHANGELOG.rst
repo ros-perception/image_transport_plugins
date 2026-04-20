@@ -2,6 +2,11 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.1.2 (2026-04-20)
+------------------
+* fix(compressed_depth): use push_back instead of index assignment (`#222 <https://github.com/ros-perception/image_transport_plugins/issues/222>`_) (`#223 <https://github.com/ros-perception/image_transport_plugins/issues/223>`_)
+* Contributors: mergify[bot]
+
 5.1.1 (2025-09-10)
 ------------------
 * Fix passing parameters to cv::imencode for OpenCV 4.7 (`#207 <https://github.com/ros-perception/image_transport_plugins/issues/207>`_) (`#208 <https://github.com/ros-perception/image_transport_plugins/issues/208>`_)
