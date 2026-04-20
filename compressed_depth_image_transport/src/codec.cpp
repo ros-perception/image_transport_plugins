@@ -235,9 +235,8 @@ sensor_msgs::msg::CompressedImage::SharedPtr encodeCompressedDepthImage(
   compressed->format += "; compressedDepth " + format;
 
   // Check input format
-  params.reserve(2);
-  params[0] = cv::IMWRITE_PNG_COMPRESSION;
-  params[1] = png_level;
+  params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+  params.push_back(png_level);
 
   if ((bitDepth == 32) && (numChannels == 1)) {
     float depthZ0 = depth_quantization;
