@@ -2,6 +2,9 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.0.0 (2026-05-13)
+------------------
+
 6.2.4 (2026-04-13)
 ------------------
 * feat: support rcl buffer type (`#219 <https://github.com/ros-perception/image_transport_plugins/issues/219>`_)
