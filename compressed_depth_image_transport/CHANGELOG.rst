@@ -2,6 +2,11 @@
 Changelog for package compressed_depth_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.5 (2026-05-13)
+------------------
+* fix(compressed_depth): use push_back instead of index assignment (`#222 <https://github.com/ros-perception/image_transport_plugins//issues/222>`_)
+* Contributors: Nicolas Frick
+
 6.2.4 (2026-04-13)
 ------------------
 
