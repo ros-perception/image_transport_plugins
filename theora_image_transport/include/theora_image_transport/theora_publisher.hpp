@@ -55,8 +55,6 @@
 namespace theora_image_transport
 {
 
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
-
 class TheoraPublisher
   : public image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet>
 {
