@@ -1,11 +1,11 @@
-name: image_transport_plugins CI - Rolling
+name: image_transport_plugins CI - Lyrical
 
 on:
   workflow_dispatch:
   pull_request:
-    branches: [ rolling ]
+    branches: [ lyrical ]
   push:
-    branches: [ rolling ]
+    branches: [ lyrical ]
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 5 * * MON-FRI'
@@ -17,11 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ros-distro: "rolling"
+          - ros-distro: "lyrical"
             ros-repo-packages: "-testing"
-          # TODO(anyone): activate once the next ROS 2 rolling sync is out
-          # - ros-distro: "rolling"
-          #   ros-repo-packages: ""
+          - ros-distro: "lyrical"
+            ros-repo-packages: ""
 
     env:
       ROS_DISTRO: ${{ matrix.ros-distro }}
