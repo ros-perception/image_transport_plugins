@@ -1,17 +1,48 @@
-name: CI
+name: image_transport_plugins CI - Lyrical
 
-on: [push, pull_request]
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ lyrical ]
+  push:
+    branches: [ lyrical ]
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '03 5 * * MON-FRI'
 
 jobs:
-  industrial_ci:
+  build:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        env:
-          - {ROS_DISTRO: rolling, ROS_REPO: testing}
-          - {ROS_DISTRO: rolling, ROS_REPO: main}
-    runs-on: ubuntu-latest
+        include:
+          - ros-distro: "lyrical"
+            ros-repo-packages: "-testing"
+          - ros-distro: "lyrical"
+            ros-repo-packages: ""
+
+    env:
+      ROS_DISTRO: ${{ matrix.ros-distro }}
+    container:
+      image: ghcr.io/ros-controls/ros:${{ matrix.ros-distro }}-ubuntu${{ matrix.ros-repo-packages }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: 'ros-industrial/industrial_ci@master'
-        env: ${{matrix.env}}
+    - uses: actions/checkout@v7
+    - name: Setup colcon workspace
+      id: configure
+      shell: bash
+      run: |
+        apt-get update
+        rosdep update
+        rosdep install --from-paths ./ -i -y --rosdistro ${ROS_DISTRO}
+    - name: Build project
+      id: build
+      run: |
+        . /opt/ros/${ROS_DISTRO}/local_setup.sh
+        colcon build --packages-up-to compressed_depth_image_transport compressed_image_transport theora_image_transport zstd_image_transport
+    - name: Run tests
+      id: test
+      run: |
+        . /opt/ros/${ROS_DISTRO}/local_setup.sh
+        colcon test --event-handlers console_direct+ --packages-select compressed_depth_image_transport compressed_image_transport theora_image_transport zstd_image_transport
+        colcon test-result
