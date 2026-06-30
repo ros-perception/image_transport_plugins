@@ -2,6 +2,11 @@
 Changelog for package image_transport_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.0.1 (2026-06-30)
+------------------
+* Update CMakeLists minimum version (`#229 <https://github.com/ros-perception/image_transport_plugins/issues/229>`_)
+* Contributors: Alejandro Hernández Cordero
+
 7.0.0 (2026-05-13)
 ------------------
 
