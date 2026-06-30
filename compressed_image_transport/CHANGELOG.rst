@@ -2,6 +2,11 @@
 Changelog for package compressed_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.6 (2026-06-30)
+------------------
+* Update CMakeLists minimum version (`#229 <https://github.com/ros-perception/image_transport_plugins/issues/229>`_) (`#235 <https://github.com/ros-perception/image_transport_plugins/issues/235>`_)
+* Contributors: mergify[bot]
+
 6.2.5 (2026-05-13)
 ------------------
 
