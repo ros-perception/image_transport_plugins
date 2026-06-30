@@ -2,6 +2,11 @@
 Changelog for package zstd_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.1.3 (2026-06-30)
+------------------
+* Update CMakeLists minimum version (`#229 <https://github.com/ros-perception/image_transport_plugins/issues/229>`_) (`#236 <https://github.com/ros-perception/image_transport_plugins/issues/236>`_)
+* Contributors: mergify[bot]
+
 5.1.2 (2026-04-20)
 ------------------
 
