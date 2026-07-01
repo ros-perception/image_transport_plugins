@@ -76,7 +76,7 @@ void CompressedSubscriber::subscribeImpl(
 {
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
-  typedef image_transport::SimpleSubscriberPlugin<CompressedImage> Base;
+  using Base = image_transport::SimpleSubscriberPlugin<CompressedImage>;
   Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 
   // Declare Parameters

@@ -102,7 +102,7 @@ void TheoraSubscriber::subscribeImpl(
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
-  typedef image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet> Base;
+  using Base = image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>;
   Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 
   // Declare Parameters

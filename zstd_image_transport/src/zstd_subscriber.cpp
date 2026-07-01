@@ -57,7 +57,7 @@ void ZstdSubscriber::subscribeImpl(
   rclcpp::SubscriptionOptions options)
 {
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
-  typedef image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage> Base;
+  using Base = image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>;
   Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 }
 

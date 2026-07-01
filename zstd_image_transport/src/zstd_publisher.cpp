@@ -72,7 +72,7 @@ void ZstdPublisher::advertiseImpl(
 {
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
   node_base_interface_ = node_interfaces.get_node_base_interface();
-  typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
+  using Base = image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage>;
   Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   unsigned int ns_len =
@@ -198,7 +198,7 @@ void ZstdPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & pa
     const auto & param_name = param.get_name();
 
     // Check if this is a deprecated dot-prefixed parameter for our transport
-    if (deprecated_parameters_.find(param_name) != deprecated_parameters_.end()) {
+    if (deprecated_parameters_.contains(param_name)) {
       auto non_dot_prefixed_name = param_name.substr(1);
       RCLCPP_WARN_STREAM(logger_,
             "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<

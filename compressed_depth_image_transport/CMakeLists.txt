@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(compressed_depth_image_transport)
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
+# The C++ standard (cxx_std_20) comes from the
+# ament_cmake_ros_core::ament_ros_defaults INTERFACE target, which is linked
+# into each target below and propagated to consumers as a minimum standard.
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -33,6 +33,7 @@ target_include_directories(
 )
 
 target_link_libraries(codecs
+  ament_cmake_ros_core::ament_ros_defaults
   cv_bridge::cv_bridge
   opencv_core
   opencv_imgcodecs
@@ -57,6 +58,7 @@ target_include_directories(
 )
 
 target_link_libraries(${PROJECT_NAME}
+  ament_cmake_ros_core::ament_ros_defaults
   codecs
   image_transport::image_transport
   cv_bridge::cv_bridge
@@ -87,6 +89,7 @@ install(
 
 ament_export_targets(export_codecs HAS_LIBRARY_TARGET)
 ament_export_dependencies(
+  ament_cmake_ros_core
   cv_bridge
   rcl_interfaces
   rclcpp
