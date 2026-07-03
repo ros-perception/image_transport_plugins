@@ -160,16 +160,16 @@ void TheoraPublisher::advertiseImpl(
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
       node_param_interface_->add_pre_set_parameters_callback(
-        [this](std::vector<rclcpp::Parameter> & parameters) {
-          preSetParametersCallback(parameters);
+      [this](std::vector<rclcpp::Parameter> & parameters) {
+        preSetParametersCallback(parameters);
         });
   }
 
   // Add post set parameter callback to handle configuration changes
   post_set_parameter_callback_handle_ =
     node_param_interface_->add_post_set_parameters_callback(
-      [this](const std::vector<rclcpp::Parameter> & parameters) {
-        postSetParametersCallback(parameters);
+    [this](const std::vector<rclcpp::Parameter> & parameters) {
+      postSetParametersCallback(parameters);
       });
 
   for(const ParameterDefinition & pd : kParameters) {

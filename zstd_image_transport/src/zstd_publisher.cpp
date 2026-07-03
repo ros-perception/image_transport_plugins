@@ -91,8 +91,8 @@ void ZstdPublisher::advertiseImpl(
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
       node_param_interface_->add_pre_set_parameters_callback(
-        [this](std::vector<rclcpp::Parameter> & parameters) {
-          preSetParametersCallback(parameters);
+      [this](std::vector<rclcpp::Parameter> & parameters) {
+        preSetParametersCallback(parameters);
         });
   }
 

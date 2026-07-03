@@ -54,8 +54,8 @@ public:
     sub_ = node_->create_subscription<theora_image_transport::msg::Packet>(
             "stream",
             10,
-            [this](theora_image_transport::msg::Packet::ConstSharedPtr message) {
-              processMsg(message);
+      [this](theora_image_transport::msg::Packet::ConstSharedPtr message) {
+        processMsg(message);
             });
   }
 
