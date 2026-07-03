@@ -293,7 +293,7 @@ void TheoraSubscriber::internalCallback(
 
   // Convert to BGR color
   cv::Mat bgr, bgr_padded;
-  cv::cvtColor(ycrcb, bgr_padded, CV_YCrCb2BGR);
+  cv::cvtColor(ycrcb, bgr_padded, cv::COLOR_YCrCb2BGR);
   // Pull out original (non-padded) image region
   bgr = bgr_padded(cv::Rect(header_info_.pic_x, header_info_.pic_y,
                             header_info_.pic_width, header_info_.pic_height));
