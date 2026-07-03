@@ -30,9 +30,12 @@
 
 #include "zstd_image_transport/zstd_subscriber.hpp"
 
-#include <sstream>
-#include <iostream>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include <vector>
+
+#include <span>  // NOLINT(build/include_order) cpplint misclassifies <span>
 
 #include <sensor_msgs/msg/compressed_image.hpp>
 
@@ -40,6 +43,7 @@
 #include <rclcpp/parameter_client.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
 
+#include "byte_order.hpp"
 #include "zlib_cpp.hpp"
 
 namespace zstd_image_transport
@@ -65,54 +69,35 @@ void ZstdSubscriber::internalCallback(
   const sensor_msgs::msg::CompressedImage::ConstSharedPtr & msg,
   const Callback & user_cb)
 {
+  // Little-endian header: height(4) width(4) is_bigendian(1) step(4) encoding_size(4)
+  constexpr std::size_t kHeaderSize = 4 + 4 + 1 + 4 + 4;
+  if (msg->data.size() < kHeaderSize) {
+    RCLCPP_ERROR(
+      logger_, "zstd: message of %zu bytes is too small for the header", msg->data.size());
+    return;
+  }
+
+  const std::span<const uint8_t> header(msg->data.data(), kHeaderSize);
   auto result = std::make_shared<sensor_msgs::msg::Image>();
+  result->height = load_le<uint32_t>(header.subspan<0, 4>());
+  result->width = load_le<uint32_t>(header.subspan<4, 4>());
+  result->is_bigendian = header[8];
+  result->step = load_le<uint32_t>(header.subspan<9, 4>());
+  const uint32_t encoding_size = load_le<uint32_t>(header.subspan<13, 4>());
+
+  const std::size_t metadata = kHeaderSize + encoding_size;
+  if (msg->data.size() < metadata) {
+    RCLCPP_ERROR(
+      logger_, "zstd: message of %zu bytes is too small for its %u-byte encoding field",
+      msg->data.size(), encoding_size);
+    return;
+  }
+  result->encoding.assign(
+    reinterpret_cast<const char *>(msg->data.data()) + kHeaderSize, encoding_size);
 
   zlib::Decomp decomp;
-
-  int metadata = 4 + 4 + 1 + 4 + 4;
-
-  result->height =
-    (msg->data[3] << 24 ) +
-    (msg->data[2] << 16 ) +
-    (msg->data[1] << 8 ) +
-    (msg->data[0]);
-
-  result->width =
-    (msg->data[7] << 24 ) +
-    (msg->data[6] << 16 ) +
-    (msg->data[5] << 8 ) +
-    (msg->data[4]);
-
-  result->is_bigendian = msg->data[8];
-
-  result->step =
-    (msg->data[12] << 24 ) +
-    (msg->data[11] << 16 ) +
-    (msg->data[10] << 8 ) +
-    (msg->data[9]);
-
-  uint32_t encoding_size =
-    (msg->data[16] << 24 ) +
-    (msg->data[15] << 16 ) +
-    (msg->data[14] << 8 ) +
-    (msg->data[13]);
-
-  std::string encoding;
-  result->encoding.resize(encoding_size);
-  memcpy(&result->encoding[0], &msg->data[17], encoding_size);
-
-  metadata += encoding_size;
-
-  std::shared_ptr<zlib::DataBlock> data = zlib::AllocateData(msg->data.size());
-  memcpy(data->ptr, &msg->data[metadata], msg->data.size());
-
-  std::list<std::shared_ptr<zlib::DataBlock>> out_data_list;
-  out_data_list = decomp.Process(data);
-
-  std::shared_ptr<zlib::DataBlock> data2 = zlib::ExpandDataList(out_data_list);
-
-  result->data.resize(data2->size);
-  memcpy(&result->data[0], data2->ptr, data2->size);
+  result->data = decomp.Process(
+    std::span<const uint8_t>(msg->data.data() + metadata, msg->data.size() - metadata));
 
   user_cb(result);
 }

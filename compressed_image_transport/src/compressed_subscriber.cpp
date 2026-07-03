@@ -96,7 +96,7 @@ void CompressedSubscriber::internalCallback(
 {
   int cfg_imdecode_flag = imdecodeFlagFromConfig();
 
-  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+  auto cv_ptr = std::make_shared<cv_bridge::CvImage>();
 
   // Copy message header
   cv_ptr->header = message->header;

@@ -54,7 +54,9 @@ public:
     sub_ = node_->create_subscription<theora_image_transport::msg::Packet>(
             "stream",
             10,
-            std::bind(&OggSaver::processMsg, this, std::placeholders::_1));
+            [this](theora_image_transport::msg::Packet::ConstSharedPtr message) {
+              processMsg(message);
+            });
   }
 
 

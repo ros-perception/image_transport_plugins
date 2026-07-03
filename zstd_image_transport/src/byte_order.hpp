@@ -27,80 +27,41 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef ZLIB_CPP_HPP_
-#define ZLIB_CPP_HPP_
+#ifndef BYTE_ORDER_HPP_
+#define BYTE_ORDER_HPP_
 
-#include <zlib.h>
-
+#include <cstddef>
 #include <cstdint>
-#include <vector>
 
+#include <concepts>  // NOLINT(build/include_order) cpplint misclassifies C++20 headers
 #include <span>  // NOLINT(build/include_order) cpplint misclassifies <span>
 
-namespace zlib
+namespace zstd_image_transport
 {
 
-/// Compress processor (RAII wrapper over a z_stream).
-class Comp
+/// Serialize `value` into `out` as little-endian bytes.
+///
+/// The fixed-extent span makes the width a compile-time contract: passing a
+/// span whose size differs from sizeof(T) is a compile error, not a runtime bug.
+template<std::unsigned_integral T>
+constexpr void store_le(std::span<std::uint8_t, sizeof(T)> out, T value) noexcept
 {
-public:
-  enum class Level : int
-  {
-    Default = -1,
-    Min = 0,
-    Level_1 = 1,
-    Level_2 = 2,
-    Level_3 = 3,
-    Level_4 = 4,
-    Level_5 = 5,
-    Level_6 = 6,
-    Level_7 = 7,
-    Level_8 = 8,
-    Max = 9
-  };
+  for (std::size_t i = 0; i < sizeof(T); ++i) {
+    out[i] = static_cast<std::uint8_t>(value >> (8 * i));
+  }
+}
 
-  /// Construct a compressor.
-  explicit Comp(Level level = Level::Default, bool zlib_header = false);
-
-  /// Destructor, will release z_stream.
-  ~Comp();
-
-  Comp(const Comp &) = delete;
-  Comp & operator=(const Comp &) = delete;
-
-  /// Returns true if the compressor initialized successfully.
-  [[nodiscard]] bool IsSucc() const noexcept {return init_ok_;}
-
-  /// Compress `input`, returning the compressed bytes as one contiguous buffer.
-  [[nodiscard]] std::vector<std::uint8_t> Process(
-    std::span<const std::uint8_t> input, bool last_block = false);
-
-private:
-  z_stream zs_{};
-  bool init_ok_ = false;
-};
-
-/// Decompress processor (RAII wrapper over a z_stream).
-class Decomp
+/// Deserialize a little-endian `T` from `in`.
+template<std::unsigned_integral T>
+constexpr T load_le(std::span<const std::uint8_t, sizeof(T)> in) noexcept
 {
-public:
-  /// Construct a decompressor.
-  Decomp();
+  T value = 0;
+  for (std::size_t i = 0; i < sizeof(T); ++i) {
+    value = static_cast<T>(value | (static_cast<T>(in[i]) << (8 * i)));
+  }
+  return value;
+}
 
-  /// Destructor, will release z_stream.
-  ~Decomp();
+}  // namespace zstd_image_transport
 
-  Decomp(const Decomp &) = delete;
-  Decomp & operator=(const Decomp &) = delete;
-
-  /// Decompress `input`, returning the inflated bytes as one contiguous buffer.
-  [[nodiscard]] std::vector<std::uint8_t> Process(std::span<const std::uint8_t> input);
-
-private:
-  z_stream zs_{};
-  bool init_ok_ = false;
-};
-
-}  // namespace zlib
-
-#endif  // ZLIB_CPP_HPP_
+#endif  // BYTE_ORDER_HPP_

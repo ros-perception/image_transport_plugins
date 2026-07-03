@@ -29,7 +29,8 @@
 
 #include "compressed_image_transport/compressed_publisher.hpp"
 
-#include <sstream>
+#include <format>
+#include <string>
 #include <vector>
 
 #include <cv_bridge/cv_bridge.hpp>
@@ -150,8 +151,10 @@ void CompressedPublisher::advertiseImpl(
   if (ns_len > 1) {
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
-      node_param_interface_->add_pre_set_parameters_callback(std::bind(
-        &CompressedPublisher::preSetParametersCallback, this, std::placeholders::_1));
+      node_param_interface_->add_pre_set_parameters_callback(
+        [this](std::vector<rclcpp::Parameter> & parameters) {
+          preSetParametersCallback(parameters);
+        });
   }
 
   for(const ParameterDefinition & pd : kParameters) {
@@ -189,6 +192,7 @@ void CompressedPublisher::publish(
   std::vector<int> params;
 
   // Get codec configuration
+  using enum compressionFormat;
   compressionFormat encodingFormat = UNDEFINED;
   if (cfg_format == "jpeg") {
     encodingFormat = JPEG;
@@ -274,22 +278,19 @@ void CompressedPublisher::publish(
         // Check input format
         if ((bitDepth == 8) || (bitDepth == 16)) {
           // Target image format
-          std::stringstream targetFormat;
+          std::string targetFormat;
           if (enc::isColor(message.encoding)) {
-          // convert color images to RGB domain
-            targetFormat << "bgr";
-            if (enc::hasAlpha(message.encoding)) {
-              targetFormat << "a";
-            }
-            targetFormat << bitDepth;
-            compressed->format += targetFormat.str();
+            // convert color images to the RGB domain
+            targetFormat = std::format(
+              "bgr{}{}", enc::hasAlpha(message.encoding) ? "a" : "", bitDepth);
+            compressed->format += targetFormat;
           }
 
           // OpenCV-ros bridge
           try {
             std::shared_ptr<CompressedPublisher> tracked_object;
             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, tracked_object,
-              targetFormat.str());
+              targetFormat);
 
             // Compress image
             if (cv::imencode(".png", cv_ptr->image, compressed->data, params)) {

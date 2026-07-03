@@ -50,7 +50,7 @@ namespace compressed_depth_image_transport
 sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
   const sensor_msgs::msg::CompressedImage & message)
 {
-  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+  auto cv_ptr = std::make_shared<cv_bridge::CvImage>();
 
   auto logger = rclcpp::get_logger("compressed_depth_image_transport");
   auto clock = rclcpp::Clock();

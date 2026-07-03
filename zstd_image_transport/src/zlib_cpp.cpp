@@ -29,136 +29,71 @@
 
 #include "zlib_cpp.hpp"
 
-#include <cstring>
-#include <utility>
-
 namespace zlib
 {
 
-// Block size block used to compress/uncompress the data
-const int MAX_CHUNK_SIZE = 1024;
-
-const int WINDOW_BITS = 15;
-
-/// Allocate memory to DataBlock and assign to a shared_ptr object.
-std::shared_ptr<DataBlock> AllocateData(std::size_t size)
+namespace
 {
-  std::shared_ptr<DataBlock> data(new DataBlock, [](DataBlock * p) {
-      delete[] p->ptr;
-      delete p;
-    });
-  data->ptr = new uint8_t[size];
-  data->size = size;
-  return data;
-}
-
-std::shared_ptr<DataBlock> ExpandDataList(const std::list<std::shared_ptr<DataBlock>> & data_list)
-{
-  std::size_t total_size = 0;
-  for (const std::shared_ptr<DataBlock> & this_data : data_list) {
-    total_size += this_data->size;
-  }
-  std::shared_ptr<DataBlock> out_data = AllocateData(total_size);
-  uint8_t * this_ptr = out_data->ptr;
-  for (const std::shared_ptr<DataBlock> & this_data : data_list) {
-    memcpy(this_ptr, this_data->ptr, this_data->size);
-    this_ptr += this_data->size;
-  }
-  return out_data;
-}
+// Chunk size used to pull data out of zlib before appending to the output.
+constexpr std::size_t MAX_CHUNK_SIZE = 1024;
+constexpr int WINDOW_BITS = 15;
+}  // namespace
 
 Comp::Comp(Level level, bool zlib_header)
-: level_(level)
 {
-  memset(&zs_, 0, sizeof(zs_));
-  int windowBits = WINDOW_BITS;
+  int window_bits = WINDOW_BITS;
   if (zlib_header) {
-    // Configurate the compressor to write a simple zlib header and trailer
-    // around the compressed data instead of a zlib wrapper
-    windowBits += 16;
+    // Configure the compressor to write a simple zlib header and trailer
+    // around the compressed data instead of a raw deflate stream.
+    window_bits += 16;
   }
-  int ret = deflateInit2(
-    &zs_, static_cast<int>(level_), Z_DEFLATED, windowBits,
-    8, Z_DEFAULT_STRATEGY);
-  init_ok_ = ret == Z_OK;
+  init_ok_ = deflateInit2(
+    &zs_, static_cast<int>(level), Z_DEFLATED, window_bits,
+    8, Z_DEFAULT_STRATEGY) == Z_OK;
 }
 
 Comp::~Comp() {deflateEnd(&zs_);}
 
-bool Comp::IsSucc() const
+std::vector<std::uint8_t> Comp::Process(std::span<const std::uint8_t> input, bool last_block)
 {
-  return init_ok_;
-}
-
-std::list<std::shared_ptr<DataBlock>> Comp::Process(
-  const uint8_t * buffer, std::size_t size,
-  bool last_block)
-{
-  std::list<std::shared_ptr<DataBlock>> out_data_list;
-  // Prepare output buffer memory.
-  uint8_t out_buffer[MAX_CHUNK_SIZE];
-  zs_.next_in = reinterpret_cast<uint8_t *>(const_cast<uint8_t *>(buffer));
-  zs_.avail_in = static_cast<uInt>(size);
+  std::vector<std::uint8_t> out;
+  std::uint8_t chunk[MAX_CHUNK_SIZE];
+  zs_.next_in = const_cast<Bytef *>(input.data());
+  zs_.avail_in = static_cast<uInt>(input.size());
   do {
-    // Reset output buffer position and size.
     zs_.avail_out = MAX_CHUNK_SIZE;
-    zs_.next_out = out_buffer;
-    // Do compress.
+    zs_.next_out = chunk;
     deflate(&zs_, last_block ? Z_FINISH : Z_NO_FLUSH);
-    // Allocate output memory.
-    std::size_t out_size = MAX_CHUNK_SIZE - zs_.avail_out;
-    std::shared_ptr<DataBlock> out_data = AllocateData(out_size);
-    // Copy and add to output data list.
-    memcpy(out_data->ptr, out_buffer, out_size);
-    out_data_list.push_back(std::move(out_data));
+    out.insert(out.end(), chunk, chunk + (MAX_CHUNK_SIZE - zs_.avail_out));
   } while (zs_.avail_out == 0);
-  // Done.
-  return out_data_list;
+  return out;
 }
 
 Decomp::Decomp()
 {
-  memset(&zs_, 0, sizeof(zs_));
-  // Enable zlib and zlib decoding with automatic header detection
-  int windowBits = WINDOW_BITS + 32;
-  int ret = inflateInit2(&zs_, windowBits);
-  init_ok_ = ret == Z_OK;
+  // Enable zlib and gzip decoding with automatic header detection.
+  init_ok_ = inflateInit2(&zs_, WINDOW_BITS + 32) == Z_OK;
 }
 
 Decomp::~Decomp() {inflateEnd(&zs_);}
 
-std::list<std::shared_ptr<DataBlock>> Decomp::Process(
-  const std::shared_ptr<DataBlock> & compressed_data)
+std::vector<std::uint8_t> Decomp::Process(std::span<const std::uint8_t> input)
 {
-  std::list<std::shared_ptr<DataBlock>> out_data_list;
-  uint8_t out_buffer[MAX_CHUNK_SIZE];
-  // Incoming buffer.
-  zs_.avail_in = static_cast<uInt>(compressed_data->size);
-  zs_.next_in = compressed_data->ptr;
-  int ret;
+  std::vector<std::uint8_t> out;
+  std::uint8_t chunk[MAX_CHUNK_SIZE];
+  zs_.avail_in = static_cast<uInt>(input.size());
+  zs_.next_in = const_cast<Bytef *>(input.data());
   do {
-    // Prepare outcoming buffer and size.
     zs_.avail_out = MAX_CHUNK_SIZE;
-    zs_.next_out = out_buffer;
-    // Decompress data.
-    ret = inflate(&zs_, Z_NO_FLUSH);
-    switch (ret) {
-      case Z_NEED_DICT:
-        // Incoming data is invalid.
-        return out_data_list;
-      case Z_DATA_ERROR:
-      case Z_MEM_ERROR:
-        // Critical error.
-        return out_data_list;
+    zs_.next_out = chunk;
+    int ret = inflate(&zs_, Z_NO_FLUSH);
+    if (ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
+      // Incoming data is invalid or a critical error occurred.
+      return out;
     }
-    // Outcome size.
-    std::size_t out_size = MAX_CHUNK_SIZE - zs_.avail_out;
-    // Allocate outcome buffer.
-    std::shared_ptr<DataBlock> out_data = AllocateData(out_size);
-    memcpy(out_data->ptr, out_buffer, out_size);
-    out_data_list.push_back(std::move(out_data));
+    out.insert(out.end(), chunk, chunk + (MAX_CHUNK_SIZE - zs_.avail_out));
   } while (zs_.avail_out == 0);
-  return out_data_list;
+  return out;
 }
 
 }  // namespace zlib
