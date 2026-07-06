@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>depthz_image_transport</name>
+  <version>7.0.1</version>
+  <description>
+    depthz_image_transport provides a plugin to image_transport for transparently sending
+    32FC1 and 16UC1 depth images losslessly compressed with the dpred codec (per-image value
+    dictionary + 2D prediction + zstd).
+  </description>
+  <maintainer email="davide.faconti@gmail.com">Davide Faconti</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  <author>Davide Faconti</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>image_transport</depend>
+  <depend>libzstd-dev</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <image_transport plugin="${prefix}/depthz_plugins.xml" />
+  </export>
+</package>
