@@ -33,6 +33,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include <rclcpp/rclcpp.hpp>
 #include <image_transport/image_transport.hpp>
@@ -43,9 +44,8 @@ using namespace std::chrono_literals;
 namespace
 {
 
-// Build a constant-colour bgr8 image with dimensions that are multiples of 16
-// (theora encodes in 16x16 macroblocks).
-sensor_msgs::msg::Image makeBgr8(uint32_t w, uint32_t h, uint8_t b, uint8_t g, uint8_t r)
+// Build a bgr8 image with a varying (non-constant) pattern to exercise the codec.
+sensor_msgs::msg::Image makeImage(uint32_t w, uint32_t h)
 {
   sensor_msgs::msg::Image img;
   img.header.frame_id = "camera";
@@ -55,62 +55,75 @@ sensor_msgs::msg::Image makeBgr8(uint32_t w, uint32_t h, uint8_t b, uint8_t g, u
   img.is_bigendian = 0;
   img.step = w * 3;
   img.data.resize(static_cast<size_t>(img.step) * h);
-  for (size_t i = 0; i < img.data.size(); i += 3) {
-    img.data[i] = b;
-    img.data[i + 1] = g;
-    img.data[i + 2] = r;
+  for (size_t i = 0; i < img.data.size(); ++i) {
+    img.data[i] = static_cast<uint8_t>((i * 131u + 17u) & 0xFFu);
   }
   return img;
 }
 
 }  // namespace
 
-// Round-trip through the "theora" transport (TheoraPublisher encode ->
-// TheoraSubscriber decode). Theora is a stateful streaming codec: header
-// packets must arrive before a keyframe can be decoded, so several frames are
-// published. Theora is lossy, so only the cloud structure is checked exactly.
-TEST(TheoraRoundTrip, PublishSubscribeDecodesFrame)
+class ZstdTransportTest : public ::testing::Test
 {
-  auto node = rclcpp::Node::make_shared("test_theora_roundtrip");
-  const auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+protected:
+  static void SetUpTestSuite()
+  {
+    if (!rclcpp::ok()) {
+      rclcpp::init(0, nullptr);
+    }
+  }
+  static void TearDownTestSuite()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+// The zstd transport plugin must be discoverable through pluginlib.
+TEST_F(ZstdTransportTest, TransportIsLoadable)
+{
+  bool found = false;
+  for (const auto & name : image_transport::getLoadableTransports()) {
+    if (name.find("zstd") != std::string::npos) {
+      found = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found) << "zstd transport not found among loadable transports";
+}
+
+// Full integration over the zstd transport. zstd is lossless, so the received
+// image must equal the original exactly (data and layout metadata).
+TEST_F(ZstdTransportTest, PublishSubscribeRoundTrip)
+{
+  auto node = std::make_shared<rclcpp::Node>("zstd_transport_test");
 
   sensor_msgs::msg::Image::ConstSharedPtr received;
   auto sub = image_transport::create_subscription(
-    *node, "camera/image",
+    *node, "test_image",
     [&received](const sensor_msgs::msg::Image::ConstSharedPtr & msg) {received = msg;},
-    "theora", qos);
-  auto pub = image_transport::create_publisher(*node, "camera/image", qos);
+    "zstd", rclcpp::SystemDefaultsQoS());
+  auto pub = image_transport::create_publisher(*node, "test_image", rclcpp::SystemDefaultsQoS());
 
-  const auto original = makeBgr8(64, 48, 40, 90, 160);
+  const auto original = makeImage(64, 48);
 
-  rclcpp::executors::SingleThreadedExecutor executor;
-  auto base = node->get_node_base_interface();
-
-  // Publish a stream of frames; the decoder needs the header packets plus a
-  // keyframe before it can emit a decoded image.
-  const size_t max_frames = 30;
-  const size_t max_loops = 50;
-  for (size_t frame = 0; frame < max_frames && !received; ++frame) {
+  rclcpp::executors::SingleThreadedExecutor exec;
+  const auto deadline = std::chrono::steady_clock::now() + 15s;
+  while (!received && std::chrono::steady_clock::now() < deadline && rclcpp::ok()) {
     pub.publish(original);
-    executor.spin_node_some(base);
-    for (size_t loop = 0; !received && loop < max_loops; ++loop) {
-      std::this_thread::sleep_for(10ms);
-      executor.spin_node_some(base);
-    }
+    exec.spin_node_some(node);
+    std::this_thread::sleep_for(50ms);
   }
 
-  ASSERT_TRUE(received) << "no image decoded through the theora transport";
+  ASSERT_TRUE(received) << "no image received through the zstd transport within the timeout";
   EXPECT_EQ(received->width, original.width);
   EXPECT_EQ(received->height, original.height);
-  EXPECT_FALSE(received->data.empty());
-  EXPECT_FALSE(received->encoding.empty());
+  EXPECT_EQ(received->step, original.step);
+  EXPECT_EQ(received->encoding, original.encoding);
+  EXPECT_EQ(received->data, original.data);  // lossless
 }
 
 int main(int argc, char ** argv)
 {
-  rclcpp::init(argc, argv);
   testing::InitGoogleTest(&argc, argv);
-  const int ret = RUN_ALL_TESTS();
-  rclcpp::shutdown();
-  return ret;
+  return RUN_ALL_TESTS();
 }

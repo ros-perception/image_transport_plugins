@@ -125,10 +125,12 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)
-  # Round-trips an image through the "theora" transport end to end
-  # (TheoraPublisher encode -> TheoraSubscriber decode) via a real node.
-  ament_add_gtest(test_theora_roundtrip test/test_theora_roundtrip.cpp)
-  target_link_libraries(test_theora_roundtrip
+  # theora exposes no standalone codec API (encode/decode live in the stateful
+  # plugin), so it is covered only by the end-to-end transport test below, which
+  # exercises TheoraPublisher (encode) and TheoraSubscriber (decode) through a
+  # real node, plus a pluginlib-discovery check.
+  ament_add_gtest(test_theora_transport test/test_theora_transport.cpp)
+  target_link_libraries(test_theora_transport
     image_transport::image_transport
     rclcpp::rclcpp
     ${sensor_msgs_TARGETS})

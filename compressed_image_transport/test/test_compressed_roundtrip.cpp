@@ -27,96 +27,88 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+// Codec-level round-trip tests: they exercise the OpenCV image codecs the
+// compressed transport relies on (JPEG / PNG), with no ROS node or transport.
+
 #include <gtest/gtest.h>
 
-#include <algorithm>
-#include <chrono>
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <string>
+#include <vector>
 
-#include <rclcpp/rclcpp.hpp>
-#include <image_transport/image_transport.hpp>
-#include <sensor_msgs/msg/image.hpp>
-
-using namespace std::chrono_literals;
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 namespace
 {
 
-// Build a constant-colour bgr8 image (constant colour survives JPEG cleanly).
-sensor_msgs::msg::Image makeBgr8(uint32_t w, uint32_t h, uint8_t b, uint8_t g, uint8_t r)
+// Build a bgr8 image with a deterministic per-pixel pattern.
+cv::Mat makeBgr8(int w, int h)
 {
-  sensor_msgs::msg::Image img;
-  img.header.frame_id = "camera";
-  img.height = h;
-  img.width = w;
-  img.encoding = "bgr8";
-  img.is_bigendian = 0;
-  img.step = w * 3;
-  img.data.resize(static_cast<size_t>(img.step) * h);
-  for (size_t i = 0; i < img.data.size(); i += 3) {
-    img.data[i] = b;
-    img.data[i + 1] = g;
-    img.data[i + 2] = r;
+  cv::Mat img(h, w, CV_8UC3);
+  for (int y = 0; y < h; ++y) {
+    for (int x = 0; x < w; ++x) {
+      img.at<cv::Vec3b>(y, x) = cv::Vec3b(
+        static_cast<uchar>((x * 7) & 0xFF),
+        static_cast<uchar>((y * 5) & 0xFF),
+        static_cast<uchar>((x + y) & 0xFF));
+    }
   }
   return img;
 }
 
-}  // namespace
-
-// Publish a raw image and receive it back through the "compressed" transport,
-// exercising CompressedPublisher (encode) and CompressedSubscriber (decode)
-// end to end. The default codec is JPEG (lossy): structure must match exactly,
-// pixel values within a tolerance.
-TEST(CompressedRoundTrip, PublishSubscribePreservesImage)
+int maxAbsDiff(const cv::Mat & a, const cv::Mat & b)
 {
-  auto node = rclcpp::Node::make_shared("test_compressed_roundtrip");
-  const auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
-
-  sensor_msgs::msg::Image::ConstSharedPtr received;
-  auto sub = image_transport::create_subscription(
-    *node, "camera/image",
-    [&received](const sensor_msgs::msg::Image::ConstSharedPtr & msg) {received = msg;},
-    "compressed", qos);
-  auto pub = image_transport::create_publisher(*node, "camera/image", qos);
-
-  const auto original = makeBgr8(32, 24, 10, 120, 200);
-
-  rclcpp::executors::SingleThreadedExecutor executor;
-  auto base = node->get_node_base_interface();
-
-  const size_t max_retries = 5;
-  const size_t max_loops = 200;
-  for (size_t retry = 0; retry < max_retries && !received; ++retry) {
-    pub.publish(original);
-    executor.spin_node_some(base);
-    for (size_t loop = 0; !received && loop < max_loops; ++loop) {
-      std::this_thread::sleep_for(10ms);
-      executor.spin_node_some(base);
-    }
-  }
-
-  ASSERT_TRUE(received) << "no image received through the compressed transport";
-  EXPECT_EQ(received->width, original.width);
-  EXPECT_EQ(received->height, original.height);
-  EXPECT_EQ(received->encoding, original.encoding);
-  ASSERT_EQ(received->data.size(), original.data.size());
-
-  int max_err = 0;
-  for (size_t i = 0; i < original.data.size(); ++i) {
-    max_err = std::max(max_err, std::abs(static_cast<int>(received->data[i]) -
-        static_cast<int>(original.data[i])));
-  }
-  EXPECT_LE(max_err, 12) << "JPEG round-trip drifted more than expected";
+  cv::Mat diff;
+  cv::absdiff(a, b, diff);
+  double maxval = 0.0;
+  cv::minMaxLoc(diff.reshape(1), nullptr, &maxval);
+  return static_cast<int>(maxval);
 }
 
-int main(int argc, char ** argv)
+}  // namespace
+
+// PNG is lossless: encode -> decode must reproduce the image exactly.
+TEST(CompressedCodecRoundTrip, PngIsLossless)
 {
-  rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
-  const int ret = RUN_ALL_TESTS();
-  rclcpp::shutdown();
-  return ret;
+  const cv::Mat original = makeBgr8(32, 24);
+  std::vector<uchar> buffer;
+  const std::vector<int> params = {cv::IMWRITE_PNG_COMPRESSION, 3};
+  ASSERT_TRUE(cv::imencode(".png", original, buffer, params));
+
+  const cv::Mat decoded = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
+  ASSERT_FALSE(decoded.empty());
+  EXPECT_EQ(decoded.size(), original.size());
+  EXPECT_EQ(decoded.type(), original.type());
+  EXPECT_EQ(maxAbsDiff(original, decoded), 0);
+}
+
+// JPEG is lossy: structure exact, pixel values within a tolerance.
+TEST(CompressedCodecRoundTrip, JpegApproximate)
+{
+  const cv::Mat original = makeBgr8(32, 24);
+  std::vector<uchar> buffer;
+  const std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
+  ASSERT_TRUE(cv::imencode(".jpg", original, buffer, params));
+
+  const cv::Mat decoded = cv::imdecode(buffer, cv::IMREAD_COLOR);
+  ASSERT_FALSE(decoded.empty());
+  EXPECT_EQ(decoded.size(), original.size());
+  EXPECT_LE(maxAbsDiff(original, decoded), 20) << "JPEG round-trip drifted more than expected";
+}
+
+// A single-channel 16-bit image (depth-like) must survive PNG losslessly.
+TEST(CompressedCodecRoundTrip, Png16BitIsLossless)
+{
+  cv::Mat original(24, 32, CV_16UC1);
+  for (int y = 0; y < original.rows; ++y) {
+    for (int x = 0; x < original.cols; ++x) {
+      original.at<uint16_t>(y, x) = static_cast<uint16_t>((x * 337 + y * 71) & 0xFFFF);
+    }
+  }
+  std::vector<uchar> buffer;
+  ASSERT_TRUE(cv::imencode(".png", original, buffer));
+
+  const cv::Mat decoded = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
+  ASSERT_FALSE(decoded.empty());
+  EXPECT_EQ(decoded.type(), original.type());
+  EXPECT_EQ(maxAbsDiff(original, decoded), 0);
 }

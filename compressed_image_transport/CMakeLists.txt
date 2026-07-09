@@ -57,10 +57,18 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)
-  # Round-trips an image through the "compressed" transport end to end
-  # (CompressedPublisher encode -> CompressedSubscriber decode) via a real node.
+  # Codec-level round-trip: exercises the JPEG/PNG codecs directly (OpenCV),
+  # with no ROS node or transport.
   ament_add_gtest(test_compressed_roundtrip test/test_compressed_roundtrip.cpp)
+  target_include_directories(test_compressed_roundtrip PRIVATE ${OpenCV_INCLUDE_DIRS})
   target_link_libraries(test_compressed_roundtrip
+    ament_cmake_ros_core::ament_ros_defaults
+    ${OpenCV_LIBRARIES})
+
+  # End-to-end integration over the "compressed" image transport through a real
+  # node, plus a pluginlib-discovery check.
+  ament_add_gtest(test_compressed_transport test/test_compressed_transport.cpp)
+  target_link_libraries(test_compressed_transport
     image_transport::image_transport
     rclcpp::rclcpp
     ${sensor_msgs_TARGETS})

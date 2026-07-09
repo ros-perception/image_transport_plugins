@@ -61,6 +61,14 @@ if(BUILD_TESTING)
   target_link_libraries(test_zstd_roundtrip
     ament_cmake_ros_core::ament_ros_defaults
     ZLIB::ZLIB)
+
+  # End-to-end integration over the "zstd" image transport through a real node
+  # (requires the installed plugin, discovered via pluginlib at runtime).
+  ament_add_gtest(test_zstd_transport test/test_zstd_transport.cpp)
+  target_link_libraries(test_zstd_transport
+    image_transport::image_transport
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS})
 endif()
 
 ament_package()
