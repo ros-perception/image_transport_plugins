@@ -52,6 +52,15 @@ pluginlib_export_plugin_description_file(image_transport zstd_plugins.xml)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  # Compile the codec sources directly into the test so it does not depend on
+  # image_transport (and its transitive links) to exercise the compression core.
+  ament_add_gtest(test_zstd_roundtrip test/test_zstd_roundtrip.cpp src/zlib_cpp.cpp)
+  target_include_directories(test_zstd_roundtrip PRIVATE src)
+  target_link_libraries(test_zstd_roundtrip
+    ament_cmake_ros_core::ament_ros_defaults
+    ZLIB::ZLIB)
 endif()
 
 ament_package()

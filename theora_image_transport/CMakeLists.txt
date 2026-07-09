@@ -123,6 +123,15 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cppcheck_LANGUAGE "c++")
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  # Round-trips an image through the "theora" transport end to end
+  # (TheoraPublisher encode -> TheoraSubscriber decode) via a real node.
+  ament_add_gtest(test_theora_roundtrip test/test_theora_roundtrip.cpp)
+  target_link_libraries(test_theora_roundtrip
+    image_transport::image_transport
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS})
 endif()
 
 pluginlib_export_plugin_description_file(image_transport theora_plugins.xml)

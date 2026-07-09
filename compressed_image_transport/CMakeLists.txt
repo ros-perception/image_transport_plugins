@@ -55,6 +55,15 @@ pluginlib_export_plugin_description_file(image_transport compressed_plugins.xml)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  # Round-trips an image through the "compressed" transport end to end
+  # (CompressedPublisher encode -> CompressedSubscriber decode) via a real node.
+  ament_add_gtest(test_compressed_roundtrip test/test_compressed_roundtrip.cpp)
+  target_link_libraries(test_compressed_roundtrip
+    image_transport::image_transport
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS})
 endif()
 
 ament_package()
