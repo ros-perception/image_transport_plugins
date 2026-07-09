@@ -123,6 +123,17 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cppcheck_LANGUAGE "c++")
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  # theora exposes no standalone codec API (encode/decode live in the stateful
+  # plugin), so it is covered only by the end-to-end transport test below, which
+  # exercises TheoraPublisher (encode) and TheoraSubscriber (decode) through a
+  # real node, plus a pluginlib-discovery check.
+  ament_add_gtest(test_theora_transport test/test_theora_transport.cpp)
+  target_link_libraries(test_theora_transport
+    image_transport::image_transport
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS})
 endif()
 
 pluginlib_export_plugin_description_file(image_transport theora_plugins.xml)
