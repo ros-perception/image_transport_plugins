@@ -1,0 +1,29 @@
+<package format="2">
+  <name>zlib_image_transport</name>
+  <version>6.2.2</version>
+  <description>
+    zlib_image_transport provides a plugin to image_transport for transparently sending images
+    encoded as zlib (deflate) blobs.
+  </description>
+  <maintainer email="acordero@honurobotics.com">Alejandro Hernandez Cordero</maintainer>
+  <license>BSD</license>
+
+  <url type="website">https://docs.ros.org/en/rolling/p/image_transport/</url>
+  <author>Alejandro Hernandez Cordero</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>image_transport</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>zlib</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <image_transport plugin="${prefix}/zlib_plugins.xml" />
+  </export>
+</package>

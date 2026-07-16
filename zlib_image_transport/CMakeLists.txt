@@ -1,0 +1,57 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(zlib_image_transport)
+
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(ZLIB REQUIRED)
+
+include_directories(include)
+
+add_library(
+  ${PROJECT_NAME} SHARED
+  src/zlib_wrapper.cpp
+  src/zlib_publisher.cpp
+  src/zlib_subscriber.cpp
+  src/manifest.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+  ZLIB::ZLIB
+  image_transport::image_transport
+  rclcpp::rclcpp
+  pluginlib::pluginlib
+  ${sensor_msgs_TARGETS}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  DIRECTORY "include/"
+  DESTINATION include
+)
+
+pluginlib_export_plugin_description_file(image_transport zlib_plugins.xml)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()
