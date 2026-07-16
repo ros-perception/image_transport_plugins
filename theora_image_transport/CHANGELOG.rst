@@ -2,6 +2,25 @@
 Changelog for package theora_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.0.1 (2026-06-30)
+------------------
+* Update CMakeLists minimum version (`#229 <https://github.com/ros-perception/image_transport_plugins/issues/229>`_)
+* Remoed parameter event alias (`#226 <https://github.com/ros-perception/image_transport_plugins/issues/226>`_)
+* Removed clang warning (`#221 <https://github.com/ros-perception/image_transport_plugins/issues/221>`_)
+* Contributors: Alejandro Hernández Cordero
+
+7.0.0 (2026-05-13)
+------------------
+
+6.2.4 (2026-04-13)
+------------------
+
+6.2.3 (2026-04-06)
+------------------
+* Update API (`#217 <https://github.com/ros-perception/image_transport_plugins/issues/217>`_)
+* Publish with uniqueptr for efficiency (`#216 <https://github.com/ros-perception/image_transport_plugins/issues/216>`_)
+* Contributors: Alejandro Hernández Cordero, Maurice Alexander Purnawan
+
 6.2.2 (2025-10-06)
 ------------------
 

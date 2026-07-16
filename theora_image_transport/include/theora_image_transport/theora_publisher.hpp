@@ -55,17 +55,12 @@
 namespace theora_image_transport
 {
 
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
-
 class TheoraPublisher
   : public image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet>
 {
 public:
   TheoraPublisher();
   ~TheoraPublisher() override;
-
-  // Return the system unique string representing the theora transport type
-  std::string getTransportName() const override {return "theora";}
 
 protected:
   void advertiseImpl(

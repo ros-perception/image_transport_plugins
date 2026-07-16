@@ -264,7 +264,8 @@ void TheoraPublisher::publish(
   theora_image_transport::msg::Packet output;
   while ((rval = th_encode_packetout(encoding_context_.get(), 0, &oggpacket)) > 0) {
     oggPacketToMsg(message.header, oggpacket, output);
-    publisher->publish(output);
+    auto msg = std::make_unique<theora_image_transport::msg::Packet>(output);
+    publisher->publish(std::move(msg));
   }
   if (rval == TH_EFAULT) {
     RCLCPP_ERROR(logger_, "[theora] EFAULT in retrieving encoded video data packets");
@@ -392,7 +393,8 @@ bool TheoraPublisher::ensureEncodingContext(
   while (th_encode_flushheader(encoding_context_.get(), &comment, &oggpacket) > 0) {
     stream_header_.push_back(theora_image_transport::msg::Packet());
     oggPacketToMsg(image.header, oggpacket, stream_header_.back());
-    publisher->publish(stream_header_.back());
+    auto msg = std::make_unique<theora_image_transport::msg::Packet>(stream_header_.back());
+    publisher->publish(std::move(msg));
   }
   return true;
 }

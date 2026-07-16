@@ -52,15 +52,12 @@ namespace zstd_image_transport
 {
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class ZstdPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
 public:
   ZstdPublisher();
   ~ZstdPublisher() override = default;
-
-  std::string getTransportName() const override;
 
 protected:
   void advertiseImpl(

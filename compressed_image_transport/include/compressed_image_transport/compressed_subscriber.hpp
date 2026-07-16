@@ -46,8 +46,6 @@
 namespace compressed_image_transport
 {
 
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
-
 class CompressedSubscriber final : public image_transport::SimpleSubscriberPlugin<
     sensor_msgs::msg::CompressedImage>
 {
@@ -57,11 +55,6 @@ public:
   {
   }
   virtual ~CompressedSubscriber() = default;
-
-  std::string getTransportName() const override
-  {
-    return "compressed";
-  }
 
 protected:
   void subscribeImpl(

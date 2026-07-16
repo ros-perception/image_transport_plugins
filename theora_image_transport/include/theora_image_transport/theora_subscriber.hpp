@@ -48,16 +48,12 @@
 namespace theora_image_transport
 {
 
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
-
 class TheoraSubscriber
   : public image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>
 {
 public:
   TheoraSubscriber();
   virtual ~TheoraSubscriber();
-
-  std::string getTransportName() const override {return "theora";}
 
 protected:
   void subscribeImpl(

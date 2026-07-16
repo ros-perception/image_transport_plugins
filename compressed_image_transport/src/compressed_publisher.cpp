@@ -181,9 +181,9 @@ void CompressedPublisher::publish(
     parameters_[TIFF_YDPI]).get_value<int64_t>();
 
   // Compressed image message
-  sensor_msgs::msg::CompressedImage compressed;
-  compressed.header = message.header;
-  compressed.format = message.encoding;
+  auto compressed = std::make_unique<sensor_msgs::msg::CompressedImage>();
+  compressed->header = message.header;
+  compressed->format = message.encoding;
 
   // Compression settings
   std::vector<int> params;
@@ -210,7 +210,7 @@ void CompressedPublisher::publish(
         params.emplace_back(cfg_jpeg_quality);
 
         // Update ros message format header
-        compressed.format += "; jpeg compressed ";
+        compressed->format += "; jpeg compressed ";
 
         // Check input format
         if ((bitDepth == 8) || (bitDepth == 16)) {
@@ -219,15 +219,15 @@ void CompressedPublisher::publish(
           if (enc::isColor(message.encoding)) {
             // convert color images to BGR8 format
             targetFormat = "bgr8";
-            compressed.format += targetFormat;
+            compressed->format += targetFormat;
           } else if (enc::isBayer(message.encoding) && cfg_jpeg_compress_bayer) {
             // do not convert bayer format to mono
             targetFormat = message.encoding;
-            compressed.format += targetFormat;
+            compressed->format += targetFormat;
           } else {
             // convert gray images to mono8 format
             targetFormat = "mono8";
-            compressed.format += targetFormat;
+            compressed->format += targetFormat;
           }
 
           // OpenCV-ros bridge
@@ -237,12 +237,12 @@ void CompressedPublisher::publish(
               targetFormat);
 
             // Compress image
-            if (cv::imencode(".jpg", cv_ptr->image, compressed.data, params)) {
+            if (cv::imencode(".jpg", cv_ptr->image, compressed->data, params)) {
               float cRatio = static_cast<float>(cv_ptr->image.rows * cv_ptr->image.cols *
-                cv_ptr->image.elemSize() / compressed.data.size());
+                cv_ptr->image.elemSize() / compressed->data.size());
               RCLCPP_DEBUG(logger_,
                 "Compressed Image Transport - Codec: jpg, Compression Ratio: 1:%.2f (%lu bytes)",
-                cRatio, compressed.data.size());
+                cRatio, compressed->data.size());
             } else {
               RCLCPP_ERROR(logger_, "cv::imencode (jpeg) failed on input image");
             }
@@ -253,7 +253,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publisher->publish(compressed);
+          publisher->publish(std::move(compressed));
         } else {
           RCLCPP_ERROR(logger_,
             "Compressed Image Transport - JPEG compression requires 8/16-bit color format "
@@ -269,7 +269,7 @@ void CompressedPublisher::publish(
         params.emplace_back(cfg_png_level);
 
         // Update ros message format header
-        compressed.format += "; png compressed ";
+        compressed->format += "; png compressed ";
 
         // Check input format
         if ((bitDepth == 8) || (bitDepth == 16)) {
@@ -282,7 +282,7 @@ void CompressedPublisher::publish(
               targetFormat << "a";
             }
             targetFormat << bitDepth;
-            compressed.format += targetFormat.str();
+            compressed->format += targetFormat.str();
           }
 
           // OpenCV-ros bridge
@@ -292,12 +292,12 @@ void CompressedPublisher::publish(
               targetFormat.str());
 
             // Compress image
-            if (cv::imencode(".png", cv_ptr->image, compressed.data, params)) {
+            if (cv::imencode(".png", cv_ptr->image, compressed->data, params)) {
               float cRatio = static_cast<float>(cv_ptr->image.rows * cv_ptr->image.cols *
-                cv_ptr->image.elemSize() / compressed.data.size());
+                cv_ptr->image.elemSize() / compressed->data.size());
               RCUTILS_LOG_DEBUG(
                 "Compressed Image Transport - Codec: png, Compression Ratio: 1:%.2f (%lu bytes)",
-                cRatio, compressed.data.size());
+                cRatio, compressed->data.size());
             } else {
               RCUTILS_LOG_ERROR("cv::imencode (png) failed on input image");
             }
@@ -310,7 +310,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publisher->publish(compressed);
+          publisher->publish(std::move(compressed));
         } else {
           RCUTILS_LOG_ERROR(
           "Compressed Image Transport - PNG compression requires 8/16-bit "
@@ -323,7 +323,7 @@ void CompressedPublisher::publish(
     case TIFF:
       {
         // Update ros message format header
-        compressed.format += "; tiff compressed ";
+        compressed->format += "; tiff compressed ";
         int res_unit = -1;
         // See https://gitlab.com/libtiff/libtiff/-/blob/v4.3.0/libtiff/tiff.h#L282-284
         if (cfg_tiff_res_unit == "inch") {
@@ -353,12 +353,12 @@ void CompressedPublisher::publish(
             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(message, nullptr, "");
 
             // Compress image
-            if (cv::imencode(".tiff", cv_ptr->image, compressed.data, params)) {
+            if (cv::imencode(".tiff", cv_ptr->image, compressed->data, params)) {
               float cRatio = static_cast<float>(cv_ptr->image.rows * cv_ptr->image.cols *
-                cv_ptr->image.elemSize() / compressed.data.size());
+                cv_ptr->image.elemSize() / compressed->data.size());
               RCUTILS_LOG_DEBUG(
                 "Compressed Image Transport - Codec: tiff, Compression Ratio: 1:%.2f (%lu bytes)",
-                cRatio, compressed.data.size());
+                cRatio, compressed->data.size());
             } else {
               RCUTILS_LOG_ERROR("cv::imencode (tiff) failed on input image");
             }
@@ -371,7 +371,7 @@ void CompressedPublisher::publish(
           }
 
           // Publish message
-          publisher->publish(compressed);
+          publisher->publish(std::move(compressed));
         } else {
           RCUTILS_LOG_ERROR(
           "Compressed Image Transport - TIFF compression requires 8/16/32-bit encoded color format "

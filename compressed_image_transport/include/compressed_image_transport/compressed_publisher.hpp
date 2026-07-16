@@ -47,7 +47,6 @@ namespace compressed_image_transport
 {
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class CompressedPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
@@ -57,11 +56,6 @@ public:
   {
   }
   ~CompressedPublisher() override = default;
-
-  std::string getTransportName() const override
-  {
-    return "compressed";
-  }
 
 protected:
   void advertiseImpl(

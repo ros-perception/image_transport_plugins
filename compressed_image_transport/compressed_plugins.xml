@@ -1,4 +1,6 @@
 <library path="compressed_image_transport">
+  <transport_name>compressed</transport_name>
+  <message_type>sensor_msgs/msg/CompressedImage</message_type>
   <class
     name="image_transport/compressed_pub"
     type="compressed_image_transport::CompressedPublisher"

@@ -47,7 +47,6 @@ namespace compressed_depth_image_transport
 {
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
-using ParameterEvent = rcl_interfaces::msg::ParameterEvent;
 
 class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
@@ -55,11 +54,6 @@ public:
   CompressedDepthPublisher()
   : logger_(rclcpp::get_logger("CompressedDepthPublisher")) {}
   ~CompressedDepthPublisher() {}
-
-  std::string getTransportName() const override
-  {
-    return "compressedDepth";
-  }
 
 protected:
   // Overridden to set up reconfigure server

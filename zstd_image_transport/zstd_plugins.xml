@@ -1,4 +1,6 @@
 <library path="zstd_image_transport">
+  <transport_name>zstd</transport_name>
+  <message_type>sensor_msgs/msg/CompressedImage</message_type>
   <class
     name="image_transport/zstd_pub"
     type="zstd_image_transport::ZstdPublisher"
