@@ -135,28 +135,28 @@ void CompressedSubscriber::internalCallback(
         if (compressed_bgr_image) {
           // if necessary convert colors from bgr to rgb
           if ((image_encoding == enc::RGB8) || (image_encoding == enc::RGB16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGB);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_BGR2RGB);
           }
 
           if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2RGBA);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_BGR2RGBA);
           }
 
           if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_BGR2BGRA);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_BGR2BGRA);
           }
         } else {
           // if necessary convert colors from rgb to bgr
           if ((image_encoding == enc::BGR8) || (image_encoding == enc::BGR16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGR);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_RGB2BGR);
           }
 
           if ((image_encoding == enc::BGRA8) || (image_encoding == enc::BGRA16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2BGRA);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_RGB2BGRA);
           }
 
           if ((image_encoding == enc::RGBA8) || (image_encoding == enc::RGBA16)) {
-            cv::cvtColor(cv_ptr->image, cv_ptr->image, CV_RGB2RGBA);
+            cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_RGB2RGBA);
           }
         }
       }
