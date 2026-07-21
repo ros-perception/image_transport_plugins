@@ -27,86 +27,69 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef ZLIB_CPP_HPP_
-#define ZLIB_CPP_HPP_
+#ifndef ZSTD_WRAPPER_HPP_
+#define ZSTD_WRAPPER_HPP_
 
-#include <zlib.h>
+#include <zstd.h>
 
+#include <cstddef>
 #include <cstdint>
-#include <list>
-#include <memory>
-#include <tuple>
+#include <stdexcept>
 
-namespace zlib
+namespace zstd_wrapper
 {
 
-struct DataBlock
-{
-  uint8_t * ptr;
-  std::size_t size;
-};
-
-std::shared_ptr<DataBlock> AllocateData(std::size_t size);
-std::shared_ptr<DataBlock> ExpandDataList(const std::list<std::shared_ptr<DataBlock>> & data_list);
-
-/// Compress processor.
-class Comp
+/// Reusable ZSTD compression context.
+/// Avoids per-frame context creation overhead.
+class Compressor
 {
 public:
-  enum class Level
-  {
-    Default = -1,
-    Min = 0,
-    Level_1 = 1,
-    Level_2 = 2,
-    Level_3 = 3,
-    Level_4 = 4,
-    Level_5 = 5,
-    Level_6 = 6,
-    Level_7 = 7,
-    Level_8 = 8,
-    Max = 9
-  };
+  Compressor();
+  ~Compressor();
 
-public:
-  /// Construct a compressor.
-  explicit Comp(Level level = Level::Default, bool zlib_header = false);
+  // Non-copyable
+  Compressor(const Compressor &) = delete;
+  Compressor & operator=(const Compressor &) = delete;
 
-  /// Destructor, will release z_stream.
-  ~Comp();
+  /// Compress src into dst. dst must be at least compressBound(srcSize) bytes.
+  /// Returns actual compressed size, or 0 on error.
+  std::size_t compress(
+    uint8_t * dst, std::size_t dst_capacity,
+    const uint8_t * src, std::size_t src_size,
+    int level);
 
-  /// Returns true if compressor initialize successfully.
-  bool IsSucc() const;
-
-  /// Compress incoming buffer to DataBlock list.
-  std::list<std::shared_ptr<DataBlock>> Process(
-    const uint8_t * buffer, std::size_t size, bool last_block = false);
+  /// Returns the maximum compressed size for src_size bytes of input.
+  static std::size_t compressBound(std::size_t src_size);
 
 private:
-  Level level_;
-  z_stream zs_;
-  bool init_ok_;
+  ZSTD_CCtx * ctx_;
 };
 
-/// Decompress processor.
-class Decomp
+/// Reusable ZSTD decompression context.
+class Decompressor
 {
 public:
-  /// Construct a decompressor.
-  Decomp();
+  Decompressor();
+  ~Decompressor();
 
-  /// Destructor, will release z_stream.
-  ~Decomp();
+  // Non-copyable
+  Decompressor(const Decompressor &) = delete;
+  Decompressor & operator=(const Decompressor &) = delete;
 
-  /// Decompress incoming buffer to DataBlock list.
-  std::list<std::shared_ptr<DataBlock>> Process(
-    const std::shared_ptr<DataBlock> & compressed_data);
+  /// Decompress src into dst.
+  /// Returns actual decompressed size, or 0 on error.
+  std::size_t decompress(
+    uint8_t * dst, std::size_t dst_capacity,
+    const uint8_t * src, std::size_t src_size);
+
+  /// Returns the decompressed content size encoded in the zstd frame header.
+  /// Returns 0 if the size is not stored in the frame or on error.
+  static std::size_t getDecompressedSize(const uint8_t * src, std::size_t src_size);
 
 private:
-  z_stream zs_;
-  bool init_ok_;
+  ZSTD_DCtx * ctx_;
 };
 
-}  // namespace zlib
+}  // namespace zstd_wrapper
 
-#endif  // ZLIB_CPP_HPP_
+#endif  // ZSTD_WRAPPER_HPP_

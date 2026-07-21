@@ -27,55 +27,77 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "zstd_wrapper.hpp"
 
-#ifndef ZSTD_IMAGE_TRANSPORT__ZSTD_SUBSCRIBER_HPP_
-#define ZSTD_IMAGE_TRANSPORT__ZSTD_SUBSCRIBER_HPP_
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
+#include <iostream>
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include <rclcpp/node.hpp>
-#include <rclcpp/subscription_options.hpp>
-
-#include <sensor_msgs/msg/image.hpp>
-#include <sensor_msgs/msg/compressed_image.hpp>
-#include <image_transport/node_interfaces.hpp>
-#include <image_transport/simple_subscriber_plugin.hpp>
-
-#include "zstd_image_transport/zstd_common.hpp"
-
-// Forward declaration — defined in the private zstd_wrapper.hpp header.
-namespace zstd_wrapper {class Decompressor;}
-
-namespace zstd_image_transport
+namespace zstd_wrapper
 {
 
-class ZstdSubscriber final
-  : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
+Compressor::Compressor()
+: ctx_(ZSTD_createCCtx())
 {
-public:
-  ZstdSubscriber();
-  virtual ~ZstdSubscriber() = default;
+  if (!ctx_) {
+    throw std::runtime_error("Failed to create ZSTD compression context");
+  }
+}
 
-protected:
-  void subscribeImpl(
-    image_transport::RequiredInterfaces node_interfaces,
-    const std::string & base_topic,
-    const Callback & callback,
-    rclcpp::QoS custom_qos,
-    rclcpp::SubscriptionOptions options) override;
+Compressor::~Compressor()
+{
+  ZSTD_freeCCtx(ctx_);
+}
 
-  void internalCallback(
-    const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
-    const Callback & user_cb) override;
+std::size_t Compressor::compress(
+  uint8_t * dst, std::size_t dst_capacity,
+  const uint8_t * src, std::size_t src_size,
+  int level)
+{
+  std::size_t result = ZSTD_compressCCtx(ctx_, dst, dst_capacity, src, src_size, level);
+  if (ZSTD_isError(result)) {
+    return 0;
+  }
+  return result;
+}
 
-  rclcpp::Logger logger_;
+std::size_t Compressor::compressBound(std::size_t src_size)
+{
+  return ZSTD_compressBound(src_size);
+}
 
-  // Reusable decompression context — avoids per-frame ZSTD_DCtx allocation.
-  std::unique_ptr<zstd_wrapper::Decompressor> decompressor_;
-};
+Decompressor::Decompressor()
+: ctx_(ZSTD_createDCtx())
+{
+  if (!ctx_) {
+    throw std::runtime_error("Failed to create ZSTD decompression context");
+  }
+}
 
-}  // namespace zstd_image_transport
+Decompressor::~Decompressor()
+{
+  ZSTD_freeDCtx(ctx_);
+}
 
-#endif  // ZSTD_IMAGE_TRANSPORT__ZSTD_SUBSCRIBER_HPP_
+std::size_t Decompressor::decompress(
+  uint8_t * dst, std::size_t dst_capacity,
+  const uint8_t * src, std::size_t src_size)
+{
+  std::size_t result = ZSTD_decompressDCtx(ctx_, dst, dst_capacity, src, src_size);
+  if (ZSTD_isError(result)) {
+    return 0;
+  }
+  return result;
+}
+
+std::size_t Decompressor::getDecompressedSize(const uint8_t * src, std::size_t src_size)
+{
+  uint64_t size = ZSTD_getFrameContentSize(src, src_size);
+  if (size == ZSTD_CONTENTSIZE_UNKNOWN || size == ZSTD_CONTENTSIZE_ERROR) {
+    return 0;
+  }
+  return static_cast<std::size_t>(size);
+}
+
+}  // namespace zstd_wrapper

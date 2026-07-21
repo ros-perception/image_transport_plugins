@@ -31,6 +31,7 @@
 #ifndef ZSTD_IMAGE_TRANSPORT__ZSTD_PUBLISHER_HPP_
 #define ZSTD_IMAGE_TRANSPORT__ZSTD_PUBLISHER_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_set>
@@ -43,6 +44,9 @@
 #include <rclcpp/node.hpp>
 
 #include "zstd_image_transport/zstd_common.hpp"
+
+// Forward declaration — defined in the private zstd_wrapper.hpp header.
+namespace zstd_wrapper {class Compressor;}
 
 namespace zstd_image_transport
 {
@@ -69,6 +73,9 @@ protected:
   rclcpp::Logger logger_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
+
+  // Reusable compression context — avoids per-frame ZSTD_CCtx allocation.
+  mutable std::unique_ptr<zstd_wrapper::Compressor> compressor_;
 
 private:
   std::vector<std::string> parameters_;

@@ -31,7 +31,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "zlib_cpp.hpp"
+#include "zstd_wrapper.hpp"
 
 namespace zstd_image_transport
 {
@@ -97,23 +97,19 @@ void ZstdPublisher::publish(
   const sensor_msgs::msg::Image & message,
   const PublisherT & publisher) const
 {
-  // Fresh Configuration
   int cfg_zstd_level =
     node_param_interface_->get_parameter(
       parameters_[ZSTD_LEVEL]).as_int();
 
-  zlib::Comp comp(static_cast<zlib::Comp::Level>(cfg_zstd_level), true);
-  auto g_compressed_data =
-    comp.Process(&message.data[0], message.data.size(), true);
-
-  size_t total_size = 0;
-  for (const auto & data : g_compressed_data) {
-    total_size += data->size;
+  // Lazily initialize the reusable compression context.
+  if (!compressor_) {
+    compressor_ = std::make_unique<zstd_wrapper::Compressor>();
   }
 
   auto compressed = std::make_unique<sensor_msgs::msg::CompressedImage>();
 
-  int metadata = 4 + 4 + 1 + 4 + 4 + message.encoding.size();
+  sensor_msgs::msg::CompressedImage compressed;
+  compressed.data.resize(metadata + bound);
 
   compressed->data.resize(total_size + metadata);
 
