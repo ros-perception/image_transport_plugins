@@ -38,7 +38,7 @@ namespace compressed_image_transport
 {
 
 // Compression formats
-enum compressionFormat
+enum class compressionFormat
 {
   UNDEFINED = -1,
   JPEG = 0,

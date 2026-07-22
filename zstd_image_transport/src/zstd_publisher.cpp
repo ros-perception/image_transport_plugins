@@ -29,8 +29,15 @@
 
 #include "zstd_image_transport/zstd_publisher.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <vector>
+
+#include <span>  // NOLINT(build/include_order) cpplint misclassifies <span>
+
 #include <rclcpp/rclcpp.hpp>
 
+#include "byte_order.hpp"
 #include "zlib_cpp.hpp"
 
 namespace zstd_image_transport
@@ -83,9 +90,10 @@ void ZstdPublisher::advertiseImpl(
   if (ns_len > 1) {
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
-      node_param_interface_->add_pre_set_parameters_callback(std::bind(
-        &ZstdPublisher::preSetParametersCallback,
-        this, std::placeholders::_1));
+      node_param_interface_->add_pre_set_parameters_callback(
+      [this](std::vector<rclcpp::Parameter> & parameters) {
+        preSetParametersCallback(parameters);
+        });
   }
 
   for (const ParameterDefinition & pd : kParameters) {
@@ -103,49 +111,25 @@ void ZstdPublisher::publish(
       parameters_[ZSTD_LEVEL]).as_int();
 
   zlib::Comp comp(static_cast<zlib::Comp::Level>(cfg_zstd_level), true);
-  auto g_compressed_data =
-    comp.Process(&message.data[0], message.data.size(), true);
-
-  size_t total_size = 0;
-  for (const auto & data : g_compressed_data) {
-    total_size += data->size;
-  }
+  const std::vector<uint8_t> payload = comp.Process(
+    std::span<const uint8_t>(message.data.data(), message.data.size()), true);
 
   auto compressed = std::make_unique<sensor_msgs::msg::CompressedImage>();
 
-  int metadata = 4 + 4 + 1 + 4 + 4 + message.encoding.size();
+  // Little-endian header: height(4) width(4) is_bigendian(1) step(4)
+  //                       encoding_size(4) encoding(encoding_size)
+  const std::size_t metadata = 4 + 4 + 1 + 4 + 4 + message.encoding.size();
+  compressed->data.resize(metadata + payload.size());
 
-  compressed->data.resize(total_size + metadata);
+  const std::span<uint8_t> header(compressed->data.data(), metadata);
+  store_le(header.subspan<0, 4>(), message.height);
+  store_le(header.subspan<4, 4>(), message.width);
+  header[8] = static_cast<uint8_t>(message.is_bigendian);
+  store_le(header.subspan<9, 4>(), message.step);
+  store_le(header.subspan<13, 4>(), static_cast<uint32_t>(message.encoding.size()));
+  std::copy(message.encoding.begin(), message.encoding.end(), compressed->data.begin() + 17);
 
-  size_t index = metadata;
-  for (const auto & data : g_compressed_data) {
-    memcpy(&compressed->data[index], data->ptr, data->size);
-    index += data->size;
-  }
-
-  compressed->data[0] = static_cast<uint8_t>(message.height & 0xFF);
-  compressed->data[1] = static_cast<uint8_t>(message.height >> 8) & 0xFF;
-  compressed->data[2] = static_cast<uint8_t>(message.height >> 16) & 0xFF;
-  compressed->data[3] = static_cast<uint8_t>(message.height >> 24) & 0xFF;
-
-  compressed->data[4] = static_cast<uint8_t>(message.width & 0xFF);
-  compressed->data[5] = static_cast<uint8_t>(message.width >> 8) & 0xFF;
-  compressed->data[6] = static_cast<uint8_t>(message.width >> 16) & 0xFF;
-  compressed->data[7] = static_cast<uint8_t>(message.width >> 24) & 0xFF;
-
-  compressed->data[8] = message.is_bigendian;
-
-  compressed->data[9] = static_cast<uint8_t>(message.step & 0xFF);
-  compressed->data[10] = static_cast<uint8_t>(message.step >> 8) & 0xFF;
-  compressed->data[11] = static_cast<uint8_t>(message.step >> 16) & 0xFF;
-  compressed->data[12] = static_cast<uint8_t>(message.step >> 24) & 0xFF;
-
-  compressed->data[13] = static_cast<uint8_t>(message.encoding.size() & 0xFF);
-  compressed->data[14] = static_cast<uint8_t>(message.encoding.size() >> 8) & 0xFF;
-  compressed->data[15] = static_cast<uint8_t>(message.encoding.size() >> 16) & 0xFF;
-  compressed->data[16] = static_cast<uint8_t>(message.encoding.size() >> 24) & 0xFF;
-
-  memcpy(&compressed->data[17], &message.encoding[0], message.encoding.size());
+  std::copy(payload.begin(), payload.end(), compressed->data.begin() + metadata);
 
   // Compressed image message
   compressed->header = message.header;

@@ -122,8 +122,10 @@ void CompressedDepthPublisher::advertiseImpl(
   if (ns_len > 1) {
     // Add pre set parameter callback to handle deprecated parameters
     pre_set_parameter_callback_handle_ =
-      node_param_interface_->add_pre_set_parameters_callback(std::bind(
-      &CompressedDepthPublisher::preSetParametersCallback, this, std::placeholders::_1));
+      node_param_interface_->add_pre_set_parameters_callback(
+      [this](std::vector<rclcpp::Parameter> & parameters) {
+        preSetParametersCallback(parameters);
+        });
   }
 
   for(const ParameterDefinition & pd : kParameters) {
