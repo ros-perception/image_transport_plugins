@@ -2,16 +2,16 @@ cmake_minimum_required(VERSION 3.20)
 
 project(theora_image_transport)
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
+# The C++ standard (cxx_std_20) comes from the
+# ament_cmake_ros_core::ament_ros_defaults INTERFACE target, which is linked
+# into each target below and propagated to consumers as a minimum standard.
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -57,6 +57,7 @@ target_include_directories(${LIBRARY_NAME} PRIVATE
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 target_link_libraries(${LIBRARY_NAME}
+  ament_cmake_ros_core::ament_ros_defaults
   opencv_imgproc
   ${PC_OGG_LIBRARIES}
   ${PC_THEORA_LIBRARIES}
@@ -78,6 +79,7 @@ target_compile_definitions(ogg_saver PRIVATE
   ${PC_THEORADEC_CFLAGS_OTHER}
 )
 target_link_libraries(ogg_saver
+  ament_cmake_ros_core::ament_ros_defaults
   ${PC_THEORA_LIBRARY}
   ${PC_OGG_LIBRARY}
   ${PC_THEORAENC_LIBRARIES}
@@ -88,6 +90,7 @@ target_link_libraries(ogg_saver
 )
 
 ament_export_dependencies(
+  ament_cmake_ros_core
   rosidl_default_runtime
   OpenCV
   cv_bridge

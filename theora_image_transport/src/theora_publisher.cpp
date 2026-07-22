@@ -147,7 +147,7 @@ void TheoraPublisher::advertiseImpl(
   node_base_interface_ = node_interfaces.get_node_base_interface();
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
-  typedef image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet> Base;
+  using Base = image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet>;
   Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
   // Declare Parameters
@@ -471,7 +471,7 @@ void TheoraPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & 
     const auto & param_name = param.get_name();
 
     // Check if this is a deprecated dot-prefixed parameter for our transport
-    if (deprecated_parameters_.find(param_name) != deprecated_parameters_.end()) {
+    if (deprecated_parameters_.contains(param_name)) {
       auto non_dot_prefixed_name = param_name.substr(1);
       RCLCPP_WARN_STREAM(logger_,
             "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<

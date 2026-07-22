@@ -40,7 +40,7 @@ jobs:
       id: build
       run: |
         . /opt/ros/${ROS_DISTRO}/local_setup.sh
-        colcon build --packages-up-to compressed_depth_image_transport compressed_image_transport theora_image_transport zstd_image_transport
+        colcon build --event-handlers console_direct+ --packages-up-to compressed_depth_image_transport compressed_image_transport theora_image_transport zstd_image_transport
     - name: Run tests
       id: test
       run: |

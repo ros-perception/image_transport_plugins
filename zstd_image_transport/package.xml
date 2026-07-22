@@ -12,6 +12,7 @@
   <author>Alejandro Hernandez Cordero</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_ros_core</buildtool_depend>
 
   <depend>image_transport</depend>
   <depend>zlib</depend>
