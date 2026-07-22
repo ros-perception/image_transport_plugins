@@ -44,7 +44,7 @@ throughput, and error-bound verification (see `benchmark/README.md`).
 ## Usage
 
 Subscribers select the transport with the standard `image_transport`
-parameter (in rviz2: the *Transport Hint* dropdown of the Image/Camera
+parameter (in RViz 2: the *Transport Hint* dropdown of the Image/Camera
 display):
 
 ```bash
