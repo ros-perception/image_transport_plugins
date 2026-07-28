@@ -34,7 +34,7 @@
 
 #include <cv_bridge/cv_bridge.hpp>
 #include <sensor_msgs/image_encodings.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <rclcpp/parameter_client.hpp>
