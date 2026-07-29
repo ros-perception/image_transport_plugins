@@ -44,7 +44,6 @@ add_library(
   SHARED
   src/theora_publisher.cpp
   src/theora_subscriber.cpp
-  src/manifest.cpp
 )
 target_compile_definitions(${LIBRARY_NAME} PRIVATE
   ${PC_OGG_CFLAGS_OTHER}

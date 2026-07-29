@@ -40,6 +40,8 @@
 #include <rclcpp/parameter_client.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
 
+#include <pluginlib/class_list_macros.hpp>
+
 #include "compressed_image_transport/compression_common.hpp"
 
 namespace enc = sensor_msgs::image_encodings;
@@ -451,3 +453,6 @@ void CompressedPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter
   parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 }  // namespace compressed_image_transport
+
+PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedPublisher,
+  image_transport::PublisherPlugin)

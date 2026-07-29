@@ -40,6 +40,8 @@
 #include <rclcpp/parameter_client.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
 
+#include <pluginlib/class_list_macros.hpp>
+
 #include "zlib_cpp.hpp"
 
 namespace zstd_image_transport
@@ -117,3 +119,5 @@ void ZstdSubscriber::internalCallback(
   user_cb(result);
 }
 }  // namespace zstd_image_transport
+
+PLUGINLIB_EXPORT_CLASS(zstd_image_transport::ZstdSubscriber, image_transport::SubscriberPlugin)

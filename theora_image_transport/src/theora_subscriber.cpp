@@ -41,6 +41,8 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <pluginlib/class_list_macros.hpp>
+
 #include "theora_image_transport/compression_common.hpp"
 
 namespace theora_image_transport
@@ -326,3 +328,5 @@ void TheoraSubscriber::declareParameter(
 }
 
 }  // namespace theora_image_transport
+
+PLUGINLIB_EXPORT_CLASS(theora_image_transport::TheoraSubscriber, image_transport::SubscriberPlugin)
