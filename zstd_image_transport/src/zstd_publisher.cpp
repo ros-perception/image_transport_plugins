@@ -29,7 +29,9 @@
 
 #include "zstd_image_transport/zstd_publisher.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/exceptions/exceptions.hpp>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/parameter.hpp>
 
 #include "zlib_cpp.hpp"
 

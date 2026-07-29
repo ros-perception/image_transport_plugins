@@ -32,9 +32,6 @@
 #include <cstddef>
 #include <string>
 
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
-
 #include "compressed_depth_image_transport/compression_common.hpp"
 #include "compressed_depth_image_transport/codec.hpp"
 
