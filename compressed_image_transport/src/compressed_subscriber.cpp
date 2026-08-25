@@ -37,9 +37,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
-
 #include "compressed_image_transport/compression_common.hpp"
 
 namespace enc = sensor_msgs::image_encodings;

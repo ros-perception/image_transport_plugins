@@ -37,8 +37,6 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include <rclcpp/exceptions/exceptions.hpp>
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
 
 #include "compressed_image_transport/compression_common.hpp"
 

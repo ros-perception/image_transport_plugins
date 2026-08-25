@@ -36,9 +36,6 @@
 #include <rclcpp/logging.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
-
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "theora_image_transport/compression_common.hpp"
