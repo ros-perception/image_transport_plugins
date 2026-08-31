@@ -36,9 +36,7 @@
 
 #include <sensor_msgs/msg/compressed_image.hpp>
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_events_filter.hpp>
+#include <rclcpp/logger.hpp>
 
 #include <pluginlib/class_list_macros.hpp>
 
