@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 
+#include <cv_bridge/cv_bridge.hpp>
 #include <rclcpp/logging.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 #include <std_msgs/msg/header.hpp>
