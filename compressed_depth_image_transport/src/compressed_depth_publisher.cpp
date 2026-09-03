@@ -55,7 +55,7 @@ enum compressedDepthParameters
 const struct ParameterDefinition kParameters[] =
 {
   {  // FORMAT - Compression format to use "png" or "rvl".
-    ParameterValue("png"),
+    ParameterValue("rvl"),
     ParameterDescriptor()
     .set__name("format")
     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
