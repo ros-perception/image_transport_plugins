@@ -37,6 +37,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <pluginlib/class_list_macros.hpp>
+
+#include <rclcpp/parameter_client.hpp>
+#include <rclcpp/parameter_events_filter.hpp>
+
 #include "compressed_image_transport/compression_common.hpp"
 
 namespace enc = sensor_msgs::image_encodings;
@@ -216,3 +221,6 @@ void CompressedSubscriber::declareParameter(
 }
 
 }  // namespace compressed_image_transport
+
+PLUGINLIB_EXPORT_CLASS(compressed_image_transport::CompressedSubscriber,
+  image_transport::SubscriberPlugin)

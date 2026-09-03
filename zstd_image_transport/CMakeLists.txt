@@ -25,7 +25,6 @@ add_library(
   src/zlib_cpp.cpp
   src/zstd_publisher.cpp
   src/zstd_subscriber.cpp
-  src/manifest.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

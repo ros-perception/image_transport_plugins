@@ -32,6 +32,11 @@
 #include <cstddef>
 #include <string>
 
+#include <pluginlib/class_list_macros.hpp>
+
+#include <rclcpp/parameter_client.hpp>
+#include <rclcpp/parameter_events_filter.hpp>
+
 #include "compressed_depth_image_transport/compression_common.hpp"
 #include "compressed_depth_image_transport/codec.hpp"
 
@@ -219,3 +224,6 @@ void CompressedDepthPublisher::preSetParametersCallback(
   parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 }  // namespace compressed_depth_image_transport
+
+PLUGINLIB_EXPORT_CLASS(compressed_depth_image_transport::CompressedDepthPublisher,
+  image_transport::PublisherPlugin)

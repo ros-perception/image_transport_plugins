@@ -27,7 +27,6 @@ add_library(
   SHARED
   src/compressed_publisher.cpp
   src/compressed_subscriber.cpp
-  src/manifest.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

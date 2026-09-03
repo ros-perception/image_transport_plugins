@@ -33,6 +33,8 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/parameter.hpp>
 
+#include <pluginlib/class_list_macros.hpp>
+
 #include "zlib_cpp.hpp"
 
 namespace zstd_image_transport
@@ -219,3 +221,5 @@ void ZstdPublisher::preSetParametersCallback(std::vector<rclcpp::Parameter> & pa
   parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 }  // namespace zstd_image_transport
+
+PLUGINLIB_EXPORT_CLASS(zstd_image_transport::ZstdPublisher, image_transport::PublisherPlugin)

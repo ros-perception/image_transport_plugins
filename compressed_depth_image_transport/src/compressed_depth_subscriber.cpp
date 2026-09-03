@@ -29,6 +29,8 @@
 
 #include "compressed_depth_image_transport/compressed_depth_subscriber.hpp"
 
+#include <pluginlib/class_list_macros.hpp>
+
 #include "compressed_depth_image_transport/codec.hpp"
 #include "compressed_depth_image_transport/compression_common.hpp"
 
@@ -46,3 +48,6 @@ void CompressedDepthSubscriber::internalCallback(
 }
 
 }  // namespace compressed_depth_image_transport
+
+PLUGINLIB_EXPORT_CLASS(compressed_depth_image_transport::CompressedDepthSubscriber,
+  image_transport::SubscriberPlugin)
