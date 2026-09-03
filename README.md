@@ -57,6 +57,8 @@ Currently provided are:
 
 - [compressed_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_image_transport)
 
+- [depthz_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/depthz_image_transport) - A library compressing 32FC1 and 16UC1 depth images (2D prediction + zstd). By default 32FC1 is quantized to a configurable 0.1 mm grid; a bit-exact lossless mode is available (`quantization: 0.0`), and 16UC1 is always lossless.
+
 - [zstd_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/zstd_image_transport) - A libraory using ZSTD to compress the pointclouds.
 
 - [theora_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/master/theora_image_transport) - A library using theora to compress the pointclouds.
