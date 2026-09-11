@@ -1,0 +1,19 @@
+<library path="avif_image_transport">
+  <class
+    name="image_transport/avif_pub"
+    type="avif_image_transport::AVIFPublisher"
+    base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin publishes a AVIF image
+    </description>
+  </class>
+
+  <class
+    name="image_transport/avif_sub"
+    type="avif_image_transport::AVIFSubscriber"
+    base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decompresses a AVIF Image.
+    </description>
+  </class>
+</library>
