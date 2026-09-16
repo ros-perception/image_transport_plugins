@@ -16,8 +16,17 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_ros_core</buildtool_depend>
 
+  <build_depend>libopencv-dev</build_depend>
+  <build_export_depend>libopencv-dev</build_export_depend>
+  <exec_depend>libopencv-core</exec_depend>
+  <exec_depend>libopencv-imgcodecs</exec_depend>
+  <exec_depend>libopencv-imgproc</exec_depend>
+
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
