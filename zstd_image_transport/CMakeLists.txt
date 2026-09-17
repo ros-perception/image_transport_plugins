@@ -14,6 +14,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros_core REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -31,6 +32,7 @@ target_link_libraries(${PROJECT_NAME}
   ament_cmake_ros_core::ament_ros_defaults
   ZLIB::ZLIB
   image_transport::image_transport
+  rcl_interfaces::rcl_interfaces
   rclcpp::rclcpp
   pluginlib::pluginlib
   ${sensor_msgs_TARGETS}
