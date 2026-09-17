@@ -15,6 +15,7 @@ find_package(ament_cmake_ros_core REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -67,6 +68,7 @@ target_link_libraries(${LIBRARY_NAME}
   cv_bridge::cv_bridge
   image_transport::image_transport
   pluginlib::pluginlib
+  rcl_interfaces::rcl_interfaces
   rclcpp::rclcpp
 )
 

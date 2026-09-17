@@ -15,6 +15,7 @@ find_package(ament_cmake_ros_core REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
@@ -34,6 +35,7 @@ target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
   image_transport::image_transport
   cv_bridge::cv_bridge
+  rcl_interfaces::rcl_interfaces
   rclcpp::rclcpp
   pluginlib::pluginlib
   ${sensor_msgs_TARGETS}

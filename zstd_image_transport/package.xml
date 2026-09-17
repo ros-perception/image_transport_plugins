@@ -16,6 +16,7 @@
 
   <depend>image_transport</depend>
   <depend>pluginlib</depend>
+  <depend>rcl_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>zlib</depend>

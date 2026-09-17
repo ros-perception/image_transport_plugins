@@ -32,6 +32,7 @@
   <depend>libogg</depend>
   <depend>libtheora</depend>
   <depend>pluginlib</depend>
+  <depend>rcl_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>rcutils</depend>
   <depend>sensor_msgs</depend>
