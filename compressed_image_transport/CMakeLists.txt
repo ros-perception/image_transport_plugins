@@ -18,9 +18,9 @@ find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgcodecs imgproc)
 
-include_directories(include ${OpenCV_INCLUDE_DIRS})
+include_directories(include)
 
 add_library(
   ${PROJECT_NAME}

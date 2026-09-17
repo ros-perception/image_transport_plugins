@@ -46,7 +46,6 @@
 
 #include <image_transport/node_interfaces.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
-#include <cv_bridge/cv_bridge.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <theora_image_transport/msg/packet.hpp>
 
@@ -93,7 +92,6 @@ protected:
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
-  mutable cv_bridge::CvImage img_image;
   mutable th_info encoder_setup_;
   mutable ogg_uint32_t keyframe_frequency_;
   mutable std::shared_ptr<th_enc_ctx> encoding_context_;
