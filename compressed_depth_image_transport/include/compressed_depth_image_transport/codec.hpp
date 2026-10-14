@@ -33,8 +33,6 @@
 
 #include <string>
 
-#include <opencv2/core/core.hpp>
-
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <sensor_msgs/image_encodings.hpp>

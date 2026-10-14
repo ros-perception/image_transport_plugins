@@ -33,13 +33,15 @@ target_include_directories(
 )
 
 target_link_libraries(codecs
-  ament_cmake_ros_core::ament_ros_defaults
-  cv_bridge::cv_bridge
-  opencv_core
-  opencv_imgcodecs
-  ${rcl_interfaces_TARGETS}
-  rclcpp::rclcpp
-  ${sensor_msgs_TARGETS}
+  PUBLIC
+    ament_cmake_ros_core::ament_ros_defaults
+    cv_bridge::cv_bridge
+    ${rcl_interfaces_TARGETS}
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS}
+  PRIVATE
+    opencv_core
+    opencv_imgcodecs
 )
 
 add_library(
@@ -92,7 +94,6 @@ ament_export_dependencies(
   cv_bridge
   rcl_interfaces
   rclcpp
-  OpenCV
   sensor_msgs
 )
 
