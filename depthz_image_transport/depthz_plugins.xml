@@ -1,0 +1,13 @@
+<library path="depthz_image_transport">
+  <class name="image_transport/depthz_pub" type="depthz_image_transport::DepthzPublisher" base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin losslessly compresses 32FC1 and 16UC1 depth images with the dpred codec
+      (value dictionary + 2D MED prediction + zstd).
+    </description>
+  </class>
+  <class name="image_transport/depthz_sub" type="depthz_image_transport::DepthzSubscriber" base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decodes depthz-compressed depth images back to 32FC1 or 16UC1.
+    </description>
+  </class>
+</library>
