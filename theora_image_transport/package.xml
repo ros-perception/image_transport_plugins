@@ -4,8 +4,7 @@
   <name>theora_image_transport</name>
   <version>7.0.1</version>
   <description>
-    Theora_image_transport provides a plugin to image_transport for
-    transparently sending an image stream encoded with the Theora codec.
+    Theora_image_transport provides a plugin to image_transport for transparently sending an image stream encoded with the Theora codec.
   </description>
   <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
@@ -46,5 +45,6 @@
   <export>
     <build_type>ament_cmake</build_type>
     <image_transport plugin="${prefix}/theora_plugins.xml" />
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 </package>

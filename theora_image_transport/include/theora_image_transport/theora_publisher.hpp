@@ -54,6 +54,12 @@
 namespace theora_image_transport
 {
 
+/// Publisher plugin of the theora transport.
+/**
+ * Encodes the images as a Theora video stream and publishes its packets in the
+ * \<base_topic\>/theora topic. The encoder is configured with parameters of the node, see the
+ * documentation of the package.
+ */
 class TheoraPublisher
   : public image_transport::SimplePublisherPlugin<theora_image_transport::msg::Packet>
 {
@@ -62,6 +68,7 @@ public:
   ~TheoraPublisher() override;
 
 protected:
+  /// Advertise the topic and declare the parameters of the transport.
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
@@ -71,34 +78,44 @@ protected:
   // TODO(anyone): Callback to send header packets to new clients
   // virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
 
-  // Main publish function
+  /// Encode an image and publish the packets of the stream.
   void publish(
     const sensor_msgs::msg::Image & message,
     const PublisherT & publisher) const override;
 
-  // Runtime reconfiguration support
+  /// Apply the current values of the parameters to the encoder, if they have changed.
   void refreshConfig() const;
+  /// Whether the parameters have changed since the last call to refreshConfig()
   mutable bool refreshConfigNeeded;
 
-  // Utility functions
+  /// Create the encoder, and publish the stream headers, if needed for this image.
   bool ensureEncodingContext(
     const sensor_msgs::msg::Image & image,
     const PublisherT & publisher) const;
+  /// Convert a packet of the Theora stream into a message.
   void oggPacketToMsg(
     const std_msgs::msg::Header & header,
     const ogg_packet & oggpacket,
     theora_image_transport::msg::Packet & msg) const;
+  /// Apply the key frame frequency to the encoder.
   void updateKeyframeFrequency() const;
 
   // Some data is preserved across calls to publish(), but from the user's perspective publish() is
   // "logically const"
+  /// Configuration of the encoder
   mutable th_info encoder_setup_;
+  /// Maximum distance between key frames
   mutable ogg_uint32_t keyframe_frequency_;
+  /// The encoder, created when the first image is published
   mutable std::shared_ptr<th_enc_ctx> encoding_context_;
+  /// The header packets of the current stream
   mutable std::vector<theora_image_transport::msg::Packet> stream_header_;
 
+  /// Logger of the plugin
   rclcpp::Logger logger_;
+  /// Parameters interface of the node that publishes the images
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  /// Base interface of the node that publishes the images
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:

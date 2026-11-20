@@ -48,6 +48,11 @@
 namespace theora_image_transport
 {
 
+/// Subscriber plugin of the theora transport.
+/**
+ * Subscribes to the \<base_topic\>/theora topic and decodes the Theora video stream. The stream
+ * can only be decoded if it is received from its beginning.
+ */
 class TheoraSubscriber
   : public image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>
 {
@@ -56,6 +61,7 @@ public:
   virtual ~TheoraSubscriber();
 
 protected:
+  /// Subscribe to the topic and declare the parameters of the transport.
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
@@ -63,30 +69,41 @@ protected:
     rclcpp::QoS custom_qos,
     rclcpp::SubscriptionOptions options) override;
 
-  // The function that does the actual decompression and calls a user supplied
-  // callback with the resulting image
+  /// The function that does the actual decompression and calls a user supplied
+  /// callback with the resulting image
   void internalCallback(
     const theora_image_transport::msg::Packet::ConstSharedPtr & msg,
     const Callback & user_cb) override;
 
-  // Runtime reconfiguration support
+  /// Apply the current values of the parameters to the decoder.
   void refreshConfig();
 
-  // Utility functions
+  /// Set the post-processing level of the decoder, and return the level that was applied.
   int updatePostProcessingLevel(int level);
+  /// Convert a message into a packet of the Theora stream. The caller must delete ogg.packet.
   void msgToOggPacket(
     const theora_image_transport::msg::Packet & msg,
     ogg_packet & ogg);
-  int pplevel_;  // Post-processing level
+  /// Post-processing level
+  int pplevel_;
+  /// Whether all the header packets of the stream have been received
   bool received_header_;
+  /// Whether a key frame has been received
   bool received_keyframe_;
+  /// The decoder, created when the headers have been received
   th_dec_ctx * decoding_context_;
+  /// Stream information read from the headers
   th_info header_info_;
+  /// Comments read from the headers
   th_comment header_comment_;
+  /// Decoder setup read from the headers
   th_setup_info * setup_info_;
+  /// The last decoded image, used again for duplicate frames
   sensor_msgs::msg::Image::SharedPtr latest_image_;
 
+  /// Logger of the plugin
   rclcpp::Logger logger_;
+  /// Parameters interface of the node that subscribes to the images
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
