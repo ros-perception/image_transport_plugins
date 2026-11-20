@@ -133,11 +133,7 @@ int main(int argc, char * argv[])
     exit(3);
   }
 
-  // port the check to ROS2
-  // if (ros::names::remap("stream") == "stream") {
-  //    ROS_WARN("ogg_saver: stream has not been remapped! Typical command-line usage:\n"
-  //             "\t$ ./ogg_saver stream:=<theora stream topic> outputFile");
-  // }
+  // TODO(anyone): warn when the stream topic has not been remapped
 
   OggSaver saver(argv[1]);
 

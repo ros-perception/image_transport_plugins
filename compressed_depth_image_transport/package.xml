@@ -9,7 +9,7 @@
   <license>BSD</license>
   <license>MIT</license>
 
-  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  <url type="website">https://docs.ros.org/en/rolling/p/compressed_depth_image_transport/</url>
   <author>Julius Kammerl</author>
   <author email="dgossow@willowgarage.com">David Gossow</author>
 
