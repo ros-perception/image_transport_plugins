@@ -198,7 +198,6 @@ void TheoraPublisher::publish(
   if (!ensureEncodingContext(message, publisher)) {
     return;
   }
-  // return;
   /// @todo fromImage is deprecated
   /// @todo Optimized gray-scale path, rgb8
   /// @todo fromImage can throw cv::Exception on bayer encoded images
