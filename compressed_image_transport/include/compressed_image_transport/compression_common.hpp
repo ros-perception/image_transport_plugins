@@ -37,7 +37,7 @@
 namespace compressed_image_transport
 {
 
-// Compression formats
+/// Compression formats
 enum compressionFormat
 {
   UNDEFINED = -1,
@@ -49,9 +49,12 @@ enum compressionFormat
 using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
 using ParameterValue = rclcpp::ParameterValue;
 
+/// Definition of a parameter of the plugins
 struct ParameterDefinition
 {
+  /// Default value of the parameter
   const ParameterValue defaultValue;
+  /// Descriptor of the parameter: name, type, description and range
   const ParameterDescriptor descriptor;
 };
 
