@@ -56,6 +56,11 @@ pluginlib_export_plugin_description_file(image_transport compressed_plugins.xml)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_compressed_publisher_parameters
+    test/test_compressed_publisher_parameters.cpp)
+  target_link_libraries(test_compressed_publisher_parameters ${PROJECT_NAME})
 endif()
 
 ament_package()
