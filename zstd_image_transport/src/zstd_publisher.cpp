@@ -79,11 +79,13 @@ void ZstdPublisher::advertiseImpl(
   using Base = image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage>;
   Base::advertiseImpl(node_interfaces, base_topic, custom_qos, options);
 
-  unsigned int ns_len =
-    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
-  // Skip the namespace and the slash after it ("/ns/image" -> "image").
-  unsigned int ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
-  std::string param_base_name = base_topic.substr(ns_prefix_len);
+  const std::string ns = node_interfaces.get_node_base_interface()->get_namespace();
+  const size_t ns_len = ns.length();
+  // Skip the namespace and the slash after it ("/ns/image" -> "image"). A topic outside
+  // the node's namespace (absolute or remapped) only loses its leading slash.
+  const std::string ns_prefix = ns_len > 1 ? ns + "/" : ns;
+  std::string param_base_name = base_topic.substr(
+    base_topic.starts_with(ns_prefix) ? ns_prefix.length() : 1);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   if (ns_len > 1) {

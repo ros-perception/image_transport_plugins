@@ -30,10 +30,13 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <string>
 
 #include "compressed_image_transport/compressed_publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+// The transport name ("compressed") is read from the plugin manifest through the ament index,
+// so these tests need the package's install space on AMENT_PREFIX_PATH (as under colcon test).
 class CompressedPublisherParameters : public ::testing::Test
 {
 protected:
@@ -47,22 +50,13 @@ protected:
     rclcpp::shutdown();
   }
 
-  static void advertise(const rclcpp::Node::SharedPtr & node)
+  void advertise(const rclcpp::Node::SharedPtr & node, const std::string & topic = "image")
   {
-    publisher_ = std::make_unique<compressed_image_transport::CompressedPublisher>();
-    publisher_->advertise(*node, "image", rclcpp::SensorDataQoS());
+    publisher_.advertise(*node, topic, rclcpp::SensorDataQoS());
   }
 
-  void TearDown() override
-  {
-    publisher_.reset();
-  }
-
-  static std::unique_ptr<compressed_image_transport::CompressedPublisher> publisher_;
+  compressed_image_transport::CompressedPublisher publisher_;
 };
-
-std::unique_ptr<compressed_image_transport::CompressedPublisher>
-CompressedPublisherParameters::publisher_;
 
 TEST_F(CompressedPublisherParameters, root_namespace)
 {
@@ -94,4 +88,42 @@ TEST_F(CompressedPublisherParameters, nested_namespace_mirrors_deprecated_name)
 
   node->set_parameter(rclcpp::Parameter(".image.compressed.jpeg_quality", 42));
   EXPECT_EQ(node->get_parameter("image.compressed.jpeg_quality").as_int(), 42);
+
+  node->set_parameter(rclcpp::Parameter("image.compressed.jpeg_quality", 17));
+  EXPECT_EQ(node->get_parameter(".image.compressed.jpeg_quality").as_int(), 17);
+}
+
+TEST_F(CompressedPublisherParameters, topic_outside_namespace)
+{
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  advertise(node, "/camera/image");
+
+  EXPECT_TRUE(node->has_parameter("camera.image.compressed.format"));
+}
+
+TEST_F(CompressedPublisherParameters, topic_sharing_namespace_prefix)
+{
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  advertise(node, "/nsx/image");
+
+  EXPECT_TRUE(node->has_parameter("nsx.image.compressed.format"));
+}
+
+TEST_F(CompressedPublisherParameters, topic_as_short_as_namespace)
+{
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  // Same length as the namespace: must neither throw nor produce an empty base name.
+  ASSERT_NO_THROW(advertise(node, "/ab"));
+
+  EXPECT_TRUE(node->has_parameter("ab.compressed.format"));
+}
+
+TEST_F(CompressedPublisherParameters, remapped_outside_namespace)
+{
+  auto node = std::make_shared<rclcpp::Node>(
+    "node", "ns",
+    rclcpp::NodeOptions().arguments({"--ros-args", "-r", "image:=/cam/image"}));
+  advertise(node);
+
+  EXPECT_TRUE(node->has_parameter("cam.image.compressed.format"));
 }
