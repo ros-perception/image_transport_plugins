@@ -2,8 +2,7 @@
   <name>zstd_image_transport</name>
   <version>7.0.1</version>
   <description>
-    zstd_image_transport provides a plugin to image_transport for transparently sending images
-    encoded as zstd blobs
+    zstd_image_transport provides a plugin to image_transport for transparently sending images compressed with a lossless general purpose algorithm.
   </description>
   <maintainer email="ahcorde@gmail.com">Alejandro Hernandez Cordero</maintainer>
   <license>BSD</license>
@@ -27,5 +26,6 @@
   <export>
     <build_type>ament_cmake</build_type>
     <image_transport plugin="${prefix}/zstd_plugins.xml" />
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 </package>
