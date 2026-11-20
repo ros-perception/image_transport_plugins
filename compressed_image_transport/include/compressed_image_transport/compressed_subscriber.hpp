@@ -46,6 +46,10 @@
 namespace compressed_image_transport
 {
 
+/// Subscriber plugin of the compressed transport.
+/**
+ * Subscribes to the \<base_topic\>/compressed topic and decompresses the images.
+ */
 class CompressedSubscriber final : public image_transport::SimpleSubscriberPlugin<
     sensor_msgs::msg::CompressedImage>
 {
@@ -57,6 +61,7 @@ public:
   virtual ~CompressedSubscriber() = default;
 
 protected:
+  /// Subscribe to the topic and declare the parameters of the transport.
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
@@ -64,11 +69,14 @@ protected:
     rclcpp::QoS custom_qos,
     rclcpp::SubscriptionOptions options) override;
 
+  /// Decompress a message and call the user callback with the image.
   void internalCallback(
     const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
     const Callback & user_cb) override;
 
+  /// Logger of the plugin
   rclcpp::Logger logger_;
+  /// Parameters interface of the node that subscribes to the images
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
