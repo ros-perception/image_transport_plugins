@@ -39,9 +39,12 @@ namespace theora_image_transport
 using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
 using ParameterValue = rclcpp::ParameterValue;
 
+/// Definition of a parameter of the plugins
 struct ParameterDefinition
 {
+  /// Default value of the parameter
   const ParameterValue defaultValue;
+  /// Descriptor of the parameter: name, type, description and range
   const ParameterDescriptor descriptor;
 };
 
