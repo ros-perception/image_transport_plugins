@@ -47,6 +47,10 @@
 namespace zstd_image_transport
 {
 
+/// Subscriber plugin of the zstd transport.
+/**
+ * Subscribes to the \<base_topic\>/zstd topic and decompresses the images.
+ */
 class ZstdSubscriber final
   : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
 {
@@ -55,6 +59,7 @@ public:
   virtual ~ZstdSubscriber() = default;
 
 protected:
+  /// Subscribe to the topic.
   void subscribeImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
@@ -62,10 +67,12 @@ protected:
     rclcpp::QoS custom_qos,
     rclcpp::SubscriptionOptions options) override;
 
+  /// Decompress a message and call the user callback with the image.
   void internalCallback(
     const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
     const Callback & user_cb) override;
 
+  /// Logger of the plugin
   rclcpp::Logger logger_;
 };
 
