@@ -2,14 +2,15 @@
   <name>compressed_depth_image_transport</name>
   <version>7.0.1</version>
   <description>
-    Compressed_depth_image_transport provides a plugin to image_transport for transparently sending
-    depth images (raw, floating-point) using PNG compression.
+    Compressed_depth_image_transport provides a plugin to image_transport for transparently sending depth images (16-bit integer or 32-bit floating-point) using PNG or RVL compression.
   </description>
   <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
   <license>MIT</license>
 
-  <url type="website">http://www.ros.org/wiki/image_transport_plugins</url>
+  <url type="website">https://docs.ros.org/en/rolling/p/compressed_depth_image_transport/</url>
+  <url type="repository">https://github.com/ros-perception/image_transport_plugins</url>
+  <url type="bugtracker">https://github.com/ros-perception/image_transport_plugins/issues</url>
   <author>Julius Kammerl</author>
   <author email="dgossow@willowgarage.com">David Gossow</author>
 
@@ -35,5 +36,6 @@
   <export>
     <build_type>ament_cmake</build_type>
     <image_transport plugin="${prefix}/compressed_depth_plugins.xml" />
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 </package>

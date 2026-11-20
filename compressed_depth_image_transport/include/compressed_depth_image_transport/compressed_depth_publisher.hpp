@@ -48,6 +48,11 @@ namespace compressed_depth_image_transport
 
 using CompressedImage = sensor_msgs::msg::CompressedImage;
 
+/// Publisher plugin of the compressedDepth transport.
+/**
+ * Compresses depth images and publishes them in the \<base_topic\>/compressedDepth topic. The
+ * compression is configured with parameters of the node, see the documentation of the package.
+ */
 class CompressedDepthPublisher : public image_transport::SimplePublisherPlugin<CompressedImage>
 {
 public:
@@ -56,19 +61,23 @@ public:
   ~CompressedDepthPublisher() {}
 
 protected:
-  // Overridden to set up reconfigure server
+  /// Advertise the topic and declare the parameters of the transport.
   void advertiseImpl(
     image_transport::RequiredInterfaces node_interfaces,
     const std::string & base_topic,
     rclcpp::QoS custom_qos,
     rclcpp::PublisherOptions options) final;
 
+  /// Compress an image with the current parameters and publish it.
   void publish(
     const sensor_msgs::msg::Image & message,
     const PublisherT & publisher) const final;
 
+  /// Logger of the plugin
   rclcpp::Logger logger_;
+  /// Parameters interface of the node that publishes the images
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  /// Base interface of the node that publishes the images
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:
