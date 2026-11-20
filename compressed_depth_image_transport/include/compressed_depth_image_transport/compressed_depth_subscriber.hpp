@@ -40,6 +40,10 @@
 namespace compressed_depth_image_transport
 {
 
+/// Subscriber plugin of the compressedDepth transport.
+/**
+ * Subscribes to the \<base_topic\>/compressedDepth topic and decompresses the depth images.
+ */
 class CompressedDepthSubscriber
   : public image_transport::SimpleSubscriberPlugin<sensor_msgs::msg::CompressedImage>
 {
@@ -47,6 +51,7 @@ public:
   virtual ~CompressedDepthSubscriber() {}
 
 protected:
+  /// Decompress a message and call the user callback with the image.
   virtual void internalCallback(
     const sensor_msgs::msg::CompressedImage::ConstSharedPtr & message,
     const Callback & user_cb);

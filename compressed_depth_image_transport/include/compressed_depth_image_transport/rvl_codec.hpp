@@ -35,16 +35,31 @@
 namespace compressed_depth_image_transport
 {
 
+/// Run-length and Variable-Length encoding (RVL) of 16-bit depth images.
+/**
+ * See A. D. Wilson, "Fast Lossless Depth Image Compression", 2017.
+ */
 class RvlCodec {
 public:
   RvlCodec();
-  // Compress input data into output. The size of output can be equal to
-  // (1.5 * numPixels + 4) in the worst case.
+  /// Compress input data into output.
+  /**
+   * The size of output can be equal to (1.5 * numPixels + 4) in the worst case.
+   *
+   * \param input The 16-bit depth values
+   * \param output Buffer for the compressed data
+   * \param numPixels Number of values in input
+   * \return The size of the compressed data, in bytes
+   */
   int CompressRVL(
     const uint16_t * input, unsigned char * output,
     int numPixels);
-  // Decompress input data into output. The size of output must be
-  // equal to numPixels.
+  /// Decompress input data into output.
+  /**
+   * \param input The compressed data
+   * \param output Buffer for the 16-bit depth values, of numPixels elements
+   * \param numPixels Number of values to decompress
+   */
   void DecompressRVL(
     const unsigned char * input, uint16_t * output,
     int numPixels);

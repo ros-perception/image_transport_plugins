@@ -6,7 +6,7 @@
     type="compressed_depth_image_transport::CompressedDepthPublisher"
     base_class_type="image_transport::PublisherPlugin">
     <description>
-      This plugin publishes a compressed depth images using PNG compression.
+      This plugin publishes compressed depth images using PNG or RVL compression.
     </description>
   </class>
 
@@ -15,7 +15,7 @@
     type="compressed_depth_image_transport::CompressedDepthSubscriber"
     base_class_type="image_transport::SubscriberPlugin">
     <description>
-      This plugin decodes a compressed depth images.
+      This plugin decodes compressed depth images.
     </description>
   </class>
 </library>

@@ -49,16 +49,16 @@ Jazzy | [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jbin_uN64__
 Humble | [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hbin_uJ64__theora_image_transport__ubuntu_jammy_amd64__binary)](https://build.ros2.org/job/Hbin_uJ64__theora_image_transport__ubuntu_jammy_amd64__binary/) |
 
 
-This metapackage contains the most common plugins for pointcloud compression using [image_transport](https://docs.ros.org/en/rolling/p/image_transport/).
+This repository contains the most common plugins for image compression using [image_transport](https://docs.ros.org/en/rolling/p/image_transport/).
 
 Currently provided are:
 
-- [compressed_depth_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_depth_image_transport)
+- [compressed_depth_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_depth_image_transport) - A library using PNG or RVL to compress depth images.
 
 - [compressed_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/compressed_image_transport)
 
-- [zstd_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/zstd_image_transport) - A libraory using ZSTD to compress the pointclouds.
+- [zstd_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/zstd_image_transport) - A library using ZSTD to compress the images.
 
-- [theora_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/master/theora_image_transport) - A library using theora to compress the pointclouds.
+- [theora_image_transport](https://github.com/ros-perception/image_transport_plugins/tree/rolling/theora_image_transport) - A library using theora to compress the images.
 
 More transports can be added. Pull requests are welcome!
