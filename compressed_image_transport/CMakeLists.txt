@@ -61,6 +61,10 @@ if(BUILD_TESTING)
   ament_add_gtest(test_compressed_publisher_parameters
     test/test_compressed_publisher_parameters.cpp)
   target_link_libraries(test_compressed_publisher_parameters ${PROJECT_NAME})
+
+  ament_add_gtest(test_compressed_subscriber_parameters
+    test/test_compressed_subscriber_parameters.cpp)
+  target_link_libraries(test_compressed_subscriber_parameters ${PROJECT_NAME})
 endif()
 
 ament_package()
