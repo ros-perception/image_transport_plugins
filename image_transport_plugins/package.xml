@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schem/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <!-- TODO: Make this a metapackage, see
        https://github.com/ros2/ros2/issues/408 -->
@@ -30,6 +30,7 @@
 
   <export>
     <build_type>ament_cmake</build_type>
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 
 </package>
