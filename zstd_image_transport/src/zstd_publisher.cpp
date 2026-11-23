@@ -81,7 +81,9 @@ void ZstdPublisher::advertiseImpl(
 
   unsigned int ns_len =
     std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
-  std::string param_base_name = base_topic.substr(ns_len);
+  // Skip the namespace and the slash after it ("/ns/image" -> "image").
+  unsigned int ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
+  std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
 
   if (ns_len > 1) {

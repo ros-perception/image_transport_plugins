@@ -69,7 +69,6 @@ protected:
     rclcpp::PublisherOptions options) override;
 
   // TODO(anyone): Callback to send header packets to new clients
-  // virtual void connectCallback(const ros::SingleSubscriberPublisher& pub);
 
   // Main publish function
   void publish(
