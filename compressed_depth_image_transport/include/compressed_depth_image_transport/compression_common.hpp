@@ -36,28 +36,31 @@
 namespace compressed_depth_image_transport
 {
 
-// Compression formats
+/// Compression formats
 enum compressionFormat
 {
   UNDEFINED = -1,
   INV_DEPTH
 };
 
-// Compression configuration
+/// Compression configuration, stored at the beginning of the data of every message
 struct ConfigHeader
 {
-  // compression format
+  /// compression format
   compressionFormat format;
-  // quantization parameters (used in depth image compression)
+  /// quantization parameters (used in depth image compression)
   float depthParam[2];
 };
 
 using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
 using ParameterValue = rclcpp::ParameterValue;
 
+/// Definition of a parameter of the publisher plugin
 struct ParameterDefinition
 {
+  /// Default value of the parameter
   const ParameterValue defaultValue;
+  /// Descriptor of the parameter: name, type, description and range
   const ParameterDescriptor descriptor;
 };
 

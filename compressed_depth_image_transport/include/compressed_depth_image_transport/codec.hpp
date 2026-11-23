@@ -41,11 +41,35 @@
 namespace compressed_depth_image_transport
 {
 
-// Returns a null pointer on bad input.
+/// Decompress a depth image compressed by encodeCompressedDepthImage().
+/**
+ * The encoding of the image and the compression format are read from the
+ * format field of the message.
+ *
+ * \param compressed_image The compressed depth image
+ * \return The depth image, or a null pointer on bad input
+ */
 sensor_msgs::msg::Image::SharedPtr decodeCompressedDepthImage(
   const sensor_msgs::msg::CompressedImage & compressed_image);
 
-// Compress a depth image. Returns a null pointer on bad input.
+/// Compress a depth image.
+/**
+ * Only single-channel 32-bit floating point images (depth in meters) and
+ * single-channel 16-bit images (depth in millimeters) are supported.
+ *
+ * Floating point images are quantized to 16 bits before being compressed, so
+ * their compression is lossy.
+ *
+ * \param message The depth image
+ * \param format Compression format: "png" or "rvl"
+ * \param depth_max Maximum depth value, in meters. Measurements further away
+ *   are discarded
+ * \param depth_quantization Depth value at which the sensor accuracy is 1 m.
+ *   Only used for floating point images
+ * \param png_level PNG compression level, from 0 to 9. Only used with the
+ *   "png" format
+ * \return The compressed depth image, or a null pointer on bad input
+ */
 sensor_msgs::msg::CompressedImage::UniquePtr encodeCompressedDepthImage(
   const sensor_msgs::msg::Image & message,
   const std::string & format = "png",

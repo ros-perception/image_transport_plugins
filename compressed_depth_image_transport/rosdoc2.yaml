@@ -1,0 +1,26 @@
+## This 'attic section' self-documents this file's type and version.
+type: 'rosdoc2 config'
+version: 1
+
+---
+
+settings:
+    ## Generate the standard package index (package.xml metadata, README, CHANGELOG, ...).
+    generate_package_index: true
+
+    ## The C++ API is documented because of the 'ament_cmake' build type.
+    always_run_doxygen: false
+
+    ## This package does not have a Python API.
+    always_run_sphinx_apidoc: false
+
+builders:
+    - doxygen: {
+        name: 'compressed_depth_image_transport Public C/C++ API',
+        output_dir: 'generated/doxygen'
+    }
+    - sphinx: {
+        name: 'compressed_depth_image_transport',
+        doxygen_xml_directory: 'generated/doxygen/xml',
+        output_dir: ''
+    }
