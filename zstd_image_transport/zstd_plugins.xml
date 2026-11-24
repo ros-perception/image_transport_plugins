@@ -6,7 +6,7 @@
     type="zstd_image_transport::ZstdPublisher"
     base_class_type="image_transport::PublisherPlugin">
     <description>
-      This plugin publishes a ZstdImage
+      This plugin publishes a losslessly compressed CompressedImage.
     </description>
   </class>
 
@@ -15,7 +15,7 @@
     type="zstd_image_transport::ZstdSubscriber"
     base_class_type="image_transport::SubscriberPlugin">
     <description>
-      This plugin decompresses a zstdImage.
+      This plugin decompresses a CompressedImage published by the zstd transport.
     </description>
   </class>
 </library>
