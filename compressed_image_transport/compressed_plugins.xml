@@ -6,7 +6,7 @@
     type="compressed_image_transport::CompressedPublisher"
     base_class_type="image_transport::PublisherPlugin">
     <description>
-      This plugin publishes a CompressedImage using either JPEG or PNG compression.
+      This plugin publishes a CompressedImage using JPEG, PNG or TIFF compression.
     </description>
   </class>
 

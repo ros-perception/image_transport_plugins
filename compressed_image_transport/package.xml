@@ -2,8 +2,7 @@
   <name>compressed_image_transport</name>
   <version>7.0.1</version>
   <description>
-    Compressed_image_transport provides a plugin to image_transport for transparently sending images
-    encoded as JPEG or PNG.
+    Compressed_image_transport provides a plugin to image_transport for transparently sending images encoded as JPEG, PNG or TIFF.
   </description>
   <maintainer email="kenjibrameld@gmail.com">Kenji Brameld</maintainer>
   <license>BSD</license>
@@ -35,5 +34,6 @@
   <export>
     <build_type>ament_cmake</build_type>
     <image_transport plugin="${prefix}/compressed_plugins.xml" />
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 </package>
