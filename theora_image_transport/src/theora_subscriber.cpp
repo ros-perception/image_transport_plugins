@@ -29,6 +29,8 @@
 
 #include "theora_image_transport/theora_subscriber.hpp"
 
+#include <algorithm>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -99,16 +101,28 @@ void TheoraSubscriber::subscribeImpl(
   rclcpp::SubscriptionOptions options)
 {
   node_param_interface_ = node_interfaces.get_node_parameters_interface();
+  node_base_interface_ = node_interfaces.get_node_base_interface();
   logger_ = node_interfaces.get_node_logging_interface()->get_logger();
 
   using Base = image_transport::SimpleSubscriberPlugin<theora_image_transport::msg::Packet>;
   Base::subscribeImpl(node_interfaces, base_topic, callback, custom_qos, options);
 
   // Declare Parameters
-  unsigned int ns_len =
-    std::string(node_interfaces.get_node_base_interface()->get_namespace()).length();
-  std::string param_base_name = base_topic.substr(ns_len);
+  const std::string ns = node_interfaces.get_node_base_interface()->get_namespace();
+  const size_t ns_len = ns.length();
+  // Skip the namespace and the slash after it ("/ns/image" -> "image"). A topic outside
+  // the node's namespace (absolute or remapped) only loses its leading slash.
+  const std::string ns_prefix = ns_len > 1 ? ns + "/" : ns;
+  std::string param_base_name = base_topic.substr(
+    base_topic.starts_with(ns_prefix) ? ns_prefix.length() : 1);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+
+  if (ns_len > 1) {
+    // Add pre set parameter callback to handle deprecated parameters
+    pre_set_parameter_callback_handle_ =
+      node_param_interface_->add_pre_set_parameters_callback(
+      std::bind(&TheoraSubscriber::preSetParametersCallback, this, std::placeholders::_1));
+  }
 
   for(const ParameterDefinition & pd : kParameters) {
     declareParameter(param_base_name, pd);
@@ -322,6 +336,56 @@ void TheoraSubscriber::declareParameter(
     RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
     param_value = node_param_interface_->get_parameter(param_name).get_parameter_value();
   }
+
+  // TODO(anyone): Remove deprecated parameters once a release has shipped with this warning
+  if (std::string(node_base_interface_->get_namespace()).length() > 1) {
+    // deprecated parameters starting with the dot character (e.g. .image_raw.compressed.mode)
+    const std::string deprecated_dot_name = "." + param_name;
+    deprecated_parameters_.insert(deprecated_dot_name);
+
+    rclcpp::ParameterValue deprecated_value = param_value;
+    try {
+      deprecated_value = node_param_interface_->declare_parameter(deprecated_dot_name, param_value,
+          definition.descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    }
+
+    // The deprecated name was given at startup (e.g. from a parameter file): keep honoring it.
+    if (deprecated_value != param_value) {
+      RCLCPP_WARN_STREAM(logger_,
+        "parameter `" << deprecated_dot_name << "` with leading dot character is deprecated; "
+        "use: `" << param_name << "` instead");
+      node_param_interface_->set_parameters({rclcpp::Parameter(param_name, deprecated_value)});
+    }
+  }
+}
+
+void TheoraSubscriber::preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters)
+{
+  std::vector<rclcpp::Parameter> new_parameters;
+
+  for (auto & param : parameters) {
+    const auto & param_name = param.get_name();
+
+    // Check if this is a deprecated dot-prefixed parameter for our transport
+    if (deprecated_parameters_.contains(param_name)) {
+      auto non_dot_prefixed_name = param_name.substr(1);
+      RCLCPP_WARN_STREAM(logger_,
+        "parameter `" << param_name << "` with leading dot character is deprecated; use: `" <<
+        non_dot_prefixed_name << "` instead");
+      new_parameters.push_back(
+        rclcpp::Parameter(non_dot_prefixed_name, param.get_parameter_value()));
+    }
+
+    // Check if this is a normal parameter for our transport
+    if (std::find(parameters_.begin(), parameters_.end(), param_name) != parameters_.end()) {
+      // Also update the dot-prefixed parameter
+      new_parameters.emplace_back("." + param_name, param.get_parameter_value());
+    }
+  }
+
+  parameters.insert(parameters.end(), new_parameters.begin(), new_parameters.end());
 }
 
 }  // namespace theora_image_transport

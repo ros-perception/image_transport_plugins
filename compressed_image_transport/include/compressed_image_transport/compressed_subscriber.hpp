@@ -31,6 +31,7 @@
 #define COMPRESSED_IMAGE_TRANSPORT__COMPRESSED_SUBSCRIBER_HPP_
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <rclcpp/node.hpp>
@@ -70,15 +71,22 @@ protected:
 
   rclcpp::Logger logger_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:
   std::vector<std::string> parameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
+
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
 
   int imdecodeFlagFromConfig();
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
+
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
 };
 }  // namespace compressed_image_transport
 

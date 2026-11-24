@@ -35,6 +35,7 @@
 #include <theora/theoradec.h>
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <rclcpp/node.hpp>
@@ -88,13 +89,20 @@ protected:
 
   rclcpp::Logger logger_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
 
 private:
   std::vector<std::string> parameters_;
+  std::unordered_set<std::string> deprecated_parameters_;
+
+  rclcpp::node_interfaces::PreSetParametersCallbackHandle::SharedPtr
+    pre_set_parameter_callback_handle_;
 
   void declareParameter(
     const std::string & base_name,
     const ParameterDefinition & definition);
+
+  void preSetParametersCallback(std::vector<rclcpp::Parameter> & parameters);
 };
 
 }  // namespace theora_image_transport
