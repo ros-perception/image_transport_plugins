@@ -80,13 +80,13 @@ private:
 
   rclcpp::Subscription<ParameterEvent>::SharedPtr parameter_subscription_;
 
-  void declareParameter(
-    const std::string & base_name,
+  rclcpp::ParameterValue declareParameter(
+    const std::string & name,
     const ParameterDefinition & definition);
 
   void onParameterEvent(
     ParameterEvent::SharedPtr event, std::string full_name,
-    std::string base_name);
+    std::string base_name, const std::vector<std::string> & deprecated_names);
 };
 
 }  // namespace compressed_depth_image_transport
