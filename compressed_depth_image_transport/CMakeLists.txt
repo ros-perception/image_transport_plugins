@@ -59,6 +59,10 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(rvl_codec_test test/rvl_codec_test.cpp)
   target_link_libraries(rvl_codec_test ${PROJECT_NAME})
+
+  ament_add_gtest(compressed_depth_publisher_test test/compressed_depth_publisher_test.cpp)
+  target_link_libraries(compressed_depth_publisher_test ${PROJECT_NAME})
+  ament_target_dependencies(compressed_depth_publisher_test image_transport rclcpp)
 endif()
 
 ament_package()

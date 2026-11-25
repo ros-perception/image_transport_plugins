@@ -113,20 +113,37 @@ void CompressedDepthPublisher::advertiseImpl(
   typedef image_transport::SimplePublisherPlugin<sensor_msgs::msg::CompressedImage> Base;
   Base::advertiseImpl(node, base_topic, custom_qos, options);
 
-  // Declare Parameters
+  // Declare transport-scoped parameters before the callback can access them.
   uint ns_len = node->get_effective_namespace().length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  const auto transport_prefix = param_base_name + "." + getTransportName() + ".";
+  std::vector<rclcpp::ParameterValue> parameter_values;
+  parameters_.clear();
+  deprecatedParameters_.clear();
+  for (const auto & definition : kParameters) {
+    parameters_.push_back(transport_prefix + definition.descriptor.name);
+    deprecatedParameters_.push_back(param_base_name + "." + definition.descriptor.name);
+    parameter_values.push_back(declareParameter(parameters_.back(), definition));
+  }
 
+  // Give the callback its own immutable list, including if the plugin is advertised again.
   using callbackT = std::function<void(ParameterEvent::SharedPtr event)>;
   auto callback = std::bind(&CompressedDepthPublisher::onParameterEvent, this,
-      std::placeholders::_1, node->get_fully_qualified_name(), param_base_name);
+      std::placeholders::_1, node->get_fully_qualified_name(), param_base_name,
+      deprecatedParameters_);
 
   parameter_subscription_ = rclcpp::SyncParametersClient::on_parameter_event<callbackT>(node,
       callback);
 
-  for(const ParameterDefinition & pd : kParameters) {
-    declareParameter(param_base_name, pd);
+  // Subscribe before declaring deprecated aliases so YAML overrides still produce NEW events.
+  for (std::size_t i = 0; i < parameter_values.size(); ++i) {
+    const auto & name = deprecatedParameters_[i];
+    try {
+      node->declare_parameter(name, parameter_values[i], kParameters[i].descriptor);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG(logger_, "%s was previously declared", name.c_str());
+    }
   }
 }
 
@@ -152,41 +169,21 @@ void CompressedDepthPublisher::publish(
   }
 }
 
-void CompressedDepthPublisher::declareParameter(
-  const std::string & base_name,
+rclcpp::ParameterValue CompressedDepthPublisher::declareParameter(
+  const std::string & name,
   const ParameterDefinition & definition)
 {
-  // transport scoped parameter (e.g. image_raw.compressedDepth.png_level)
-  const std::string transport_name = getTransportName();
-  const std::string param_name = base_name + "." + transport_name + "." +
-    definition.descriptor.name;
-  parameters_.push_back(param_name);
-
-  // deprecated non-scoped parameter name (e.g. image_raw.png_level)
-  const std::string deprecated_name = base_name + "." + definition.descriptor.name;
-  deprecatedParameters_.push_back(deprecated_name);
-
-  rclcpp::ParameterValue param_value;
-
   try {
-    param_value = node_->declare_parameter(param_name, definition.defaultValue,
-        definition.descriptor);
+    return node_->declare_parameter(name, definition.defaultValue, definition.descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    param_value = node_->get_parameter(param_name).get_parameter_value();
-  }
-
-  // transport scoped parameter as default, otherwise we would overwrite
-  try {
-    node_->declare_parameter(deprecated_name, param_value, definition.descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
+    RCLCPP_DEBUG(logger_, "%s was previously declared", name.c_str());
+    return node_->get_parameter(name).get_parameter_value();
   }
 }
 
 void CompressedDepthPublisher::onParameterEvent(
   ParameterEvent::SharedPtr event,
-  std::string full_name, std::string base_name)
+  std::string full_name, std::string base_name, const std::vector<std::string> & deprecated_names)
 {
   // filter out events from other nodes
   if (event->node != full_name) {
@@ -196,7 +193,7 @@ void CompressedDepthPublisher::onParameterEvent(
   // filter out new/changed deprecated parameters
   using EventType = rclcpp::ParameterEventsFilter::EventType;
 
-  rclcpp::ParameterEventsFilter filter(event, deprecatedParameters_,
+  rclcpp::ParameterEventsFilter filter(event, deprecated_names,
     {EventType::NEW, EventType::CHANGED});
 
   const std::string transport = getTransportName();
