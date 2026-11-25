@@ -1,0 +1,19 @@
+<library path="svtav1_image_transport">
+  <class
+    name="image_transport/svtav1_pub"
+    type="svtav1_image_transport::SVTAV1Publisher"
+    base_class_type="image_transport::PublisherPlugin">
+    <description>
+      This plugin publishes a SVT-AV1 image
+    </description>
+  </class>
+
+  <class
+    name="image_transport/svtav1_sub"
+    type="svtav1_image_transport::SVTAV1Subscriber"
+    base_class_type="image_transport::SubscriberPlugin">
+    <description>
+      This plugin decompresses a SVT-AV1 Image.
+    </description>
+  </class>
+</library>
